@@ -24,8 +24,8 @@ Ingest the competitive meta (Limitless API + official-event scraping), resolve e
 | 3 | [S03.T03](T03-limitless-web-scraper.md) | Limitless web scraper (official events) | [S02.T01](../02-card-data-and-search/T01-etl-cli-and-raw-cache.md) | no | TODO |
 | 4 | [S03.T04](T04-deck-resolver.md) | Decklist line resolver | [S02.T06](../02-card-data-and-search/T06-load-cards.md), [S03.T01](T01-tournaments-schema-migration.md) | no | TODO |
 | 5 | [S03.T05](T05-decks-sync-and-prune.md) | Deck synchronisation and pruning | [S03.T02](T02-limitless-api-client.md), [S03.T03](T03-limitless-web-scraper.md), [S03.T04](T04-deck-resolver.md) | no | TODO |
-| 6 | [S03.T06](T06-meta-queries.md) | Meta queries: archetypes, partners, alternatives, deck read | [S02.T07](../02-card-data-and-search/T07-prices-snapshot.md), [S03.T05](T05-decks-sync-and-prune.md) | no | TODO |
-| 7 | [S03.T07](T07-api-meta-endpoints.md) | API: meta endpoints | [S01.T07](../01-foundation/T07-api-skeleton-and-health.md), [S03.T06](T06-meta-queries.md) | no | TODO |
+| 6 | [S03.T06](T06-meta-queries.md) | Meta queries: archetypes, partners, alternatives, deck read | [S02.T07](../02-card-data-and-search/T07-prices-snapshot.md), [S03.T04](T04-deck-resolver.md), [S03.T05](T05-decks-sync-and-prune.md) | no | TODO |
+| 7 | [S03.T07](T07-api-meta-endpoints.md) | API: meta endpoints | [S01.T07](../01-foundation/T07-api-skeleton-and-health.md), [S03.T05](T05-decks-sync-and-prune.md), [S03.T06](T06-meta-queries.md) | no | TODO |
 | 8 | [S03.T08](T08-web-meta-pages.md) | Web: meta pages (archetypes, decklists, deck detail) | [S01.T08](../01-foundation/T08-web-skeleton.md), [S02.T12](../02-card-data-and-search/T12-web-search-page.md), [S03.T07](T07-api-meta-endpoints.md) | no | TODO |
 | 9 | [S03.T09](T09-decklist-parser-and-exporter.md) | Decklist text parser and exporter | [S01.T05](../01-foundation/T05-shared-contracts-package.md), [S03.T04](T04-deck-resolver.md) | no | TODO |
 | 10 | [S03.T10](T10-deck-validation-rules.md) | Deck validation rules | [S02.T06](../02-card-data-and-search/T06-load-cards.md), [S03.T09](T09-decklist-parser-and-exporter.md) | no | TODO |
@@ -57,7 +57,9 @@ graph LR
   S03_T02 --> S03_T05
   S03_T03 --> S03_T05
   S03_T04 --> S03_T05
+  S03_T04 --> S03_T06
   S03_T05 --> S03_T06
+  S03_T05 --> S03_T07
   S03_T06 --> S03_T07
   S03_T07 --> S03_T08
   S03_T04 --> S03_T09

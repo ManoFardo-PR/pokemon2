@@ -12,7 +12,7 @@
 - **Ids**: text primary keys from the sources (`cards.id = 'sv4pt5-54'`, tournaments `api:<id>` / `web:<n>`); integer autoincrement only for internal rows (jobs, versions, evidence).
 - **Dates/times**: ISO-8601 text (`YYYY-MM-DD`, `YYYY-MM-DDTHH:MM:SSZ`).
 - **Arrays/objects**: JSON text in columns named `*_json`; queried with `json_each` through the dialect module (Postgres: `jsonb`).
-- **Normalized text**: `norm(s)` = strip diacritics → lower → trim; `name_norm`, `text_norm`, `name_key` all use it byte-identically.
+- **Normalized text**: `norm(s)` = `s.normalize("NFD").replace(/\p{Mn}/gu, "").toLowerCase().trim()` with internal whitespace collapsed to single spaces. `name_norm`, `text_norm` and `name_key` use exactly this function, so joins on normalized names are byte-exact. It is **not** the legacy `unidecode`, which also transliterates non-Latin characters (`★`→`star`, `δ`→`d`); legacy-derived values are therefore not comparable with ours, which is one more reason the legacy database is not reused (D-003).
 - **Migrations**: `packages/db/migrations/NNNN_name.sql`, forward-only, applied by `pnpm db:migrate`, recorded in `schema_migrations`; SQLite-only statements sit in blocks tagged `-- @sqlite-only` with a `-- @postgres:` note.
 - **Snapshots**: `rules_snapshot` = SHA-256 over all active code bodies and text_codes; `engine_build` = hash printed by `ptcg-cli --version`. Both are recorded wherever a number depends on them.
 
@@ -24,7 +24,7 @@
 |---|---|---|---|
 | `schema_migrations`, `etl_runs` | schema version (with each migration's `checksum`, so an applied file cannot be edited unnoticed, and `duration_ms`); one row per ETL run with stats/error | 0001 | S01.T04 |
 | `sets`, `cards`, `attacks`, `abilities`, `weaknesses`, `resistances` | canonical card facts (pokemon-tcg-data) complemented by TCGdex; both raw documents preserved (RN-01) | 0002 | S02.T05 (schema), S02.T06 (load) |
-| `price_history`, view `cards_latest_price`, table `cards_market_usd` | dated price snapshots per source/variant; latest per card; single market USD per card | 0002 | S02.T05, S02.T07 |
+| `price_history`, view `cards_latest_price`, table `cards_market_usd` | dated price snapshots per source/variant; latest per card; single market USD per card. **Deliberate deviation**: the legacy `cards_market_usd` was a view recomputed on every search; here it is a table refreshed after each snapshot (SQLite has no materialized views) and becomes a materialized view in Postgres (S08.T03) | 0002 | S02.T05, S02.T07 |
 | `cards_fts` (FTS5) | full-text index rebuilt after each load; bm25 weights name 10 / attack names 6 / attack text 3 / ability names 6 / ability text 3 / rules 2 / flavor 0.5 | 0002 | S02.T08 |
 | `tournaments`, `archetypes`, `decks`, `deck_cards` | the meta window (Standard, 90 days, ≥ 16 players, ≤ 400 tournaments — RN-03); every decklist line resolved to a card (RN-02) | 0003 | S03.T01, S03.T05 |
 

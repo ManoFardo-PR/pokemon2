@@ -109,9 +109,11 @@ they change only through the interlock rules below. Everything from **Context** 
 
 ### Sizing
 
-A detailed subtask file runs roughly 700–2,600 words of body. Files that carry full DDL, interface signatures or a protocol definition sit at the
-upper end and that is expected; shorter is fine for genuinely small tasks provided every section is substantive. Past ~2,600 words, check whether the
-subtask is really two (propose the split in Risks and open questions — never renumber IDs yourself).
+Measured as **prose** — the body from `## Context` to the footer, excluding fenced code blocks and table rows — a detailed subtask file runs roughly
+700–2,400 words. Tables and DDL are not padding and are not counted: a schema or protocol file can easily double its total length in tables, and that
+is expected. Shorter is fine for genuinely small tasks provided every section is substantive. Past ~2,400 words of prose, check whether the subtask is
+really two (propose the split in Risks and open questions — never renumber IDs yourself). Never merge two distinct items — edge cases, rules, steps —
+into one bullet to hit a number.
 
 ## Status vocabulary
 
