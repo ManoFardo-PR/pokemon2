@@ -58,7 +58,7 @@ The two coverage numbers are always shown together (business rule RN-70).
 
 ## Constraints that shaped the plan
 
-- Windows 11 machine, 22 threads, 39 GB RAM, Node 24, pnpm, Docker and `gcloud` present; **no Rust, no MSVC compiler, no Windows SDK** → Rust via the GNU target with a go/no-go gate (S01.T06).
+- Windows 11 machine, 22 threads, 39 GB RAM; Node 24.13, pnpm 12, Bun 1.3.14, Docker 29, `gcloud` 555, git 2.52 and `gh` 2.83 present; **no Rust, no MSVC compiler, no Windows SDK, no C compiler at all** → Rust via the GNU target with a go/no-go gate (S01.T06), pure-Rust dependencies only, and `node:sqlite` instead of a native driver (Bun's `bun:sqlite` is the hedge behind the adapter; `gh` is used for the licence checks).
 - Both project folders live in OneDrive → database, raw cache and Cargo target default to `%LOCALAPPDATA%\pokemon2`.
 - Single user, offline-capable after the first ETL run (raw cache), everything reproducible (seeds, fingerprints, snapshot hashes).
 

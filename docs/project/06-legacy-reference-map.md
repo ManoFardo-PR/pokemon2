@@ -21,7 +21,7 @@
 | `README.md` | Screen-by-screen description of the legacy UI; coverage numbers; performance notes (L123–132) | S02.T12–T14, S03.T08, S04.T17, S04.T18 |
 | `src/pokesearch/config.py` | Source URLs, defaults (`TCGDEX_CONCURRENCY = 8`, `DEFAULT_RELEASE_FROM = 2021-01-01`, meta window constants) | S02.T01, S02.T09, S03.T02 |
 | `src/pokesearch/db/schema.sql` | Table shapes and the covering-index note (8.5 s → 0.11 s) | S02.T05, S03.T01, [data model](04-data-model-overview.md) |
-| `src/pokesearch/db/connection.py` | Pragmas; the schema-on-connect anti-pattern | S01.T02, S01.T04 |
+| `src/pokesearch/db/connection.py` | Pragmas; the schema-on-connect anti-pattern. Note it sets only `foreign_keys` and `busy_timeout` — WAL comes from line 1 of `schema.sql`, which is exactly why that file was executed on every connect | S01.T02, S01.T04 |
 | `src/pokesearch/etl/fetch_ptcg.py` | ETag strategy, changed-set detection | S02.T02 |
 | `src/pokesearch/etl/fetch_tcgdex.py` | Endpoints, retry/backoff, concurrency, cache-by-presence | S02.T03 |
 | `src/pokesearch/etl/idmap.py`, `tests/test_idmap.py` | Set/card id heuristics and their test cases | S02.T04 |

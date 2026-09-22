@@ -22,7 +22,7 @@
 
 | Table / object | Purpose | Migration | Owner |
 |---|---|---|---|
-| `schema_migrations`, `etl_runs` | schema version; one row per ETL run with stats/error | 0001 | S01.T04 |
+| `schema_migrations`, `etl_runs` | schema version (with each migration's `checksum`, so an applied file cannot be edited unnoticed, and `duration_ms`); one row per ETL run with stats/error | 0001 | S01.T04 |
 | `sets`, `cards`, `attacks`, `abilities`, `weaknesses`, `resistances` | canonical card facts (pokemon-tcg-data) complemented by TCGdex; both raw documents preserved (RN-01) | 0002 | S02.T05 (schema), S02.T06 (load) |
 | `price_history`, view `cards_latest_price`, table `cards_market_usd` | dated price snapshots per source/variant; latest per card; single market USD per card | 0002 | S02.T05, S02.T07 |
 | `cards_fts` (FTS5) | full-text index rebuilt after each load; bm25 weights name 10 / attack names 6 / attack text 3 / ability names 6 / ability text 3 / rules 2 / flavor 0.5 | 0002 | S02.T08 |

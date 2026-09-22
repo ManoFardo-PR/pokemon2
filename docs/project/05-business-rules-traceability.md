@@ -61,7 +61,7 @@ Legend — **Kept**: same rule; **Revised**: same intent, new mechanism; **Super
 | RN-44 | Two readings: weighted score and mirror | Kept | S06.T08 | measure job tests |
 | RN-45 | Ties = 0.5; Wilson CI z = 1.96 | Kept | S04.T17, S06.T08 | unit tests |
 | RN-46 | Stable seeds per matchup (CRC-based) | Kept | S04.T10, S06.T08 | fingerprint tests |
-| RN-47 | `PYTHONHASHSEED=0` on every measurement | Superseded — no hashing-order dependence in Rust game logic (rule: no `HashMap` iteration) | S04.T10 | 1 vs N workers test |
+| RN-47 | `PYTHONHASHSEED=0` on every measurement | Superseded — the engine's game logic carries no iteration-order dependence (no hash-map iteration), whichever language the S01.T06 gate settles on | S04.T10 | 1 vs N workers fingerprint test |
 | RN-48 | Differences under ~3 points at 1,200 games are noise | Revised into the statistics plan (CIs shown; sequential confirmation) | S06.T08, S07.T03 | synthetic power tests |
 | RN-49 | Every measurement records the commit, `+` if dirty | Kept | S06.T08 | measure job test |
 | RN-50 | Performance changes accepted only with identical result hash | Kept | S04.T10 (fingerprint), S04.T18 | bench + fingerprint |

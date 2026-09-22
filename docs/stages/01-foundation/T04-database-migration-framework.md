@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 4 / 10 |
 | Depends on | [S01.T02](T02-sqlite-database-client.md), [S01.T03](T03-test-database-and-fixtures.md) |
-| Unblocks | [S01.T07](T07-api-skeleton-and-health.md), [S02.T01](../02-card-data-and-search/T01-etl-cli-and-raw-cache.md), [S02.T05](../02-card-data-and-search/T05-cards-schema-migration.md), [S03.T01](../03-tournament-meta-and-deck-builder/T01-tournaments-schema-migration.md), [S04.T14](../04-game-engine-core/T14-jobs-schema-migration.md), [S05.T01](../05-card-rules-base/T01-rules-schema-migration.md) |
+| Unblocks | [S01.T07](T07-api-skeleton-and-health.md), [S02.T01](../02-card-data-and-search/T01-etl-cli-and-raw-cache.md), [S02.T05](../02-card-data-and-search/T05-cards-schema-migration.md), [S03.T01](../03-tournament-meta-and-deck-builder/T01-tournaments-schema-migration.md), [S04.T14](../04-game-engine-core/T14-jobs-schema-migration.md), [S05.T01](../05-card-rules-base/T01-rules-schema-migration.md), [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md) |
 | Parallel with | — |
 | Gate | no |
 | Owner / Updated | — / — |

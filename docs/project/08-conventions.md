@@ -151,7 +151,15 @@ Update the status in **two places**: the file's header table and the row of the 
 5. Every input `from Sxx.Tyy` names a subtask listed in `Depends on`.
 6. Every subtask file appears exactly once in its stage README table and in the index.
 7. Every file has all template-v2 sections, non-empty; every RN assigned in the traceability doc appears in the file's Business rules table.
-8. `BR-` IDs are unique across the tree and match the file they live in.
+8. `BR-` IDs are unique across the tree; a rule **row** defines only IDs of its own file (citing another file's rule in prose is allowed and expected).
+9. Status is from the vocabulary and agrees with the stage README row for the same subtask.
+10. The header table has exactly the template's fields, in order; `Gate` is `no` or `yes — fallback: …`.
+11. The `Context docs:` footer is present and its links resolve.
+12. Every relative link in the file resolves to an existing file; a link whose anchor text is a subtask ID points at that subtask's file.
+13. Acceptance checks are checkboxes (`- [ ]`) and there are at least five.
+
+Checks 1–8 are errors; 9–13 are errors too once the tree is elaborated (they were warnings during generation). The lint is the executable form of
+this document: when a rule here changes, the lint changes with it in the same commit.
 
 ## Review
 

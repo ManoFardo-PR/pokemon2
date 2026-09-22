@@ -105,6 +105,9 @@ sequenceDiagram
 | `CARGO_TARGET_DIR` | `$DATA_DIR/target` | engine builds |
 | `ENGINE_BIN` | `$CARGO_TARGET_DIR/release/ptcg-cli.exe` | worker |
 | `API_PORT` / `WEB_PORT` | 8000 / 5173 | api, web |
+| `NODE_ENV` | `development` | api, web, worker, etl |
+| `LOG_LEVEL` | `info` | api, worker, etl |
+| `MIGRATE_ON_START` | 0 | api, worker (1 runs pending migrations at startup instead of refusing) |
 | `SCHEDULER_ENABLED` | 0 | worker |
 | `LIMITLESS_API_KEY` | — (optional) | etl |
 | `ANTHROPIC_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` | — (optional) | worker (coach, authoring) |

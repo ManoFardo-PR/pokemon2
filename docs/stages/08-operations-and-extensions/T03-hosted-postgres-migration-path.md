@@ -5,7 +5,7 @@
 | Stage | S08 — Operations and extensions |
 | Status | TODO |
 | Order in stage | 3 / 6 |
-| Depends on | [S01.T02](../01-foundation/T02-sqlite-database-client.md), [S01.T07](../01-foundation/T07-api-skeleton-and-health.md), [S01.T08](../01-foundation/T08-web-skeleton.md), [S02.T08](../02-card-data-and-search/T08-full-text-search.md) |
+| Depends on | [S01.T02](../01-foundation/T02-sqlite-database-client.md), [S01.T04](../01-foundation/T04-database-migration-framework.md), [S01.T07](../01-foundation/T07-api-skeleton-and-health.md), [S01.T08](../01-foundation/T08-web-skeleton.md), [S02.T08](../02-card-data-and-search/T08-full-text-search.md) |
 | Unblocks | — |
 | Parallel with | [S08.T01](T01-scheduler.md), [S08.T02](T02-etl-monitoring-and-alerts.md), [S08.T04](T04-wasm-replay-and-play.md), [S08.T05](T05-twinleaf-differential-oracle.md), [S08.T06](T06-llm-assisted-authoring.md) |
 | Gate | no |
@@ -13,6 +13,7 @@
 
 ## Inputs (required)
 - `doc` `PORTABILITY.md` and the adapter interface — from [S01.T02](../01-foundation/T02-sqlite-database-client.md)
+- `module` the migration runner, the `NNNN_*.sql` file convention and the `-- @sqlite-only` / `-- @postgres:` block tagging that makes a Postgres migration set derivable — from [S01.T04](../01-foundation/T04-database-migration-framework.md)
 - `module` API config (`DATABASE_*`) — from [S01.T07](../01-foundation/T07-api-skeleton-and-health.md)
 - `module` web build — from [S01.T08](../01-foundation/T08-web-skeleton.md)
 - `doc` dialect module contract (FTS5 ↔ `tsvector`) — from [S02.T08](../02-card-data-and-search/T08-full-text-search.md)
