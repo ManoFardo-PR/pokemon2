@@ -30,7 +30,7 @@ The new ETL (D-003) rebuilds ingestion from the public sources: GitHub raw files
 
 Writing this down before the first fetch is cheap; doing it after 20,000 cached documents exist is a negotiation with sunk cost. It also makes an honest distinction possible: "verified, MIT" for one source and "unverified — the repository declares no licence" for another, so the user decides what to do about the second instead of silence implying permission.
 
-The output is not legal advice. It is a register of facts — what is fetched, from where, how often, what upstream declares, what remains unknown — plus the attribution strings the site and the repository must display. The project's own licence (O-1) stays the user's decision; this file's job is to make it an informed one.
+The output is not legal advice. It is a register of facts — what is fetched, from where, how often, what upstream declares and what remains unknown — plus the attribution strings the site and the repository must display. The project's own licence (O-1) stays the user's decision; this file's job is to make it an informed one.
 
 ## Scope
 
@@ -113,8 +113,8 @@ No table, no endpoint: this subtask produces documents and a register.
 - **Terms change after the check** → each `verified` carries its retrieval date; the register is re-checked whenever a fetcher subtask is touched, and amendments are appended, not overwritten.
 - **`robots.txt` disallows the scraped paths** → record it and stop: [S03.T03](../03-tournament-meta-and-deck-builder/T03-limitless-web-scraper.md) then depends on the API alone and the meta window may shrink. The register states the consequence before the code is written.
 - **A dependency carries a copyleft licence** → flagged in §Dependencies for the user with the alternative or the removal noted; nothing is silently accepted.
-- **twinleafgg's licence differs between subfolders** → record the exact file consulted (`ptcg-server/package.json` is what the legacy project cited) and the root `LICENSE` if present; a disagreement becomes the `question:`.
-- **Someone adds a source without a NOTICE section** → `pnpm check` fails through `notice-lint`, naming the missing id.
+- **twinleafgg's licence differs between subfolders** → record the exact file consulted (`ptcg-server/package.json` is what the legacy project cited) and the root `LICENSE` if present; if they disagree, that disagreement becomes the `question:`.
+- **Someone adds a source without a NOTICE section** → `pnpm check` fails through `notice-lint` (BR-S01.T09-01), and the failure names the missing id.
 
 ## Acceptance / verification
 
@@ -125,14 +125,14 @@ No table, no endpoint: this subtask produces documents and a register.
 - [ ] NOTICE §ptcg-engine states that nothing is ported, and a review of `engine/` finds no file derived from it (BR-S01.T09-04).
 - [ ] The attribution strings in NOTICE match the footer strings in `apps/web/src/strings.ts` (BR-S01.T09-05, -07).
 - [ ] `grep -i "licen" README.md` shows the "licence pending — all rights reserved" line (BR-S01.T09-06).
-- [ ] `pnpm check` runs `notice-lint` and fails on a section with a missing `status:` field.
+- [ ] `pnpm check` runs `notice-lint` and fails on a NOTICE section with a missing `status:` field.
 - [ ] O-1 carries the findings and a recommendation and is still open (the user has not been pre-empted).
 
 ## Risks and open questions
 
 - **Risk — the project depends on a source that declares no licence.** Mitigation: the register states it, `if-refused:` names the fallback per source, and no fetch of an `unverified` source happens without recorded consent. Card *facts* and a compiled *database* of them are not the same question; that distinction is the user's to resolve, possibly with advice this project cannot give.
 - **Risk — the register rots** as sources evolve. Mitigation: dated `status:` lines, `notice-lint` in `pnpm check`, and a re-check whenever a fetcher subtask is edited.
-- **Risk — image hotlinking is read as redistribution.** Mitigation: NOTICE records that only URLs are stored, that images load from the source CDN in the user's browser, and that the legacy local-mirror mode is not carried over.
+- **Risk — image hotlinking is read as redistribution.** Mitigation: NOTICE records that only URLs are stored, that images load from the source CDN in the user's browser, and that the legacy local-mirror mode (`IMAGE_MODE=local`) is not carried over.
 - **Question — O-1, the project `LICENSE`.** The user decides after reading the register. Recommendation: keep the repository private and unlicensed until the data-source questions are settled; if published, a permissive licence on the *code* plus an explicit "data belongs to its sources" note is the shape to aim for.
 - **Question — does the register also cover the user's own work products** (the rules spreadsheet, the recipes, the 136 verified tests imported as scenarios)? They are the user's, and D-003 lists them as imported data. Recommendation: one short section saying so, to confirm with the user.
 

@@ -29,9 +29,9 @@ One command tells whether the code and the execution docs are consistent, so the
 
 Two things need guarding, and they fail differently.
 
-The code is guarded the ordinary way — `tsc`, eslint, vitest — but with a twist: several business rules written in other S01 files are *implemented as lint rules*. `node:sqlite` may be imported only by the database client (BR-S01.T02-03); `@pokesearch/shared` may not import `node:*` (BR-S01.T05-01); `apps/web` may not import server-only modules (BR-S01.T08-03); no literal user-visible string may appear in JSX (BR-S01.T08-01). Those rules live here, each tagged with the BR id it enforces, so deleting one is a visible act.
+The code is guarded the ordinary way — `tsc`, eslint, vitest — but with a twist: several business rules written in other S01 files are *implemented as lint rules*. `node:sqlite` may be imported only by the database client (BR-S01.T02-03); `@pokesearch/shared` may not import `node:*` (BR-S01.T05-01); `apps/web` may not import server-only modules (BR-S01.T08-03); no literal user-visible string may appear in JSX (BR-S01.T08-01). They live here, each tagged with the BR id it enforces, so deleting one is a visible act.
 
-The docs are guarded by a linter that did not exist before. The tree of 92 subtask files was rendered once by a one-off generator that derived `Unblocks`, `Order in stage`, `Parallel with`, the stage tables and the graphs, and refused to write on any inconsistency. That generator is gone and the `.md` files are now the source of truth, hand-edited. The invariants it enforced — an acyclic, symmetric, backwards-pointing dependency graph; every ID resolving to a real file; every subtask listed exactly once — are exactly what an elaboration pass breaks by accident. `pnpm docs:lint` re-establishes them as a check rather than a generator: it reads, it reports, it never writes.
+The docs are guarded by a linter that did not exist before. The tree of 92 subtask files was rendered once by a generator that derived `Unblocks`, `Order in stage`, `Parallel with`, the stage tables and the graphs, and refused to write on any inconsistency. That generator is gone and the `.md` files are now the hand-edited source of truth. The invariants it enforced — an acyclic, symmetric, backwards-pointing dependency graph; every ID resolving to a real file; every subtask listed exactly once — are exactly what an elaboration pass breaks by accident. `pnpm docs:lint` re-establishes them as a check rather than a generator: it reads, it reports, it never writes.
 
 ## Scope
 
@@ -116,13 +116,16 @@ No database, no endpoint: this subtask produces scripts, configuration and repor
 - **Em dash versus hyphen, CRLF, non-breaking spaces** → the parser normalises whitespace and accepts `—`, `–`, `-` as "none"; `.gitattributes` keeps `*.md` at LF so reported line numbers match the editor.
 - **The traceability doc assigns an RN to a subtask that does not exist** → check 7 reports it against the traceability doc's line, so the error points at the thing that is wrong.
 - **A BR id is reused after a rewrite** → check 8 catches the duplicate tree-wide; since renumbering is forbidden, the message says "choose the next free number in this file".
+- **`pnpm lint` is slow** because type-aware rules build the whole program → `projectService: true` plus per-member invocation keeps it incremental; if it still hurts, the type-aware rule set is trimmed rather than the restriction rules, which are the ones carrying business rules.
 
 ## Acceptance / verification
 
 - [ ] `pnpm docs:lint` passes on the generated tree and fails when a dependency ID is edited to a non-existent one (check 1), printing `path:line [check-1]` with the bad ID.
 - [ ] `pnpm check` passes on the skeleton and fails after removing a `test` script from one member (BR-S01.T10-01).
 - [ ] `docs-lint.spec.mjs` green: every check has a failing `bad` and a passing `good` fixture, and the registry covers checks 1–8 exactly (BR-S01.T10-03, -04).
-- [ ] Removing `S01.T04` from [S01.T07](T07-api-skeleton-and-health.md)'s `Depends on` makes checks 2 and 5 both fail, naming both files; introducing a cycle ([S01.T01](T01-monorepo-skeleton.md) depending on [S01.T10](T10-quality-gates-and-docs-lint.md)) makes check 3 fail and print the cycle path; duplicating a `BR-S01.T02-01` id into another file makes check 8 fail, naming both locations.
+- [ ] Removing `S01.T04` from [S01.T07](T07-api-skeleton-and-health.md)'s `Depends on` makes checks 2 and 5 both fail, naming both files.
+- [ ] Introducing a cycle (making [S01.T01](T01-monorepo-skeleton.md) depend on [S01.T10](T10-quality-gates-and-docs-lint.md)) makes check 3 fail and print the cycle path.
+- [ ] Duplicating a `BR-S01.T02-01` id into another file makes check 8 fail, naming both locations.
 - [ ] `pnpm lint` fails on each of the four restriction fixtures (`node:sqlite` from `apps/api`, `node:fs` from `packages/shared/src/search`, `@pokesearch/db` from `apps/web`, a literal string in JSX) (BR-S01.T10-06).
 - [ ] `pnpm docs:lint --json` reports `ok: true` on the current tree, and two consecutive runs leave the tree's hash unchanged (BR-S01.T10-02, -05).
 - [ ] The CI workflow runs `pnpm install --frozen-lockfile`, `pnpm check` and `pnpm docs:lint` and is green on a branch (BR-S01.T10-07).
@@ -132,7 +135,8 @@ No database, no endpoint: this subtask produces scripts, configuration and repor
 - **Risk — the lint becomes a second source of truth** and drifts from `project/08-conventions.md`. Mitigation: BR-S01.T10-03 derives the expected check list from the conventions doc itself, so adding a check there without implementing it fails the lint's test suite, and vice versa.
 - **Risk — a regex parser is fragile** against hand-edited markdown. Mitigation: a narrow, explicit grammar, a distinct exit code for parse failures, and fixtures for the ugly cases. A markdown AST parser is the fallback if false positives appear; it would add a dependency to a script that currently has none.
 - **Risk — check 4 produces a wall of violations** after any insertion, hiding real errors. Mitigation: violations are grouped by check and each message carries the expected value; a `--fix-order` mode would make the lint a writer, which BR-S01.T10-05 forbids today.
-- **Question — should `pnpm check` also run `pnpm docs:lint`?** They are kept separate so the docs can be checked without a workspace install. Recommendation: separate locally, both in CI; the user decides if one command is preferred.
+- **Question — should `pnpm check` also run `pnpm docs:lint`?** The output contract keeps them separate so the docs can be checked without a workspace install. Recommendation: separate locally, both in CI; the user decides if a single command is preferred.
+- **Question — coverage thresholds.** Out of scope by decision; revisit once [S04](../04-game-engine-core/README.md) has real logic worth measuring.
 - **Question — adopt strict checks 9–13 into the conventions?** They catch real mistakes (a status disagreeing with the stage table, a broken relative link). Recommendation: adopt 9, 11 and 12 as errors and keep 10 and 13 as warnings; that requires editing `project/08-conventions.md` §"Consistency checks", which is outside this subtask's scope and is therefore proposed, not done.
 
 ## References

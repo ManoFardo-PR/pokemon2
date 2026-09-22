@@ -29,7 +29,7 @@ A running web shell with navigation, an API client and a health widget, so every
 
 The shell is the frame six later subtasks fill. What it must settle once is the pervasive stuff — how a page fetches, how it fails, where its text comes from, how a card picture is shown, what dark mode looks like — because each of those is expensive to change across twenty pages.
 
-The legacy site is the reference for visual economy, not architecture: a 31-line Jinja base with a five-item nav and a source-attribution footer, plus 154 hand-written lines of CSS whose `:root` token block is redefined under `prefers-color-scheme: dark` (details in References). That economy is kept; the server-rendered HTMX fragments are not — D-008 puts a JSON API behind React so a long job survives a reload and UI state lives in the URL. Navigation gains `Meta` and `Regras` and loses `API`, since there is no `/docs` page to link yet.
+The legacy site is the reference for visual economy, not architecture. `pokemon/src/pokesearch/templates/base.html` is a 31-line Jinja base with `<html lang="pt-BR">`, a brand link, a five-item nav (`Buscar`, `Decks` with a badge, `Simulador`, `Sets`, `API`), a footer attributing pokemon-tcg-data, TCGdex and Limitless, and htmx from a CDN. `static/style.css` is 154 hand-written lines: a `:root` token block, a `@media (prefers-color-scheme: dark)` override of the same tokens, a card grid at `minmax(170px, 1fr)` and images locked to `aspect-ratio: 245 / 337`. That economy is kept; the server-rendered HTMX fragments are not — D-008 puts a JSON API behind React so a long job survives a reload and UI state lives in the URL. Navigation gains `Meta` and `Regras` and loses `API`, since there is no `/docs` page to link yet.
 
 ## Scope
 
@@ -63,7 +63,8 @@ The traceability doc assigns no `RN-nn` here. RN-70 ("exact and proven coverage 
 | Navigate between sections | nav links (client-side routing) | none | the target route renders its placeholder naming the owning subtask; back/forward work |
 | Deep-link with search params | pasted URL | per-page | `validateSearch` parses them; invalid params fall back to defaults with a pt-BR notice |
 | A card image fails to load | `CardImage` | none (CDN hotlink) | the next URL is tried; after the last, the placeholder renders in the same box |
-| A page query fails, or an unknown path is opened | `<QueryState>` / not-found route | the page's own call / none | pt-BR message mapped from the API `code` with a "tentar novamente" button; the not-found route links back to Buscar |
+| Open an unknown path | any bad link | none | the not-found route renders a pt-BR message and a link back to Buscar |
+| A page query fails | `<QueryState>` | the page's own call | error state with the pt-BR message mapped from the API `code` and a "tentar novamente" button |
 
 ## Interfaces
 
@@ -157,6 +158,7 @@ The footer keeps the legacy attributions (pokemon-tcg-data, TCGdex, Limitless) a
 - **Invalid URL search params** (`?page=abc`) → `validateSearch` falls back to defaults with a dismissible pt-BR notice rather than an error page, so a shared link with a typo still shows results.
 - **A pt-BR label overflows the nav on a narrow window** → the header wraps at the legacy 800 px breakpoint, and nav labels are kept to one word.
 - **A request hangs** → the default `AbortSignal.timeout(15_000)` aborts it and the query surfaces the error state; no indefinite spinner.
+- **Two tabs open** → each has its own query cache and nothing in the shell assumes a single client. Job progress, which does need coordination, is [S04.T16](../04-game-engine-core/T16-api-jobs-and-sse.md)'s problem.
 
 ## Acceptance / verification
 
@@ -166,14 +168,16 @@ The footer keeps the legacy attributions (pokemon-tcg-data, TCGdex, Limitless) a
 - [ ] With the API stopped, every route still renders and the badge shows "Banco indisponível", with no unhandled promise rejection in the console.
 - [ ] `pnpm lint` fails on a fixture component with a literal pt-BR string in JSX and passes for the shell (BR-S01.T08-01).
 - [ ] Switching the OS to dark mode and reloading changes the palette with no flash of the light theme; `theme.spec.tsx` asserts the computed `--bg` (BR-S01.T08-06).
-- [ ] All seven routes render their placeholder with the owning subtask id visible, `/nao-existe` renders the not-found route, and the footer shows the attributions (pokemon-tcg-data, TCGdex, Limitless) and the non-affiliation line, consistent with `docs/NOTICE.md`.
+- [ ] All seven routes render their placeholder with the owning subtask id visible, and `/nao-existe` renders the not-found route.
+- [ ] The footer shows the attributions (pokemon-tcg-data, TCGdex, Limitless) and the non-affiliation line, consistent with `docs/NOTICE.md`.
 
 ## Risks and open questions
 
 - **Risk — the strings module grows into an ad-hoc i18n layer.** Mitigation: it is flat, typed and pt-BR only; if a second language is ever wanted, it is the seam where a real library plugs in. Stated here so nobody adds one casually.
 - **Risk — hotlinked images break when a CDN changes URLs.** Mitigation: the fallback chain and the placeholder; the local-mirror option stays out of scope, consistent with the licensing position in [S01.T09](T09-licensing-and-notice.md).
 - **Risk — TanStack Router's generated route tree looks like a build step for the workspace.** It is not: only `apps/web` has a bundler by design. Mitigation: commit the generated tree or produce it in `predev`/`prebuild`, and never import it from a server package.
-- **Question — who serves the built app outside `vite dev`?** The API deliberately serves no HTML, while the legacy FastAPI app served templates and `/static`. Recommendation: `vite preview` for now; the user decides when the app is used daily. Blocks no later page. A manual theme toggle (the tokens already support `data-theme`) is the same kind of call, best made after the first real pages exist.
+- **Question — who serves the built app outside `vite dev`?** The API deliberately serves no HTML (ROUTES.md convention 2), while the legacy FastAPI app served templates and `/static`. Options: `vite preview`, a static server in the worker, or a static plugin on the API. Recommendation: `vite preview` for now; the user decides when the app is used daily. Blocks no later page.
+- **Question — a manual theme toggle?** The tokens already support `data-theme`; whether a toggle appears in the header is the user's call, ideally after the first real pages exist.
 - **DEPENDENCY-PROPOSAL.** This file's `Unblocks` lists [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md), but nothing in the web shell is consumed by a database-hosting subtask. Unless S08.T03 explicitly covers re-pointing the web app's origin, consider removing `S01.T08 → S08.T03` from both files when S08 is elaborated; the edges from [S01.T02](T02-sqlite-database-client.md) and [S01.T07](T07-api-skeleton-and-health.md) carry the real dependency.
 
 ## References
