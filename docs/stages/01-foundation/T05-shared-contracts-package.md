@@ -35,11 +35,11 @@ What ships now is the skeleton plus the machinery: layout, export pipeline, vers
 ## Scope
 
 - **In scope.** `packages/shared/src/` layout and barrel exports; `CONTRACT_VERSION` and its rule; one placeholder schema per contract with its inferred type and a sample; the JSON Schema exporter and its determinism check; `CONTRACTS.md`; the "pure package" constraints; moving `env.ts` under `src/` as the one module allowed to read `process.env`.
-- **Out of scope.** The content of any contract (each named subtask below); the Rust `serde` structs and their diff against the JSON Schema ([S04.T12](../04-game-engine-core/T12-cli-job-protocol.md)); the pure helpers that will live here later — NL parser ([S02.T10](../02-card-data-and-search/T10-natural-language-parser.md)), decklist parser ([S03.T09](../03-tournament-meta-and-deck-builder/T09-decklist-parser-and-exporter.md)), deck validation ([S03.T10](../03-tournament-meta-and-deck-builder/T10-deck-validation.md)) — whose folders are only reserved; the Fastify type-provider wiring ([S01.T07](T07-api-skeleton-and-health.md)).
+- **Out of scope.** The content of any contract (each named subtask below); the Rust `serde` structs and their diff against the JSON Schema ([S04.T12](../04-game-engine-core/T12-cli-job-protocol.md)); the pure helpers that will live here later — NL parser ([S02.T10](../02-card-data-and-search/T10-natural-language-parser.md)), decklist parser ([S03.T09](../03-tournament-meta-and-deck-builder/T09-decklist-parser-and-exporter.md)), deck validation ([S03.T10](../03-tournament-meta-and-deck-builder/T10-deck-validation-rules.md)) — whose folders are only reserved; the Fastify type-provider wiring ([S01.T07](T07-api-skeleton-and-health.md)).
 
 ## Business rules
 
-The traceability doc assigns no `RN-nn` here. Two later rules depend on this machinery: RN-61 (LLM output becomes behaviour only through a closed, schema-validated vocabulary) via [S05.T03](../05-card-rules-base/T03-effect-ir-vocabulary.md), and RN-10 (60-card decks) via [S03.T10](../03-tournament-meta-and-deck-builder/T10-deck-validation.md); both inherit the strictness rules below.
+The traceability doc assigns no `RN-nn` here. Two later rules depend on this machinery: RN-61 (LLM output becomes behaviour only through a closed, schema-validated vocabulary) via [S05.T03](../05-card-rules-base/T03-effect-ir-vocabulary.md), and RN-10 (60-card decks) via [S03.T10](../03-tournament-meta-and-deck-builder/T10-deck-validation-rules.md); both inherit the strictness rules below.
 
 | ID | Rule | Enforcement point | Verification |
 |---|---|---|---|
@@ -69,7 +69,7 @@ This subtask touches no table and no endpoint; it produces contracts and the fil
 | Contract | File | Producer → consumer | Replaced by |
 |---|---|---|---|
 | `SearchQuery` | `schema/search-query.json` | web/api → SQL builder; LLM parser output | [S02.T09](../02-card-data-and-search/T09-search-query-model-and-sql.md), [S02.T10](../02-card-data-and-search/T10-natural-language-parser.md) |
-| `DecklistLine`, `Decklist`, `ValidationReport` | `schema/decklist.json`, `schema/validation-report.json` | web → api → worker → engine | [S03.T09](../03-tournament-meta-and-deck-builder/T09-decklist-parser-and-exporter.md), [S03.T10](../03-tournament-meta-and-deck-builder/T10-deck-validation.md) |
+| `DecklistLine`, `Decklist`, `ValidationReport` | `schema/decklist.json`, `schema/validation-report.json` | web → api → worker → engine | [S03.T09](../03-tournament-meta-and-deck-builder/T09-decklist-parser-and-exporter.md), [S03.T10](../03-tournament-meta-and-deck-builder/T10-deck-validation-rules.md) |
 | `EffectIr` | `schema/effect-ir.json` | rules editor / importers → engine VM | [S05.T03](../05-card-rules-base/T03-effect-ir-vocabulary.md) |
 | `JobRequest`, `JobEvent` | `schema/job-request.json`, `schema/job-event.json` | worker ⇄ engine over JSON Lines | [S04.T12](../04-game-engine-core/T12-cli-job-protocol.md) |
 | `Scenario` | `schema/scenario.json` | `engine/scenarios/*.json` → runner, `rule_scenarios` mirror | [S04.T13](../04-game-engine-core/T13-scenario-format-and-runner.md) |

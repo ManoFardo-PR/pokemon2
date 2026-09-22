@@ -149,7 +149,7 @@ export function listFixtures(): string[];
 
 - `pokemon/tests/test_engine_cards.py` and 13 sibling files — verified: `pytestmark = pytest.mark.skipif(not ea.ENGINE_AVAILABLE or not config.DB_PATH.exists(), ...)`, i.e. tests run against the real database and skip silently without it. Consult as the failure mode this subtask prevents.
 - `pokemon/tests/test_search.py:38`, `pokemon/tests/test_decks.py:30` — verified: `connect(":memory:")`, which worked only because the legacy `connect()` applied `schema.sql` on every connect.
-- `pokemon/tests/conftest.py` — verified: the `verifies` marker registry and `--write-verified`, which writes `sim/verified_cards.json` from the tests that passed; the model [S05.T12](../05-card-rules-base/T12-coverage-and-evidence.md) re-expresses as insert-only evidence.
+- `pokemon/tests/conftest.py` — verified: the `verifies` marker registry and `--write-verified`, which writes `sim/verified_cards.json` from the tests that passed; the model [S05.T12](../05-card-rules-base/T12-evidence-and-coverage-metrics.md) re-expresses as insert-only evidence.
 - `pokemon/tests/fixtures/` — verified: only `limitless_details.json` and `limitless_standings.json`; card fixtures never existed, which is why the five printings are hand-built here.
 - [Data model overview](../../project/04-data-model-overview.md) — the table inventory and the parent-before-child order `loadFixture` follows.
 - External: vitest configuration (`setupFiles`, `pool: "forks"`, `poolOptions.forks.execArgv`); Node `fs.mkdtemp` and `fs.rm` retry options.

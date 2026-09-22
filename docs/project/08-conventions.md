@@ -109,7 +109,9 @@ they change only through the interlock rules below. Everything from **Context** 
 
 ### Sizing
 
-A detailed subtask file is typically 700–1,500 words of body. Shorter is fine for genuinely small tasks if every section is substantive; longer than 2,000 words suggests the subtask should be split (propose it in Risks and open questions rather than doing it).
+A detailed subtask file runs roughly 700–2,600 words of body. Files that carry full DDL, interface signatures or a protocol definition sit at the
+upper end and that is expected; shorter is fine for genuinely small tasks provided every section is substantive. Past ~2,600 words, check whether the
+subtask is really two (propose the split in Risks and open questions — never renumber IDs yourself).
 
 ## Status vocabulary
 

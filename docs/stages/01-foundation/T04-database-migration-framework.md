@@ -29,9 +29,7 @@ Schema changes are explicit, ordered, reviewable SQL files applied by one comman
 
 The legacy project had no migrations: `connection.py` ran `executescript(schema.sql)` on every connect and `schema.sql` is a sequence of `CREATE TABLE IF NOT EXISTS`, so the schema was whatever the file contained, a hand-added column never propagated, and nothing recorded which version a database was at. `ESPECIFICACAO.md` §2.4 lists this as a declared gap. Here the adapter opens, the runner changes, and nothing else creates a table.
 
-The runner itself is small — discover, compare, apply one transaction per file. The interesting part is the guarantees around it: an applied file is immutable (checksum), the version sequence is gapless, two processes racing cannot double-apply, and a failure leaves the database exactly where it was. Those are what let [S01.T07](T07-api-skeleton-and-health.md) refuse to serve on an outdated schema and [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md) derive a Postgres set mechanically from the same tagged files.
-
-`etl_runs` is created here rather than in S02 because every ingestion subtask logs into it from [S02.T01](../02-card-data-and-search/T01-etl-cli-and-raw-cache.md) onwards. The open question O-4 — Drizzle, Kysely or hand-written row types — is closed **in** this subtask by a documented procedure, because the answer depends on what exists at implementation time.
+The runner itself is small — discover, compare, apply one transaction per file. The interesting part is the guarantees around it: an applied file is immutable (checksum), the version sequence is gapless, two processes racing cannot double-apply, and a failure leaves the database exactly where it was. Those are what let [S01.T07](T07-api-skeleton-and-health.md) refuse to serve on an outdated schema and [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md) derive a Postgres set mechanically from the same tagged files. `etl_runs` is created here rather than in S02 because every ingestion subtask logs into it from [S02.T01](../02-card-data-and-search/T01-etl-cli-and-raw-cache.md) onwards, and open question O-4 (Drizzle, Kysely or hand-written row types) is closed **in** this subtask by a documented procedure, because the answer depends on what exists at implementation time.
 
 ## Scope
 
@@ -130,7 +128,7 @@ CREATE INDEX etl_runs_running_idx      ON etl_runs (started_at) WHERE status = '
 
 **`@pokesearch/db/schema`** exports `SchemaMigrationRow`, `EtlRunRow`, the unions `EtlRunKind` and `EtlRunStatus`, and a `TABLES` descriptor used only by the drift test.
 
-**O-4 decision procedure**, timeboxed to half a day. (1) Establish the facts: does `drizzle-orm` ship a driver for `node:sqlite` (not `better-sqlite3`) at implementation time; does Kysely's SQLite dialect accept a custom driver object? (2) Score each candidate: (a) no native dependency; (b) migrations remain the single source of truth for the schema — a tool wanting its own schema DSL fails this; (c) any codegen is deterministic and runs inside `pnpm check`; (d) a raw-SQL escape hatch exists for FTS5, `json_each` and the dialect module; (e) hot paths can still use hand-written SQL. (3) Spike the winner for two hours against 0001. (4) If none satisfies (b) cheaply, take hand-written row types plus the drift test — the recommendation of record, since the project writes SQL by hand anyway. (5) Append the outcome, with the observed facts, as a dated resolution of O-4 in the decision log.
+**O-4 decision procedure**, timeboxed to half a day. (1) Establish the facts: does `drizzle-orm` ship a `node:sqlite` driver (not `better-sqlite3`) at implementation time; does Kysely's SQLite dialect accept a custom driver object? (2) Score each candidate: (a) no native dependency; (b) migrations remain the single source of truth — a tool wanting its own schema DSL fails this; (c) codegen is deterministic and runs inside `pnpm check`; (d) a raw-SQL escape hatch exists for FTS5 and `json_each`; (e) hot paths can still use hand-written SQL. (3) Spike the winner for two hours against 0001. (4) If none satisfies (b) cheaply, take hand-written row types plus the drift test — the recommendation of record. (5) Append the outcome and the observed facts as a dated resolution of O-4.
 
 ## Implementation steps
 
@@ -153,8 +151,7 @@ CREATE INDEX etl_runs_running_idx      ON etl_runs (started_at) WHERE status = '
 - **An applied file was deleted** → `MigrationMissingError`; a database cannot be reasoned about from a tree that no longer holds its history.
 - **A migration must disable foreign keys** (the twelve-step rebuild) → `PRAGMA foreign_keys` is a no-op inside a transaction, so the file declares `-- @no-transaction`; the runner applies it statement by statement, records it only on full success, and `db:status` marks the database "needs verification" if the process died mid-file.
 - **A long migration blocks the api** → migrations run with the api stopped by convention; `busy_timeout` makes a concurrent writer fail fast rather than hang. MIGRATIONS.md requires a header note for anything expected to take seconds.
-- **`schema_migrations` exists but is empty** → version 0, so 0001 is retried and fails on "table already exists"; the message names the unsupported recovery path instead of guessing.
-- **`--to <version>` below the applied version** → refused, exit 2, with "restore a backup (`pnpm db:backup` output) to go back".
+- **`--to <version>` below the applied version, or `schema_migrations` emptied by hand** → both refused with exit 2 and the supported recovery named ("restore a `pnpm db:backup` output"), instead of guessing at repair.
 
 ## Acceptance / verification
 
@@ -164,8 +161,7 @@ CREATE INDEX etl_runs_running_idx      ON etl_runs (started_at) WHERE status = '
 - [ ] `pnpm db:status --db <temp>` exits 3 with a pending migration and 0 when up to date; `pnpm db:migrate --dry-run` leaves `schema_migrations` unchanged.
 - [ ] After `pnpm db:migrate`, `etl_runs` exists with both indexes, and inserting `status='ok'` with `finished_at NULL` is rejected by the CHECK (BR-S01.T04-06).
 - [ ] `pnpm check` fails on the three lint fixtures: `IF NOT EXISTS` in a migration, an untagged `CREATE VIRTUAL TABLE … USING fts5`, and `CREATE TABLE` inside `apps/api/src` (BR-S01.T04-04, -05, -07).
-- [ ] `schema.spec.ts > row types match the database` fails when a column is added to 0001 without updating `@pokesearch/db/schema` (BR-S01.T04-09).
-- [ ] `assertSchemaCurrent` throws `SchemaOutdatedError { applied: 1, expected: 2 }` on a database at 0001 with a 0002 file present (BR-S01.T04-08).
+- [ ] `schema.spec.ts > row types match the database` fails when a column is added to 0001 without updating `@pokesearch/db/schema` (BR-S01.T04-09); `assertSchemaCurrent` throws `SchemaOutdatedError { applied: 1, expected: 2 }` on a database at 0001 with a 0002 file present (BR-S01.T04-08).
 - [ ] The decision log contains a dated resolution of O-4 naming the chosen typing layer and the facts that decided it.
 
 ## Risks and open questions
@@ -173,18 +169,14 @@ CREATE INDEX etl_runs_running_idx      ON etl_runs (started_at) WHERE status = '
 - **Risk — a later stage needs a destructive change** (renaming a populated column). Mitigation: MIGRATIONS.md documents the twelve-step rebuild and `-- @no-transaction`; `pnpm db:backup` runs first and the backup path is named in the file's header.
 - **Risk — the checksum rule is too strict during early development**, while 0002–0006 are drafted and re-applied. Mitigation: `--allow-checksum-drift` locally plus the fact that dropping a temp database is free; the rule is absolute only outside development.
 - **Risk — O-4 is resolved for a library that later stalls.** Mitigation: criterion (b) keeps migrations as the source of truth, so abandoning it costs the row types, not the schema.
-- **Question — retention of `etl_runs`.** Nothing deletes rows today. Proposal: a retention step in [S08.T01](../08-operations-and-extensions/T01-scheduler.md); the user decides whether to keep everything.
-- **Question — should `MIGRATE_ON_START` default to 1 in development?** Decided in [S01.T07](T07-api-skeleton-and-health.md); the safe default recommended here is 0.
+- **Question — retention of `etl_runs`** (nothing deletes rows today; proposal: a retention step in [S08.T01](../08-operations-and-extensions/T01-scheduler.md)) and **whether `MIGRATE_ON_START` should default to 1 in development** (decided in [S01.T07](T07-api-skeleton-and-health.md); recommended 0). The user decides both.
 - **DEPENDENCY-PROPOSAL.** [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md) consumes the tagged migration files produced under these conventions, yet it is listed as unblocked by [S01.T02](T02-sqlite-database-client.md) only. Consider adding `S01.T04 → S08.T03` (`Unblocks` here, `Depends on` there) when S08 is elaborated.
 
 ## References
 
 - `pokemon/src/pokesearch/db/connection.py` — verified: `executescript(SCHEMA_PATH.read_text())` on every connect, no version table. The gap this subtask closes.
-- `pokemon/src/pokesearch/db/schema.sql` — verified: `PRAGMA journal_mode = WAL;` then `CREATE TABLE IF NOT EXISTS sets (...)`, `cards (...)` with text primary keys, `*_json TEXT` columns and ISO-date comments. Consult for the column conventions the later migrations follow; do not copy the `IF NOT EXISTS` style.
-- `pokemon/ESPECIFICACAO.md` §2.4 — verified: the section where "no migrations" is declared as a limitation.
-- [Data model overview](../../project/04-data-model-overview.md) — the 0001–0008 numbering and the migration conventions this file implements.
-- [Decision log](../../project/02-decision-log.md) D-002 and open item O-4, which this subtask must close.
-- `packages/db/PORTABILITY.md` ([S01.T02](T02-sqlite-database-client.md)) — the SQL rules every migration is checked against.
+- `pokemon/src/pokesearch/db/schema.sql` — verified: `PRAGMA journal_mode = WAL;` then `CREATE TABLE IF NOT EXISTS sets (...)`, `cards (...)` with text primary keys, `*_json TEXT` columns and ISO-date comments. Consult for the column conventions later migrations follow; do not copy the `IF NOT EXISTS` style. `pokemon/ESPECIFICACAO.md` §2.4 — verified: where "no migrations" is declared as a limitation.
+- [Data model overview](../../project/04-data-model-overview.md) (0001–0008 numbering), [Decision log](../../project/02-decision-log.md) D-002 and O-4, and `packages/db/PORTABILITY.md` ([S01.T02](T02-sqlite-database-client.md)) — the SQL rules every migration is checked against.
 - External: SQLite documentation on transactional DDL, `PRAGMA foreign_keys` inside transactions, and the twelve-step `ALTER TABLE` procedure.
 
 ---
