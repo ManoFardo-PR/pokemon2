@@ -20,13 +20,13 @@
 | `ESPECIFICACAO.md` | Objectives, metrics, the 84 business rules with their legacy pointers, limitations | every stage README; [traceability](05-business-rules-traceability.md) |
 | `README.md` | Screen-by-screen description of the legacy UI; coverage numbers; performance notes (L123–132) | S02.T12–T14, S03.T08, S04.T17, S04.T18 |
 | `src/pokesearch/config.py` | Source URLs, defaults (`TCGDEX_CONCURRENCY = 8`, `DEFAULT_RELEASE_FROM = 2021-01-01`, meta window constants) | S02.T01, S02.T09, S03.T02 |
-| `src/pokesearch/db/schema.sql` | Table shapes and the covering-index note (8.5 s → 0.11 s) | S02.T05, S03.T01, [data model](04-data-model-overview.md) |
+| `src/pokesearch/db/schema.sql` | Table shapes. The card region (L1–180) documents one index rationale: the evolution line is looked up by exact name, and without `ix_cards_name` that was a 20k-row scan per card (L128). The covering-index note "8,5 s para 200 nomes → 0,11 s" is at **L219–220**, in the `deck_cards` region — it belongs to S03.T01, not to the card tables | S02.T05, S03.T01, [data model](04-data-model-overview.md) |
 | `src/pokesearch/db/connection.py` | Pragmas; the schema-on-connect anti-pattern. Note it sets only `foreign_keys` and `busy_timeout` — WAL comes from line 1 of `schema.sql`, which is exactly why that file was executed on every connect | S01.T02, S01.T04 |
 | `src/pokesearch/etl/fetch_ptcg.py` | ETag strategy, changed-set detection | S02.T02 |
 | `src/pokesearch/etl/fetch_tcgdex.py` | Endpoints, retry/backoff, concurrency, cache-by-presence | S02.T03 |
 | `src/pokesearch/etl/idmap.py`, `tests/test_idmap.py` | Set/card id heuristics and their test cases | S02.T04 |
 | `src/pokesearch/etl/load.py` | Field provenance, `parse_damage` regex, `derive_stage`, delete-then-insert of children, `rebuild_fts` SQL | S02.T06, S02.T08 |
-| `src/pokesearch/etl/prices.py` | TCGplayer variant keys, Cardmarket synthetic variants, currencies | S02.T07 |
+| `src/pokesearch/etl/prices.py` | TCGplayer variant keys, Cardmarket synthetic variants, currencies. Caveat: its `_TCGPLAYER_KEYS` tuple is declared and never used — `rows_from_pricing` iterates every dict-valued key under `pricing.tcgplayer`, so that tuple is documentation, not an allow-list | S02.T07 |
 | `src/pokesearch/etl/limitless.py` | Endpoints, 0.4 s spacing, pagination cutoff rules | S03.T02 |
 | `src/pokesearch/etl/limitless_web.py`, `tests/test_limitless_web.py` | Selectors, date parsing, division split, estimated players; HTML fixtures | S03.T03 |
 | `src/pokesearch/etl/deck_resolver.py`, `limitless_overrides.json`, `tests/test_deck_resolver.py` | Resolution order, aliases, `name_key`, fallback image URL | S03.T04 |

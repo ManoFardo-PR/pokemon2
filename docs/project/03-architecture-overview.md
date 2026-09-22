@@ -102,6 +102,7 @@ sequenceDiagram
 | `DATA_DIR` | `%LOCALAPPDATA%\pokemon2` | all |
 | `DATABASE_PATH` | `$DATA_DIR/pokesearch.db` | api, worker, etl |
 | `RAW_CACHE_DIR` | `$DATA_DIR/raw` | etl |
+| `TCGDEX_CONCURRENCY` | 8 | etl |
 | `CARGO_TARGET_DIR` | `$DATA_DIR/target` | engine builds |
 | `ENGINE_BIN` | `$CARGO_TARGET_DIR/release/ptcg-cli.exe` | worker |
 | `API_PORT` / `WEB_PORT` | 8000 / 5173 | api, web |

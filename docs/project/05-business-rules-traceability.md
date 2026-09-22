@@ -70,7 +70,7 @@ Legend — **Kept**: same rule; **Revised**: same intent, new mechanism; **Super
 
 | RN | Rule (short) | Disposition | Implemented in | Verified by |
 |---|---|---|---|---|
-| RN-60 | LLMs never on the critical path; everything works without keys | Kept | S02.T10 (rules parser only), S07.T07, S08.T06 | feature hidden without key |
+| RN-60 | LLMs never on the critical path; everything works without keys | Kept | S02.T10 (rules parser only), S07.T07, S08.T06 | S02.T10: the parser has no network dependency and the whole suite passes with every LLM key unset. S07.T07 / S08.T06: the feature is hidden and jobs are unaffected without a key |
 | RN-61 | LLM output becomes behaviour only through a closed vocabulary with sanity ranges; malformed output rejected | Kept | S05.T03 (schema), S08.T06 | schema tests |
 | RN-62 | Translation from an implemented second source prevails over prose classification | Kept | S05.T09 (provenance ranks), S08.T05 | import report |
 | RN-63 | An AI opinion is not evidence; it is a review queue | Kept | S05.T12 (evidence kinds exclude LLM), S08.T06 | evidence kind enum |
