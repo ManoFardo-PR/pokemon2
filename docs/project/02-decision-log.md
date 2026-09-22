@@ -1,0 +1,70 @@
+# Decision log
+
+| Field | Value |
+|---|---|
+| Doc | project/02 |
+| Status | LIVE — append-only; revise a decision by adding a dated revision, never by rewriting history |
+| Inputs | User decisions of 2026-09-21 and 2026-09-22; machine facts verified in the planning session |
+| Outputs | Decision IDs `D-nnn` referenced by subtask files as `decision` inputs |
+
+Format per entry: **Context** (what forced the choice) · **Decision** · **Alternatives considered** · **Consequences** (what subtasks must do because of it).
+
+---
+
+## D-001 — Game engine and bots in Rust, GNU target (2026-09-21; gate pending)
+
+- **Context.** The legacy simulator ran 22–40 games/s on top of a third-party Python engine kept alive by monkeypatching; the deck optimizer needs 10–100× more games per candidate, and lookahead bots need cheap state cloning. The machine has no MSVC `cl.exe`/`link.exe` and no Windows SDK.
+- **Decision.** Write the engine and bots in Rust as a pure library crate plus a CLI, installed with `rustup` on the `stable-x86_64-pc-windows-gnu` host toolchain (self-contained linker, no admin), targets `x86_64-pc-windows-gnu` and `wasm32-unknown-unknown`, pure-Rust dependencies only.
+- **Alternatives.** TypeScript engine on `worker_threads` (no toolchain risk, ~10–50× slower, lookahead impractical); adopting the twinleafgg TypeScript engine (huge card coverage in code, but deep-clones per action, prompts are closures, rules are not data).
+- **Consequences.** S01.T06 is a hard gate with a one-day budget; if it fails, **D-001b** applies: a TypeScript engine implementing the same JSON contracts (job protocol, IR, scenarios) under `packages/engine-ts`, keeping every other subtask unchanged. All boundaries are therefore defined in `packages/shared` first (S01.T05).
+
+## D-002 — Database: local SQLite file outside OneDrive, Postgres-portable (2026-09-21; **revised 2026-09-22**)
+
+- **Context.** Original leaning was SQLite; the user then asked for Google Cloud SQL (2026-09-21) and on 2026-09-22 withdrew it: "treat the database as a local file outside OneDrive; a Supabase-like solution will be sought for deployment in the future".
+- **Decision.** SQLite file at `%LOCALAPPDATA%\pokemon2\pokesearch.db` (env `DATABASE_PATH`), opened through Node 24's built-in `node:sqlite` behind a small adapter; WAL mode, `busy_timeout = 5000`, foreign keys on; several processes (api, worker, etl) may share the file. Every SQL statement follows Postgres-portability rules (`packages/db/PORTABILITY.md`) and the SQLite-only constructs (FTS5, `json_each`, maintained tables instead of materialized views) are isolated in a dialect module and tagged migration blocks.
+- **Verified facts.** `node:sqlite` on this machine ships SQLite 3.50.4 with `ENABLE_FTS5` and JSON1; a bm25 query over a 487 MB legacy database returned in 16 ms; `json_each` works. It prints an "experimental" warning.
+- **Alternatives.** Google Cloud SQL PostgreSQL (dropped by the user: cost and remote latency for a single local user); PGlite/Postgres-in-WASM (rejected: single-process, uncertain performance on a ~0.5 GB dataset); `better-sqlite3` (native module needing a prebuilt binary — no C compiler here; kept as an optional driver behind the adapter).
+- **Consequences.** S01.T02 (client + portability rules), S02.T05/S02.T08 (FTS5 in a dialect module with a documented `tsvector` counterpart), S08.T03 (rehearsed migration path to a hosted Postgres). Nothing before S08.T03 depends on which host is chosen.
+
+## D-003 — ETL rebuilt from scratch in TypeScript from the public sources (2026-09-21)
+
+- **Context.** The legacy Python ETL works and has a 164 MB offline cache, but the user wants the new project to start from zero with the source repositories/APIs as the origin.
+- **Decision.** New ETL in `packages/etl` fetching pokemon-tcg-data (GitHub raw, ETag cache), TCGdex (API, file cache, concurrency 8) and Limitless (API + polite scraping). The legacy database file is **not** copied; legacy code is consulted only as documentation of algorithms (id mapping heuristics, deck-line resolution order, natural-language parser order).
+- **Alternatives.** Keep the Python ETL writing into the new database (faster first screen, two writers, two languages).
+- **Consequences.** S02.T01–T07 and S03.T02–T05 rewrite the pipeline; first full TCGdex fetch takes 30–60 minutes (optionally seeded from the legacy raw cache, which is cache, not database).
+
+## D-004 — Card rules as sentence codes with per-card parameters, stored in the database (2026-09-21)
+
+- **Context.** The user is building a rules base in a spreadsheet: every distinct effect sentence gets a code; a card is then a parametrized composition of codes. The legacy project had rules in Python recipes, JSON files and tables, with three notions of "correct".
+- **Decision.** Tables `rule_codes` (code, sentence pattern with placeholders, params schema, executable body as effect IR or a named builtin, status), `text_codes` (ordered `(code, params)` per distinct effect text, shared by all reprints with identical wording), `text_sentences` (the spreadsheet rows with their classification columns), `rule_evidence` (insert-only proofs). The engine executes the composed IR program of a text; it never sees sentences or cards' names.
+- **Alternatives.** Templates only (cannot express the long tail: ~1,046 of 1,157 raw templates occur once); code per card in the engine (fast to write, impossible to audit or edit as data).
+- **Consequences.** S05 is organised around this model; S05.T07 fixes the composition semantics before the spreadsheet import (S05.T08); a `builtin` escape hatch exists for < 2 % of copies (S05.T06); the IR vocabulary is closed and schema-validated (RN-61).
+
+## D-005 — Repository in `pokemon2` (OneDrive), heavy artifacts outside (2026-09-22, assumed)
+
+- **Decision.** Source and docs stay in the OneDrive folder the user opened, with a GitHub remote; `DATA_DIR = %LOCALAPPDATA%\pokemon2` holds the database, raw cache, Cargo target and backups. If OneDrive sync interferes with `node_modules`, the repo moves out with GitHub as the source of truth.
+
+## D-006 — Documentation and code in English; product UI in pt-BR (2026-09-22)
+
+- **Decision.** Everything in the repository (docs, code, commit messages, schemas) is English. UI copy is pt-BR through a single strings module; card data is English by source.
+
+## D-007 — Single local user, no authentication (2026-09-21)
+
+- **Decision.** API bound to loopback; no accounts or ownership columns. Re-evaluated when hosting is planned (S08.T03).
+
+## D-008 — Site stack: Node 24 + TypeScript, Fastify, React + Vite, pnpm monorepo (2026-09-21)
+
+- **Decision.** `apps/api` (Fastify 5, zod type provider), `apps/web` (React 19, Vite, TanStack Router/Query), `apps/worker` (job runner, scheduler), `packages/shared|db|etl`, `engine/`. Node runs TypeScript directly (type stripping); no build step for server code.
+
+---
+
+## Open decisions (owned by the user)
+
+| ID | Question | Needed by | Recommendation |
+|---|---|---|---|
+| O-1 | Project `LICENSE` | S01.T09 | Record source licences first (NOTICE), then choose |
+| O-2 | GitHub repository name for `pokemon2` | S01.T01 | e.g. `ManoFardo-PR/pokemon2` next to the legacy `pokemon` |
+| O-3 | Which Supabase-like host to target later | S08.T03 only | Any managed PostgreSQL ≥ 15 |
+| O-4 | Typed schema layer: Drizzle (if its `node:sqlite` driver exists at implementation time) vs Kysely vs hand-written types | S01.T04 | Decide during S01.T04 and record here |
+
+[Docs index](../README.md) · [Vision and scope](01-vision-and-scope.md) · [Architecture](03-architecture-overview.md)
