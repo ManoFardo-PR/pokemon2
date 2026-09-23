@@ -124,6 +124,10 @@ importers:
   apps/worker: {}
 
   packages/db:
+    dependencies:
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
