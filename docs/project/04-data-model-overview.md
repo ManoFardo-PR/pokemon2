@@ -42,7 +42,7 @@
 | `jobs` | every engine invocation: kind, status, params, progress, result, engine build, rules snapshot, `workers`, and `created_at` separate from `started_at` so queue latency is measurable | 0005 | S04.T14 |
 | `job_pairings` | per (deck A, deck B, bots, seed block): W/L/T, outcomes, avg turns, fingerprint | 0005 | S04.T14 |
 | `games` | optional per-game rows and compressed event logs | 0005 | S04.T14 |
-| `optimizer_candidates` | every swap considered by an optimize job with screening/confirmation/holdout numbers and decision | 0008 | S07.T04 |
+| `optimizer_candidates` | every swap considered by an optimize job with its screening, confirmation and holdout numbers and its decision, including `holdout_seed_set` (the salt) and `alpha_spent`, without which a finished run cannot be audited | 0009 | S07.T04 |
 
 ### Card rules base (D-004)
 
@@ -63,9 +63,9 @@
 
 | Table | Purpose | Migration | Owner |
 |---|---|---|---|
-| `bots` | registered bots with kind, params, `code_hash`, frozen flag (RN-37) | 0007 | S05.T16, S06.T07 |
+| `bots` | registered bots with kind, params, `code_hash`, frozen flag (RN-37). A frozen bot must be **self-contained**: the legacy's frozen pilots imported helpers from a module that kept changing, so freezing is enforced here by hash, by a self-contained copy and by an import-graph test | 0007 | S05.T16, S06.T07 |
 | `suites`, `suite_opponents` | frozen rulers: evaluated deck version **and its `deck_list_json`** — the list is frozen as cards, not followed through the deck version, so editing that version cannot silently change a suite — opponents with weights/lists, `seed0`, opponent bot, rules snapshot, engine build (RN-40..43) | 0007 | S05.T16 |
-| `measurements`, `measurement_opponents` | score + CI, mirror + CI, outcomes, avg turns, commit per measurement (RN-44..49) | 0007 | S05.T16, S06.T08 |
+| `measurements`, `measurement_opponents` | score + CI, mirror + CI, outcomes, avg turns, commit per measurement (RN-44..49), plus `bot_code_hash` and `bot_params_json` — without them an *unfrozen* bot under test can change and every historical row silently points at different code. The mirror columns carry `CHECK ((mirror_games = 0) = (mirror_rate IS NULL))` and a width check, so the legacy's `0.0 % (0.0 %–100.0 %)` row is un-insertable rather than merely unexplained | 0008 | S06.T08 |
 
 ## Derived numbers
 

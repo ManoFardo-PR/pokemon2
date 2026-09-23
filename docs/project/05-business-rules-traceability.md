@@ -44,7 +44,7 @@ Legend — **Kept**: same rule; **Revised**: same intent, new mechanism; **Super
 | RN-30 | Honest information: own list known; own deck+prizes one pile until the first own-deck search; never read the opponent's hidden zones | Kept (native) | S06.T01 | view property tests |
 | RN-31 | The bot infers main attacker, line, support and the deck's goal from attack conditions | Kept | S06.T02 | profile tests on 3 lists |
 | RN-32 | Fixed turn order, attack last | Kept | S06.T03 | policy tests |
-| RN-33 | Optional draws refused with ≥ 12 in hand or < 7 in deck | Kept | S06.T03 | policy tests |
+| RN-33 | Optional draws are refused with ≥ 12 cards in hand, or when the deck would drop **below 7 after the draw** | Kept — the legacy brake is `deck_n - n >= SAFE_DECK` with `SAFE_DECK = 7` (`pilot.py` L447), so 9 cards left and a draw of 3 is refused. The older wording "< 7 in deck" understated it | S06.T03 | policy tests: a draw-3 with 9 cards left is refused; with 10 it is taken |
 | RN-34 | Gust effects only when they yield a KO the Active cannot, or more prizes | Kept | S06.T03 | policy tests |
 | RN-35 | Retreat only if the incoming Pokémon really hits; never promote a 2-prize Pokémon that cannot attack | Kept | S06.T03 | policy tests |
 | RN-36 | Discard with memory: last copy and scarce energy worth more | Kept | S06.T04 | need tests |

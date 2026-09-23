@@ -17,7 +17,7 @@
 - `doc` ESPECIFICACAO.md RN-36
 
 ## Outputs (proposed)
-- `module` `ptcg-core::bots::planner::need` — `need(def, view, profile) → Need` (`Need` is an `i32` in hundredths, because `ptcg-core` carries no floating point — [S04.T10](../04-game-engine-core/T10-termination-stall-and-determinism.md) BR-S04.T10-09; the scale below is the legacy's unchanged): goal fodder 0.5 in hand / 6.0 in deck; main-line Basic 9.0 until 3 in play; evolution with base in play 10 + stage; energy when a main-line Pokémon has none 8.0; supporter when holding none 7.0; Rare Candy 7.5; recovery when a piece is discarded 6.5; search/draw 4.5; +3 last copy, +3 scarce energy when discarding — and `answer_prompt(prompt, view)` scoring by purpose (opening active: free retreat, avoid multi-prize; promotion: +300 can attack now, −400 gives the game; opponent target: prize value × 100, +200 lethal; losing a card: −need); records `margin = best − second` per decision for the coach — consumed by [S06.T05](T05-rollout-bot.md), [S07.T07](../07-deck-optimizer/T07-coach-lost-game-review.md)
+- `module` `ptcg-core::bots::planner::need` — `need(def, view, profile) → Need` (`Need` is an `i32` in hundredths, because `ptcg-core` carries no floating point; the scale below is the legacy's, unchanged): goal fodder 0.5 in hand / 6.0 in deck; main-line Basic 9.0 until 3 in play; evolution with base in play 10 + stage; energy when a main-line Pokémon has none 8.0; supporter when holding none 7.0; Rare Candy 7.5; recovery when a piece is discarded 6.5; search/draw 4.5; +3 last copy, +3 scarce energy when discarding — and `answer_prompt(prompt, view)` scoring by purpose (opening active: free retreat, avoid multi-prize; promotion: +300 can attack now, −400 gives the game; opponent target: prize value × 100, +200 lethal; losing a card: −need); records `margin = best − second` per decision for the coach — consumed by [S06.T05](T05-rollout-bot.md), [S07.T07](../07-deck-optimizer/T07-coach-lost-game-review.md)
 
 ## Initial objective
 Every prompt the engine asks gets a reasoned answer from the same value function that drives discards and searches, so the bot's choices in effects are as deliberate as its main actions.
@@ -234,19 +234,18 @@ except for `distribute_counters` and any prompt whose purpose moves counters, wh
 
 ## Implementation steps
 
-1. Declare `Need`, `Holding`, the constant block and a `need` that returns `BASE` for everything; wire it into [S06.T03](T03-planner-turn-policy.md)'s four call sites, replacing the stub. `cargo test -p ptcg-core need` green and the planner's phase tests still pass (BR-S06.T04-01).
-2. Implement the Pokémon branch — the line lookup, the Basic target counts, the evolution rule with its Rare-Candy-like exception, and the loose multi-prize support Basic — and spec each case against a hand-built board (RN-36).
-3. Implement `is_rare_candy_like`, `recovers_from_discard` and `searches_or_draws` over the `ProgramTable`; spec each against a stub program and against an empty one (BR-S06.T04-02).
-4. Implement the energy and Trainer branches; spec the "a main-line Pokémon has no energy" case and the "no supporter held" case, both with the self-exclusion (RN-36).
-5. Implement the three memory bonuses on top of `base_need`, reading `view.own.deck` when `deck_searched` is set and `view.own.unseen` before it; spec the Alakazam regression, the last-copy bonus and the scarce-energy bonus (RN-36).
-6. Add the per-decision memo and the totality property test; add the policy test forbidding name and text reads, and the "rename everything" test on the Dhelmise fixture (BR-S06.T04-02, -11).
-7. Implement `direction(prompt)` as a total function over `Purpose` × `Zone` and spec all four directions, including a `def`-less candidate group being `Blind` (BR-S06.T04-05, -10).
-8. Implement `pick_cards` with the group scoring, the stable sort and the greedy assembly; spec the group-count call counter, the gain/loss quantities and `max_pick` (BR-S06.T04-06, -12).
-9. Implement the board resolvers — opening active, bench setup, promotion, opponent target, counters, attach, retreat payment — each against its formula above; spec the two acceptance cases (the lethal two-prize gust target, and a promotion that refuses to hand over the game) (RN-34, RN-35).
-10. Implement the `Confirm`/`may_use` brake through [S06.T03](T03-planner-turn-policy.md)'s `may_draw` and spec the three cases (RN-33, BR-S06.T04-09).
-11. Implement `feed_goal` for a deck-to-discard prompt under a pending goal, with the `missing + 1` cap and the main-line exclusion; spec the four cases on the Dhelmise fixture (BR-S06.T04-08).
-12. Implement `Decision`, `Explains` and the driver's `bot_decision` event behind `store_logs`; spec that logging changes no decision by comparing pairing fingerprints with logging on and off (BR-S06.T04-07).
-13. Run the property test over 10,000 generated prompts asserting every answer validates, then a 1,200-game suite run asserting `invalid_actions == 0` on the planner side; write the resolver table and the `need` table into `engine/BOTS.md` (BR-S06.T04-03, -04).
+1. Declare `Need`, `Holding` and the constant block; wire a `need` that returns `BASE` for everything into [S06.T03](T03-planner-turn-policy.md)'s four call sites, replacing the stub, then implement the Pokémon branch — the line lookup, the Basic target counts, the evolution rule with its Rare-Candy-like exception, and the loose multi-prize support Basic — speccing each case against a hand-built board. `cargo test -p ptcg-core need` green and the planner's phase tests still pass (BR-S06.T04-01, RN-36).
+2. Implement `is_rare_candy_like`, `recovers_from_discard` and `searches_or_draws` over the `ProgramTable`; spec each against a stub program and against an empty one (BR-S06.T04-02).
+3. Implement the energy and Trainer branches; spec the "a main-line Pokémon has no energy" case and the "no supporter held" case, both with the self-exclusion (RN-36).
+4. Implement the three memory bonuses on top of `base_need`, reading `view.own.deck` when `deck_searched` is set and `view.own.unseen` before it; spec the Alakazam regression, the last-copy bonus and the scarce-energy bonus (RN-36).
+5. Add the per-decision memo and the totality property test; add the policy test forbidding name and text reads, and the "rename everything" test on the Dhelmise fixture (BR-S06.T04-02, -11).
+6. Implement `direction(prompt)` as a total function over `Purpose` × `Zone` and spec all four directions, including a `def`-less candidate group being `Blind` (BR-S06.T04-05, -10).
+7. Implement `pick_cards` with the group scoring, the stable sort and the greedy assembly; spec the group-count call counter, the gain/loss quantities and `max_pick` (BR-S06.T04-06, -12).
+8. Implement the board resolvers — opening active, bench setup, promotion, opponent target, counters, attach, retreat payment — each against its formula above; spec the two acceptance cases (the lethal two-prize gust target, and a promotion that refuses to hand over the game) (RN-34, RN-35).
+9. Implement the `Confirm`/`may_use` brake through [S06.T03](T03-planner-turn-policy.md)'s `may_draw` and spec the three cases (RN-33, BR-S06.T04-09).
+10. Implement `feed_goal` for a deck-to-discard prompt under a pending goal, with the `missing + 1` cap and the main-line exclusion; spec the four cases on the Dhelmise fixture (BR-S06.T04-08).
+11. Implement `Decision`, `Explains` and the driver's `bot_decision` event behind `store_logs`; spec that logging changes no decision by comparing pairing fingerprints with logging on and off (BR-S06.T04-07).
+12. Run the property test over 10,000 generated prompts asserting every answer validates, then a 1,200-game suite run asserting `invalid_actions == 0` on the planner side; write the resolver table and the `need` table into `engine/BOTS.md` (BR-S06.T04-03, -04).
 
 ## Edge cases and error handling
 
