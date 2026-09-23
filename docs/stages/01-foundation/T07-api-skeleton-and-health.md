@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 7 / 10 |
 | Depends on | [S01.T04](T04-database-migration-framework.md), [S01.T05](T05-shared-contracts-package.md) |
-| Unblocks | [S01.T08](T08-web-skeleton.md), [S02.T11](../02-card-data-and-search/T11-api-cards-search-sets.md), [S03.T07](../03-tournament-meta-and-deck-builder/T07-api-meta-endpoints.md), [S03.T11](../03-tournament-meta-and-deck-builder/T11-user-decks-schema-and-api.md), [S04.T16](../04-game-engine-core/T16-api-jobs-and-sse.md), [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md) |
+| Unblocks | [S01.T08](T08-web-skeleton.md), [S02.T11](../02-card-data-and-search/T11-api-cards-search-sets.md), [S03.T07](../03-tournament-meta-and-deck-builder/T07-api-meta-endpoints.md), [S03.T11](../03-tournament-meta-and-deck-builder/T11-user-decks-schema-and-api.md), [S04.T16](../04-game-engine-core/T16-api-jobs-and-sse.md), [S08.T02](../08-operations-and-extensions/T02-etl-monitoring-and-alerts.md), [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md) |
 | Parallel with | — |
 | Gate | no |
 | Owner / Updated | — / — |

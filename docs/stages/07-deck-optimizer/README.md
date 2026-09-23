@@ -20,7 +20,7 @@ Turn the engine's speed into confirmed advice: propose one-card swaps from what 
 | 1 | [S07.T01](T01-candidate-pool-and-move-generation.md) | Candidate pool and move generation | [S03.T06](../03-tournament-meta-and-deck-builder/T06-meta-queries.md), [S03.T11](../03-tournament-meta-and-deck-builder/T11-user-decks-schema-and-api.md), [S05.T12](../05-card-rules-base/T12-evidence-and-coverage-metrics.md) | no | TODO |
 | 2 | [S07.T02](T02-paired-seed-screening.md) | Paired-seed screening | [S04.T10](../04-game-engine-core/T10-termination-stall-and-determinism.md), [S04.T15](../04-game-engine-core/T15-worker-job-runner.md), [S05.T16](../05-card-rules-base/T16-measurement-model-and-suite-v6-freeze.md), [S07.T01](T01-candidate-pool-and-move-generation.md) | no | TODO |
 | 3 | [S07.T03](T03-sequential-confirmation.md) | Sequential confirmation | [S07.T02](T02-paired-seed-screening.md) | no | TODO |
-| 4 | [S07.T04](T04-holdout-acceptance-and-versioning.md) | Holdout acceptance and versioning | [S03.T11](../03-tournament-meta-and-deck-builder/T11-user-decks-schema-and-api.md), [S07.T03](T03-sequential-confirmation.md) | no | TODO |
+| 4 | [S07.T04](T04-holdout-acceptance-and-versioning.md) | Holdout acceptance and versioning | [S03.T11](../03-tournament-meta-and-deck-builder/T11-user-decks-schema-and-api.md), [S07.T02](T02-paired-seed-screening.md), [S07.T03](T03-sequential-confirmation.md) | no | TODO |
 | 5 | [S07.T05](T05-optimize-job-orchestration.md) | Optimize job orchestration | [S04.T15](../04-game-engine-core/T15-worker-job-runner.md), [S07.T02](T02-paired-seed-screening.md), [S07.T03](T03-sequential-confirmation.md), [S07.T04](T04-holdout-acceptance-and-versioning.md) | no | TODO |
 | 6 | [S07.T06](T06-web-optimizer-page.md) | Web: optimizer page | [S04.T17](../04-game-engine-core/T17-web-evaluate-page.md), [S07.T05](T05-optimize-job-orchestration.md) | no | TODO |
 | 7 | [S07.T07](T07-coach-lost-game-review.md) | Coach: lost-game review (optional LLM) | [S04.T14](../04-game-engine-core/T14-jobs-schema-migration.md), [S06.T04](../06-bots/T04-need-scoring-and-prompt-resolvers.md), [S07.T05](T05-optimize-job-orchestration.md) | no | TODO |
@@ -41,6 +41,7 @@ graph LR
   S07_T07["T07 coach-lost-game-review"]
   S07_T01 --> S07_T02
   S07_T02 --> S07_T03
+  S07_T02 --> S07_T04
   S07_T03 --> S07_T04
   S07_T02 --> S07_T05
   S07_T03 --> S07_T05

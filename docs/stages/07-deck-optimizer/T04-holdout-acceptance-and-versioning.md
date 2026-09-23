@@ -5,7 +5,7 @@
 | Stage | S07 — Deck optimizer |
 | Status | TODO |
 | Order in stage | 4 / 7 |
-| Depends on | [S03.T11](../03-tournament-meta-and-deck-builder/T11-user-decks-schema-and-api.md), [S07.T03](T03-sequential-confirmation.md) |
+| Depends on | [S03.T11](../03-tournament-meta-and-deck-builder/T11-user-decks-schema-and-api.md), [S07.T02](T02-paired-seed-screening.md), [S07.T03](T03-sequential-confirmation.md) |
 | Unblocks | [S07.T05](T05-optimize-job-orchestration.md) |
 | Parallel with | — |
 | Gate | no |
