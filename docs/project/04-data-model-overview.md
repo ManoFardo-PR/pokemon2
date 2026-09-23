@@ -14,7 +14,7 @@
 - **Arrays/objects**: JSON text in columns named `*_json`; queried with `json_each` through the dialect module (Postgres: `jsonb`).
 - **Normalized text**: `norm(s)` = `s.normalize("NFD").replace(/\p{Mn}/gu, "").toLowerCase().trim()` with internal whitespace collapsed to single spaces. `name_norm`, `text_norm` and `name_key` use exactly this function, so joins on normalized names are byte-exact. It is **not** the legacy `unidecode`, which also transliterates non-Latin characters (`★`→`star`, `δ`→`d`); legacy-derived values are therefore not comparable with ours, which is one more reason the legacy database is not reused (D-003).
 - **Migrations**: `packages/db/migrations/NNNN_name.sql`, forward-only, applied by `pnpm db:migrate`, recorded in `schema_migrations`; SQLite-only statements sit in blocks tagged `-- @sqlite-only` with a `-- @postgres:` note.
-- **Snapshots**: `rules_snapshot` = SHA-256 over all active code bodies and text_codes; `engine_build` = hash printed by `ptcg-cli --version`. Both are recorded wherever a number depends on them.
+- **Snapshots**: `rules_snapshot` = SHA-256 over the **behaviour-bearing** fields only — every active code's `ir_body_json`, `params_schema_json`, `status`, `category`, `once_scope` and `phase`, plus every `text_codes` row. Editing `notes`, `pattern` or `approx_note` must not change it, or documentation edits would invalidate evidence. `engine_build` = hash printed by `ptcg-cli --version`. Both are recorded wherever a number depends on them.
 
 ## Domains and tables
 
@@ -50,12 +50,13 @@
 |---|---|---|---|
 | `effect_texts` | one row per distinct effect text (kind, name, text) keyed by hash; reprints share it (RN-05) | 0006 | S05.T01, S05.T02 |
 | `card_parts` | which printing parts (ability i, attack j, trainer text, energy text, rule box) point at which text | 0006 | S05.T02 |
-| `rule_codes` | the sentence codes: pattern with placeholders, params schema, IR body or builtin, status `draft/exact/approx/builtin/unimplemented` | 0006 | S05.T01, S05.T07 |
+| `rule_codes` | the sentence codes: pattern with placeholders, params schema, IR body or builtin, status `draft/exact/approx/builtin/unimplemented`, `once_scope` (D-004a item 3), `category` (`effect`, `attack_modifier`, `modifier`, `trigger`, `wrapper`) and `phase` (`before_damage`/`after_damage`, which is what makes "discard N energy, then do 50 more damage for each" expressible and retires eight legacy approximations) | 0006 | S05.T01, S05.T07 |
 | `text_codes` | ordered `(code, params)` per text — the per-card parametrization | 0006 | S05.T07, imports S05.T08–T10 |
 | `text_sentences` | sentence split of each text with the spreadsheet's classification columns | 0006 | S05.T08 |
 | `card_overrides` | attribute corrections of source data (values only, never names — RN-76) | 0006 | S05.T01, applied by S04.T02 |
 | `rule_scenarios` | mirror of `engine/scenarios/*.json` (git is the source) | 0006 | S05.T11 |
-| `rule_evidence` | insert-only proofs per (text, code, kind, engine build, rules snapshot) | 0006 | S05.T12 |
+| `rule_evidence` | insert-only proofs, latest-wins on `(text_hash, code, kind, ref, engine_build)` with `rules_snapshot` as a **staleness marker rather than part of the key**, plus a nullable `card_id` for `attr_only` evidence, which is about a printing and not about a text | 0006 | S05.T12 |
+| `rules_current`, `card_usage_cache`, `coverage_history` | the one agreed answer to "which engine build is current" (so the `card_status` view has a single source); a cache of the meta-copies denominator (the legacy query took ~3.5 s over ~1M rows); and the coverage trend, which cannot be derived from current state | 0006 | S05.T01, S05.T12, S05.T14 |
 | view `card_status` | `exact` / `proven` per card derived from codes and evidence | 0006 | S05.T01 |
 
 ### Measurement
@@ -63,7 +64,7 @@
 | Table | Purpose | Migration | Owner |
 |---|---|---|---|
 | `bots` | registered bots with kind, params, `code_hash`, frozen flag (RN-37) | 0007 | S05.T16, S06.T07 |
-| `suites`, `suite_opponents` | frozen rulers: evaluated deck version, opponents with weights/lists, `seed0`, opponent bot, rules snapshot, engine build (RN-40..43) | 0007 | S05.T16 |
+| `suites`, `suite_opponents` | frozen rulers: evaluated deck version **and its `deck_list_json`** — the list is frozen as cards, not followed through the deck version, so editing that version cannot silently change a suite — opponents with weights/lists, `seed0`, opponent bot, rules snapshot, engine build (RN-40..43) | 0007 | S05.T16 |
 | `measurements`, `measurement_opponents` | score + CI, mirror + CI, outcomes, avg turns, commit per measurement (RN-44..49) | 0007 | S05.T16, S06.T08 |
 
 ## Derived numbers

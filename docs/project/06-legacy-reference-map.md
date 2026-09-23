@@ -40,9 +40,9 @@
 | `src/pokesearch/api/*.py`, `templates/*.html`, `static/*` | Routes, parameter buckets, screen contents, image fallback chain | S02.T11–T14, S03.T07–T08, S04.T17 |
 | `src/pokesearch/sim/engine_adapter.py` | `convert_decklist` (L373–418), `run_game` loop, stall signature, end reasons, 60-card refusal (L444–447) | S03.T09, S04.T04, S04.T10 |
 | `src/pokesearch/sim/status.py` | Damage pipeline order, special conditions, checkup, `HOOK_NAMES` (19 hooks), rulebook fixes, perf notes (L162, L201) | S04.T07, S04.T08, S05.T05 |
-| `src/pokesearch/sim/effects.py` | 64 primitives, 10 combinators, 39 counters, 5 recipe types; edge semantics in docstrings | S05.T03, S05.T04 |
-| `src/pokesearch/sim/attackops.py`, `attackgen.py`, `attack_effects.json` | 28 closed ops, 7 plus-conditions, sanity ranges; 412 classified attacks | S05.T03, S05.T09 |
-| `src/pokesearch/sim/catalog.py`, `catalog_cards.py`, `cardfilters.py` | 262 recipes with rulings in comments; 11-step attack resolution; 25 filters | S05.T03, S05.T10 |
+| `src/pokesearch/sim/effects.py` | Counted 2026-09-22: 72 classes — `Ctx`, the base `Effect`, 9 composition classes, 56 concrete effects and the 5 recipe dataclasses — plus 8 module-level `Require` factories. The familiar "64 primitives" is 56 + those 8 factories, and "10 combinators" reaches 10 only by counting `PlayedSupporterThisTurn`. 39 counters confirmed (15 base + 3 families × 8 types). Edge semantics live in the docstrings | S05.T03, S05.T04 |
+| `src/pokesearch/sim/attackops.py`, `attackgen.py`, `attack_effects.json` | 28 closed ops, 7 plus-conditions, sanity ranges. Counted 2026-09-22: **413** attack entries over 346 cards — 344 from Groq, 69 from Twinleaf; 167 are `approx`/`unsupported`, 32 carry a `replaced` block, 7 an `unrecognized` array | S05.T03, S05.T09 |
+| `src/pokesearch/sim/catalog.py`, `catalog_cards.py`, `cardfilters.py` | Counted 2026-09-22: **255 distinct recipe keys** (`alakazam` is defined twice, L274 and L309; Python keeps the later, so the often-quoted 262 counts a duplicate and some non-recipe entries), with rulings in the comments; 11-step attack resolution; `cardfilters.py` exposes **29** filter predicates and factories plus 3 combinators and 3 helpers | S05.T03, S05.T10 |
 | `src/pokesearch/sim/cardspec.py` | Card → engine spec, prize parsing, evolution line | S04.T02 |
 | `src/pokesearch/sim/verified.py`, `tests/test_verified.py`, `verified_cards.json` | Parts/evidence semantics, invariant | S05.T02, S05.T12 |
 | `src/pokesearch/sim/audit.py`, `engine_fixes.json`, `lint.py`, `tests/test_lint.py` | Attribute audit; corrections as data; lint rules | S05.T01 (overrides), S05.T13 (lint warnings) |
@@ -55,7 +55,7 @@
 | `src/pokesearch/sim/coach.py`, `benchmarks/COACH.md` | Critical-moment selection, closed verdicts, "opinion ≠ gain" | S07.T07 |
 | `src/pokesearch/sim/twinleaf_import.py`, `tests/test_twinleaf_import.py` | Exact-printing matching against twinleafgg; translation rules | S08.T05 |
 | `src/pokesearch/llm/backends.py`, `roles.py` | Provider abstraction, 429 handling | S08.T06 |
-| `data/reports/cartas_standard.xlsx` | The user's rules spreadsheet (7 sheets; ~1,636 distinct sentences; 7 classification columns) | S05.T08 |
+| `data/reports/cartas_standard.xlsx` | The user's rules spreadsheet. Verified 2026-09-22: 7 sheets of which `Planilha8` is empty; `cartas_standard` and `(2)` hold 2,950 Standard cards × 38 columns; `(3)` is `A1:H13008` (13,007 data rows of id → ability/attack/rules text); `(6)` holds 11,800 raw sentences; `(4)` and `(5)` are `A1:H1637` — column A has the deduplicated sentences (~1,578 non-blank) and **columns B–H exist but are styled-empty: the classification has not started** (D-004a item 4) | S05.T08 |
 | `data/raw/` (164 MB) | Optional seed for the new raw cache (TCGdex 20k files) — cache, not database | S02.T03 |
 
 ## Legacy facts worth remembering

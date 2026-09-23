@@ -88,7 +88,7 @@ sequenceDiagram
 1. **The engine never touches the database.** A job is self-contained; results are lines. (S04.T12, S04.T15)
 2. **Node is the only database writer**; the api writes user-facing tables, the worker writes job/measurement tables, the etl writes baseline tables. (S01.T02)
 3. **Rules are data.** Card behaviour is `rule_codes` + `text_codes` composed into IR programs; code changes are needed only for new primitives or builtins. (S05)
-4. **Two coverage numbers, always together**: exact (intention) and proven (evidence on the current build). (S05.T12, RN-70)
+4. **Two coverage numbers, always together**: exact (intention) and proven (evidence on the current build). Computed in S05.T12, rendered side by side in S05.T14 — the rule is only observable where it is displayed. (RN-70)
 5. **Determinism.** One seeded RNG per game, a separate stream per bot, no hash-map iteration in game logic, fingerprints per pairing, identical results at 1 or N workers. (S04.T10)
 6. **Frozen rulers.** Suites and frozen bots are immutable; every measurement records engine build, rules snapshot, bot and commit. (S05.T16, S06.T07, S06.T08)
 7. **Honest information.** Bots see only what a player sees. (S06.T01)

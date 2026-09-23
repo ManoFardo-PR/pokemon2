@@ -30,7 +30,7 @@ Legend — **Kept**: same rule; **Revised**: same intent, new mechanism; **Super
 | RN-13 | `+N` before Weakness/Resistance, `−N` after; W/R only on the Active | Kept | S04.T07 | damage scenarios |
 | RN-14 | Bench damage is not counters (no W/R but prevention/reduction apply); counters are effects and pass the prevention filter | Kept | S04.T07 | two distinct paths, both asserted: attack damage to a benched target in `rules/bench-damage-no-wr.json`, and the counter path (`place_counters` honouring `counters_blocked` / `prevent_effects` but never W/R) in T07's counter scenarios |
 | RN-15 | Tera rule is a card rule: nothing turns it off; counters still land | Kept | S04.T07 | damage scenarios |
-| RN-16 | "Once during your turn" is per Pokémon instance unless the text says per name | Kept | S05.T07 (declared per code), S04.T05 / S05.T05 (enforced) | ability scenarios |
+| RN-16 | "Once during your turn" is per Pokémon instance unless the text says per name | Kept | S05.T07 declares `once_scope` on the code (D-004a item 3); S04.T05 and S05.T05 enforce it | ability scenarios: a second copy in play may use its own ability; a name-scoped one may not |
 | RN-17 | "Doesn't stack" counts once per card name | Kept | S05.T05 (`no_stack_key`) | modifier scenario |
 | RN-18 | Bench size comes from state, not a constant | Kept | S04.T03, S05.T05 | Area Zero scenario |
 | RN-19 | Prize value from the printed rule ("takes N Prize cards"); subtype only as fallback | Kept | S04.T02 | CardDef tests |
@@ -74,7 +74,7 @@ Legend — **Kept**: same rule; **Revised**: same intent, new mechanism; **Super
 | RN-61 | LLM output becomes behaviour only through a closed vocabulary with sanity ranges; malformed output rejected | Kept | S05.T03 (schema), S08.T06 | schema tests |
 | RN-62 | Translation from an implemented second source prevails over prose classification | Kept | S05.T09 (provenance ranks), S08.T05 | import report |
 | RN-63 | An AI opinion is not evidence; it is a review queue | Kept | S05.T12 (evidence kinds exclude LLM), S08.T06 | evidence kind enum |
-| RN-64 | Audit and lint never alter a card | Kept (insert-only evidence) | S05.T01 | no UPDATE/DELETE path test |
+| RN-64 | Audit and lint never alter a card | Kept, and strengthened: insert-only is a pair of database triggers, not an application convention, so no code path can weaken it | S05.T01 | a test attempting `UPDATE`/`DELETE` on `rule_evidence` raises |
 | RN-65 | Coach reviews ≤ 6 critical moments per game, sees only what the player saw, closed vocabulary, invalid verdicts rejected | Kept | S07.T07 | stub-LLM tests |
 | RN-66 | Coach suggestions are hypotheses measured on the suite | Kept | S07.T07 | process + measurement |
 | RN-67 | AI-generated code sandboxed (no `os`, `subprocess`, `eval`…) | Superseded — no code generation; rules are data, builtins are human-written Rust | S05.T06 | — |

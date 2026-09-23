@@ -41,6 +41,17 @@ Format per entry: **Context** (what forced the choice) · **Decision** · **Alte
 - **Alternatives.** Templates only (cannot express the long tail: ~1,046 of 1,157 raw templates occur once); code per card in the engine (fast to write, impossible to audit or edit as data).
 - **Consequences.** S05 is organised around this model; S05.T07 fixes the composition semantics before the spreadsheet import (S05.T08); a `builtin` escape hatch exists for < 2 % of copies (S05.T06); the IR vocabulary is closed and schema-validated (RN-61).
 
+### D-004a — Composition semantics, settled with the user on 2026-09-22
+
+The S05 elaboration surfaced seventeen questions the model did not answer. Four were the user's to settle and are now closed; they are binding on `docs/rules/CODES.md`, on the spreadsheet import and on the editor.
+
+1. **Filters, counts and conditions are parameters, not new codes.** One `SEARCH_DECK_FILTER_TO_BENCH{n, filter}` covers Nest Ball, Buddy-Buddy Poffin (`hp_at_most 70`, n = 2), Precious Trolley (n = 5) and Hop's Bag (`owner_tag hops`). This keeps the base at roughly 150–300 codes instead of several hundred near-duplicates, and it makes the spreadsheet's `code` column a choice of code **plus** a filter expression. Rejected: a code per variation (literal, easy to classify, but every new card tends to need a new code).
+2. **The ordered `(code, params)` list is authoritative; the sentence link is provenance.** A sentence may need two codes (Gwynn discards *and* draws in one sentence) and a code may span two sentences. `sentence_from` / `sentence_to` record which sentences a code came from and are never used to execute. Rejected: one code per sentence exactly, which would force composite codes like `DISCARD_THEN_DRAW_PER` and prevent reuse of the parts.
+3. **`once_scope` (instance / name / game, RN-16) is a property of the code, not of the card's params.** Two cards whose once-per-turn wording differs use two different codes. This keeps each code's semantics fixed and testable, and keeps evidence meaningful: proving one code says nothing about the other. Rejected: scope as a parameter, which would let one code mean different things per card.
+4. **The spreadsheet's classification has not started.** Verified on 2026-09-22: in `cartas_standard (4)` and `(5)`, column A holds the 1,634 deduplicated sentences and columns B–H exist but are styled-empty. So `S05.T08` must accept an empty classification without failing, and the authoring order comes from `S05.T14`'s queue — uncovered texts sorted by meta copies, the 200 most-played names first (≈ 93.8 % of copies) — not from the sheet's row order.
+
+Still open from that list and owned by whoever writes `CODES.md`: the wrapper nesting depth, the six named locals, `phase` on attack codes, whether a Trainer's several sentences are one part, and the remaining items recorded in S05.T07's Risks section.
+
 ## D-005 — Repository in `pokemon2` (OneDrive), heavy artifacts outside (2026-09-22, assumed)
 
 - **Decision.** Source and docs stay in the OneDrive folder the user opened, with a GitHub remote; `DATA_DIR = %LOCALAPPDATA%\pokemon2` holds the database, raw cache, Cargo target and backups. If OneDrive sync interferes with `node_modules`, the repo moves out with GitHub as the source of truth.
