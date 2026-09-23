@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
+
 import { mkdtempSync, rmSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -35,8 +36,8 @@ describe("BR-S01.T02-04: Multi-process concurrency spec", () => {
     // Child script code that opens database and runs 1000 inserts in transactions
     const childWorkerScript = `
       import { openDatabase } from "./src/client.ts";
-      const dbPath = process.argv[2];
-      const workerId = Number(process.argv[3]);
+      const dbPath = process.argv[1];
+      const workerId = Number(process.argv[2]);
       const db = openDatabase(dbPath, { busyTimeoutMs: 5000 });
 
       try {
@@ -62,16 +63,20 @@ describe("BR-S01.T02-04: Multi-process concurrency spec", () => {
     const scriptPath = join(tempDir, "worker.mjs");
     // We write worker.mjs or execute node with inline code.
     // Notice: in RED phase, packages/db/src/client.ts doesn't exist yet, so this will fail to run or import.
+    const dbPkgDir = process.cwd().endsWith("packages/db") || process.cwd().endsWith("packages\\db")
+      ? process.cwd()
+      : join(process.cwd(), "packages/db");
+
     const proc1 = spawnSync(
       process.execPath,
       ["--no-warnings=ExperimentalWarning", "--input-type=module", "-e", childWorkerScript, dbPath, "1"],
-      { cwd: join(process.cwd(), "packages/db"), encoding: "utf-8" }
+      { cwd: dbPkgDir, encoding: "utf-8" }
     );
 
     const proc2 = spawnSync(
       process.execPath,
       ["--no-warnings=ExperimentalWarning", "--input-type=module", "-e", childWorkerScript, dbPath, "2"],
-      { cwd: join(process.cwd(), "packages/db"), encoding: "utf-8" }
+      { cwd: dbPkgDir, encoding: "utf-8" }
     );
 
     expect(proc1.status).toBe(0);

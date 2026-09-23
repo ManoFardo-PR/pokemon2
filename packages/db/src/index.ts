@@ -1,3 +1,2 @@
-console.log('DB package placeholder');
-
-export {};
+export * from "./client.js";
+export * from "./dialect/index.js";
