@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import path from 'node:path';
 import os from 'node:os';
+import fs from 'node:fs';
 import {
   loadEnv,
   assertArtifactPath,
@@ -8,6 +9,7 @@ import {
   ensureDataDirs,
   EnvPathError,
   envSchema,
+  findRepoRoot,
 } from './env.ts';
 
 describe('packages/shared/src/env.ts - RED phase', () => {
@@ -16,6 +18,34 @@ describe('packages/shared/src/env.ts - RED phase', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe('BR-S01.T01-02 (.env.example matches schema)', () => {
+    it('.env.example matches the schema', () => {
+      const repoRoot = findRepoRoot(__dirname);
+      const envExamplePath = path.join(repoRoot, '.env.example');
+      expect(fs.existsSync(envExamplePath)).toBe(true);
+
+      const content = fs.readFileSync(envExamplePath, 'utf8');
+      const lines = content.split('\n');
+      const exampleKeys: string[] = [];
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) {
+          continue;
+        }
+        const match = trimmed.match(/^([A-Z0-9_]+)=/);
+        if (match && match[1]) {
+          exampleKeys.push(match[1]);
+        }
+      }
+
+      const schemaKeys = Object.keys(envSchema.shape).sort();
+      const sortedExampleKeys = [...new Set(exampleKeys)].sort();
+
+      expect(sortedExampleKeys).toEqual(schemaKeys);
+    });
   });
 
   describe('defaultDataDir', () => {

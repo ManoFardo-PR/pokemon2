@@ -77,13 +77,13 @@ const rawEnvSchema = z.object({
   RAW_CACHE_DIR: z.string().optional(),
   CARGO_TARGET_DIR: z.string().optional(),
   ENGINE_BIN: z.string().optional(),
+  LIMITLESS_API_KEY: z.string().optional(),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  LLM_BASE_URL: z.string().optional(),
+  LLM_MODEL: z.string().optional(),
 });
 
 export const envSchema = rawEnvSchema;
-
-export interface LoadEnvOptions {
-  repoRoot?: string;
-}
 
 export interface AppEnv {
   NODE_ENV: 'development' | 'production' | 'test';
@@ -96,12 +96,22 @@ export interface AppEnv {
   RAW_CACHE_DIR: string;
   CARGO_TARGET_DIR: string;
   ENGINE_BIN: string;
+  LIMITLESS_API_KEY?: string | undefined;
+  ANTHROPIC_API_KEY?: string | undefined;
+  LLM_BASE_URL?: string | undefined;
+  LLM_MODEL?: string | undefined;
+}
+
+export type Env = AppEnv;
+
+export interface LoadEnvOptions {
+  repoRoot?: string;
 }
 
 export function loadEnv(
   input: Record<string, string | undefined> = process.env,
   options: LoadEnvOptions = {}
-): AppEnv {
+): Env {
   const parsed = rawEnvSchema.parse(input);
   const repoRoot = options.repoRoot ? path.resolve(options.repoRoot) : findRepoRoot();
 
@@ -115,7 +125,7 @@ export function loadEnv(
 
   const rawCacheDir = parsed.RAW_CACHE_DIR
     ? path.resolve(dataDir, parsed.RAW_CACHE_DIR)
-    : path.resolve(dataDir, 'cache');
+    : path.resolve(dataDir, 'raw');
   assertArtifactPath('RAW_CACHE_DIR', rawCacheDir, repoRoot);
 
   const cargoTargetDir = parsed.CARGO_TARGET_DIR
@@ -123,9 +133,10 @@ export function loadEnv(
     : path.resolve(dataDir, 'target');
   assertArtifactPath('CARGO_TARGET_DIR', cargoTargetDir, repoRoot);
 
+  const defaultEngineExe = process.platform === 'win32' ? 'release/ptcg-cli.exe' : 'release/ptcg-cli';
   const engineBin = parsed.ENGINE_BIN
     ? path.resolve(dataDir, parsed.ENGINE_BIN)
-    : path.resolve(cargoTargetDir, process.platform === 'win32' ? 'release/engine.exe' : 'release/engine');
+    : path.resolve(cargoTargetDir, defaultEngineExe);
   assertArtifactPath('ENGINE_BIN', engineBin, repoRoot);
 
   return {
@@ -139,14 +150,26 @@ export function loadEnv(
     RAW_CACHE_DIR: rawCacheDir,
     CARGO_TARGET_DIR: cargoTargetDir,
     ENGINE_BIN: engineBin,
+    LIMITLESS_API_KEY: parsed.LIMITLESS_API_KEY,
+    ANTHROPIC_API_KEY: parsed.ANTHROPIC_API_KEY,
+    LLM_BASE_URL: parsed.LLM_BASE_URL,
+    LLM_MODEL: parsed.LLM_MODEL,
   };
 }
 
-export function ensureDataDirs(env: AppEnv): void {
-  const dirs = [env.DATA_DIR, path.dirname(env.DATABASE_PATH), env.RAW_CACHE_DIR, env.CARGO_TARGET_DIR];
+export function ensureDataDirs(currentEnv: Env): void {
+  const dirs = [
+    currentEnv.DATA_DIR,
+    path.dirname(currentEnv.DATABASE_PATH),
+    currentEnv.RAW_CACHE_DIR,
+    currentEnv.CARGO_TARGET_DIR,
+  ];
   for (const dir of dirs) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
   }
 }
+
+// Memoized default environment
+export const env: Env = loadEnv();
