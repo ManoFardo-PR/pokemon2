@@ -25,17 +25,17 @@ Legend — **Kept**: same rule; **Revised**: same intent, new mechanism; **Super
 | RN | Rule (short) | Disposition | Implemented in | Verified by |
 |---|---|---|---|---|
 | RN-10 | Games run only with exactly 60 cards per side | Kept | S04.T04 (engine refuses), S03.T10 (deck validation) | engine test; validation tests |
-| RN-11 | Six rulebook corrections: evolving keeps damage; only the starter skips the first attack; the starter draws on turn 1; tools persist after evolving; benching a Basic fires field triggers; a card returned to hand cannot evolve the turn it is replayed; nobody evolves on their own first turn | Kept | S04.T04, S04.T05, S05.T05 (bench trigger) | `engine/scenarios/rules/*.json` (S04.T13) |
+| RN-11 | Six rulebook corrections: evolving keeps damage; only the starter skips the first attack; the starter draws on turn 1; tools persist after evolving; benching a Basic fires field triggers; a card returned to hand cannot evolve the turn it is replayed; nobody evolves on their own first turn | Kept | S04.T04, S04.T05 (the bench trigger's raise point: `bench_put` raises `enter_bench`), S05.T05 (the listeners registered on that event) | `engine/scenarios/rules/*.json` (S04.T13) |
 | RN-12 | Special Conditions: Poisoned 10, Burned 20 + coin, Asleep/Paralyzed block attack and retreat, Confused coin/30; exclusivity; cleared on bench/evolve | Kept | S04.T08 | condition scenarios |
 | RN-13 | `+N` before Weakness/Resistance, `−N` after; W/R only on the Active | Kept | S04.T07 | damage scenarios |
-| RN-14 | Bench damage is not counters (no W/R but prevention/reduction apply); counters are effects and pass the prevention filter | Kept | S04.T07 | damage scenarios |
+| RN-14 | Bench damage is not counters (no W/R but prevention/reduction apply); counters are effects and pass the prevention filter | Kept | S04.T07 | two distinct paths, both asserted: attack damage to a benched target in `rules/bench-damage-no-wr.json`, and the counter path (`place_counters` honouring `counters_blocked` / `prevent_effects` but never W/R) in T07's counter scenarios |
 | RN-15 | Tera rule is a card rule: nothing turns it off; counters still land | Kept | S04.T07 | damage scenarios |
 | RN-16 | "Once during your turn" is per Pokémon instance unless the text says per name | Kept | S05.T07 (declared per code), S04.T05 / S05.T05 (enforced) | ability scenarios |
 | RN-17 | "Doesn't stack" counts once per card name | Kept | S05.T05 (`no_stack_key`) | modifier scenario |
 | RN-18 | Bench size comes from state, not a constant | Kept | S04.T03, S05.T05 | Area Zero scenario |
 | RN-19 | Prize value from the printed rule ("takes N Prize cards"); subtype only as fallback | Kept | S04.T02 | CardDef tests |
 | RN-20 | End reasons: prizes, deck-out (mandatory draw only), no Pokémon, stall 12 turns, step cap | Kept | S04.T10 | terminal tests |
-| RN-21 | An illegal bot action/answer is counted and replaced by a default | Kept | S04.T09 | prompt property tests |
+| RN-21 | An illegal bot action/answer is counted and replaced by a default | Revised — the legacy substituted `actions[0]` (whatever happened to be first); here the substitute is the purpose-specific default resolver, so the replacement is meaningful rather than arbitrary | S04.T09 | prompt property tests: every random legal answer validates, every invalid one is rejected with a reason, and the default resolver yields a valid answer for every purpose |
 
 ## Bots (RN-30..RN-37)
 

@@ -39,7 +39,7 @@
 
 | Table | Purpose | Migration | Owner |
 |---|---|---|---|
-| `jobs` | every engine invocation: kind, status, params, progress, result, engine build, rules snapshot | 0005 | S04.T14 |
+| `jobs` | every engine invocation: kind, status, params, progress, result, engine build, rules snapshot, `workers`, and `created_at` separate from `started_at` so queue latency is measurable | 0005 | S04.T14 |
 | `job_pairings` | per (deck A, deck B, bots, seed block): W/L/T, outcomes, avg turns, fingerprint | 0005 | S04.T14 |
 | `games` | optional per-game rows and compressed event logs | 0005 | S04.T14 |
 | `optimizer_candidates` | every swap considered by an optimize job with screening/confirmation/holdout numbers and decision | 0008 | S07.T04 |

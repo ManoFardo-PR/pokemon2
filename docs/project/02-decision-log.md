@@ -17,6 +17,7 @@ Format per entry: **Context** (what forced the choice) · **Decision** · **Alte
 - **Decision.** Write the engine and bots in Rust as a pure library crate plus a CLI, installed with `rustup` on the `stable-x86_64-pc-windows-gnu` host toolchain (self-contained linker, no admin), targets `x86_64-pc-windows-gnu` and `wasm32-unknown-unknown`, pure-Rust dependencies only.
 - **Alternatives.** TypeScript engine on `worker_threads` (no toolchain risk, ~10–50× slower, lookahead impractical); adopting the twinleafgg TypeScript engine (huge card coverage in code, but deep-clones per action, prompts are closures, rules are not data).
 - **Consequences.** S01.T06 is a hard gate with a one-day budget; if it fails, **D-001b** applies: a TypeScript engine implementing the same JSON contracts (job protocol, IR, scenarios) under `packages/engine-ts`, keeping every other subtask unchanged. All boundaries are therefore defined in `packages/shared` first (S01.T05).
+- **Dependency list** (all pure Rust, no C toolchain): `serde`, `serde_json`, `rand_xoshiro`, `rayon` (CLI only), `smallvec`, `indexmap`, `sha2`. Condition flags on a slot are hand-rolled bit operations rather than the `bitflags` crate — one fewer dependency for a `u8` of flags. Adding any crate to this list is a decision-log amendment, not a code change.
 
 ## D-002 — Database: local SQLite file outside OneDrive, Postgres-portable (2026-09-21; **revised 2026-09-22**)
 

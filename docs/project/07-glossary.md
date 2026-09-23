@@ -52,8 +52,11 @@
 - **Turn effect** — a `(source, kind, value, until)` entry on a slot or player (e.g. `no_attack`, `damage_minus`).
 - **Marker** — a named flag on a slot/player/game for once-per-turn/game tracking.
 - **Prize value** — how many prizes a knockout awards (1/2/3), modifiable by hooks.
+- **Material signature** — the per-player tuple `(prizes, deck size, discard size, hand size, board size, total damage)` used to detect stagnation. It is compared **two turns back**, not one, because the signature alternates sides.
 - **Stall** — no change in the material signature for 12 turns → tie (RN-20).
+- **Default resolver** — the engine's deterministic answer for each prompt purpose. It is what a random bot uses, and what replaces an invalid bot answer (RN-21); the legacy substituted whatever action happened to be first.
 - **Fingerprint** — SHA-256 over per-game outcomes in game order; identical across worker counts and runs.
+- **`seed_base`** — the per-matchup seed, derived stably as `(suite.seed0 + crc32(parts)) mod 1_000_000_007` (RN-46). Game *i* of a pairing uses `seed_base + i`. It is CRC-based rather than hash-based because a language's string hash may vary between processes.
 
 ## Bots and measurement
 

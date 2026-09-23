@@ -75,6 +75,7 @@ sequenceDiagram
   API->>DB: insert jobs(status=queued)
   Worker->>DB: poll queued job, mark running
   Worker->>DB: read deck versions, opponents, card tables, active rule programs
+  Worker->>Engine: ptcg-cli --version (build hash, recorded on the job)
   Worker->>Engine: stdin: one JSON line {card_defs, programs, pairings, bots, seeds, options}
   Engine-->>Worker: stdout: progress / game / result / done lines
   Worker->>DB: update progress, upsert job_pairings, insert games, finish job
