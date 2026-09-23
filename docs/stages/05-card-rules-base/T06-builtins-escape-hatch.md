@@ -23,11 +23,9 @@
 ## Initial objective
 The 'rules as data' promise does not force 100 % expressiveness on day one: the long tail can be native code that is still registered, counted and tested like any other code.
 
-## Summary of the bargain
+## Context
 
 D-004 says card behaviour is data. A vocabulary that can express every card ever printed would be a programming language, and a spreadsheet of programs is not the authoring surface the user asked for. The escape hatch resolves the tension: an effect the alphabet cannot spell becomes one named Rust function, referenced from a `rule_codes` row like any other code, with a status that says exactly what it is. The card still has a code. The card still counts toward coverage. The card still needs a scenario before anything calls it proven. What it does not have is an IR body a human can read in the editor — and that is the entire cost, paid deliberately, capped at under 2 % of meta copies.
-
-## Context
 
 The legacy had the same escape valve and used it badly, in the only way available: `Approx`. `effects.py::Approx` is an effect that *does nothing* and marks the card approximate; `catalog.py` uses it and the `approx=True` flag on 24 recipes, each with a `note` in Portuguese saying what is missing — *"repetir moedas não modelado"*, *"sobreviver ao nocaute com 10 de HP não modelado"*, *"ataque concedido pela ferramenta não modelado"*, *"fornecer todos os tipos, um por vez, não é representável"*. Those cards were honest about being wrong, which is better than being silently wrong, but they were still wrong: the effect simply did not happen, and the simulation measured a card that does not exist. `ESPECIFICACAO.md` §6.1 lists the resulting declared gaps, and `coverage.py` puts `catalog_approx` at 3.9 % of meta copies with `vanilla` at 1.2 %.
 
