@@ -5,7 +5,7 @@
 | Stage | S08 — Operations and extensions |
 | Status | TODO |
 | Order in stage | 1 / 6 |
-| Depends on | [S02.T02](../02-card-data-and-search/T02-fetch-pokemon-tcg-data.md), [S02.T07](../02-card-data-and-search/T07-prices-snapshot.md), [S03.T05](../03-tournament-meta-and-deck-builder/T05-decks-sync-and-prune.md) |
+| Depends on | [S02.T02](../02-card-data-and-search/T02-fetch-pokemon-tcg-data.md), [S02.T07](../02-card-data-and-search/T07-prices-snapshot.md), [S03.T05](../03-tournament-meta-and-deck-builder/T05-decks-sync-and-prune.md), [S04.T15](../04-game-engine-core/T15-worker-job-runner.md) |
 | Unblocks | — |
 | Parallel with | [S08.T02](T02-etl-monitoring-and-alerts.md), [S08.T03](T03-hosted-postgres-migration-path.md), [S08.T04](T04-wasm-replay-and-play.md), [S08.T05](T05-twinleaf-differential-oracle.md), [S08.T06](T06-llm-assisted-authoring.md) |
 | Gate | no |

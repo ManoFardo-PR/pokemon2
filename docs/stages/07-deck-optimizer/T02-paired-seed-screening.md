@@ -5,7 +5,7 @@
 | Stage | S07 — Deck optimizer |
 | Status | TODO |
 | Order in stage | 2 / 7 |
-| Depends on | [S04.T10](../04-game-engine-core/T10-termination-stall-and-determinism.md), [S04.T15](../04-game-engine-core/T15-worker-job-runner.md), [S07.T01](T01-candidate-pool-and-move-generation.md) |
+| Depends on | [S04.T10](../04-game-engine-core/T10-termination-stall-and-determinism.md), [S04.T15](../04-game-engine-core/T15-worker-job-runner.md), [S05.T16](../05-card-rules-base/T16-measurement-model-and-suite-v6-freeze.md), [S07.T01](T01-candidate-pool-and-move-generation.md) |
 | Unblocks | [S07.T03](T03-sequential-confirmation.md), [S07.T05](T05-optimize-job-orchestration.md) |
 | Parallel with | — |
 | Gate | no |

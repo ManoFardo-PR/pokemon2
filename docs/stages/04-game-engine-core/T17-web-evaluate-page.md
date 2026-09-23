@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 17 / 18 |
 | Depends on | [S03.T06](../03-tournament-meta-and-deck-builder/T06-meta-queries.md), [S03.T12](../03-tournament-meta-and-deck-builder/T12-web-deck-builder.md), [S04.T16](T16-api-jobs-and-sse.md) |
-| Unblocks | [S07.T06](../07-deck-optimizer/T06-web-optimizer-page.md) |
+| Unblocks | [S06.T08](../06-bots/T08-measurement-score-and-mirror.md), [S07.T06](../07-deck-optimizer/T06-web-optimizer-page.md) |
 | Parallel with | — |
 | Gate | no |
 | Owner / Updated | — / — |

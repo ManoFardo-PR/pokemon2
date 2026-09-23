@@ -5,7 +5,7 @@
 | Stage | S06 — Bots |
 | Status | TODO |
 | Order in stage | 8 / 8 |
-| Depends on | [S04.T15](../04-game-engine-core/T15-worker-job-runner.md), [S05.T16](../05-card-rules-base/T16-measurement-model-and-suite-v6-freeze.md), [S06.T07](T07-bot-registry-and-freezing.md) |
+| Depends on | [S04.T15](../04-game-engine-core/T15-worker-job-runner.md), [S04.T17](../04-game-engine-core/T17-web-evaluate-page.md), [S05.T16](../05-card-rules-base/T16-measurement-model-and-suite-v6-freeze.md), [S06.T07](T07-bot-registry-and-freezing.md) |
 | Unblocks | — |
 | Parallel with | [S06.T03](T03-planner-turn-policy.md) |
 | Gate | no |

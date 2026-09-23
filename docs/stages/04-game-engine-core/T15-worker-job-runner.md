@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 15 / 18 |
 | Depends on | [S04.T02](T02-card-definition-model.md), [S04.T12](T12-cli-job-protocol.md), [S04.T14](T14-jobs-schema-migration.md) |
-| Unblocks | [S04.T16](T16-api-jobs-and-sse.md), [S05.T12](../05-card-rules-base/T12-evidence-and-coverage-metrics.md), [S05.T16](../05-card-rules-base/T16-measurement-model-and-suite-v6-freeze.md), [S06.T08](../06-bots/T08-measurement-score-and-mirror.md), [S07.T02](../07-deck-optimizer/T02-paired-seed-screening.md), [S07.T05](../07-deck-optimizer/T05-optimize-job-orchestration.md) |
+| Unblocks | [S04.T16](T16-api-jobs-and-sse.md), [S05.T12](../05-card-rules-base/T12-evidence-and-coverage-metrics.md), [S05.T16](../05-card-rules-base/T16-measurement-model-and-suite-v6-freeze.md), [S06.T08](../06-bots/T08-measurement-score-and-mirror.md), [S07.T02](../07-deck-optimizer/T02-paired-seed-screening.md), [S07.T05](../07-deck-optimizer/T05-optimize-job-orchestration.md), [S08.T01](../08-operations-and-extensions/T01-scheduler.md) |
 | Parallel with | [S04.T18](T18-performance-baseline.md) |
 | Gate | no |
 | Owner / Updated | — / — |

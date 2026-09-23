@@ -5,7 +5,7 @@
 | Stage | S07 — Deck optimizer |
 | Status | TODO |
 | Order in stage | 7 / 7 |
-| Depends on | [S04.T14](../04-game-engine-core/T14-jobs-schema-migration.md), [S07.T05](T05-optimize-job-orchestration.md) |
+| Depends on | [S04.T14](../04-game-engine-core/T14-jobs-schema-migration.md), [S06.T04](../06-bots/T04-need-scoring-and-prompt-resolvers.md), [S07.T05](T05-optimize-job-orchestration.md) |
 | Unblocks | — |
 | Parallel with | [S07.T06](T06-web-optimizer-page.md) |
 | Gate | no |

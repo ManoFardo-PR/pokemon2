@@ -5,7 +5,7 @@
 | Stage | S06 — Bots |
 | Status | TODO |
 | Order in stage | 5 / 8 |
-| Depends on | [S04.T03](../04-game-engine-core/T03-game-state-model.md), [S04.T10](../04-game-engine-core/T10-termination-stall-and-determinism.md), [S06.T01](T01-honest-information-view.md), [S06.T03](T03-planner-turn-policy.md), [S06.T04](T04-need-scoring-and-prompt-resolvers.md) |
+| Depends on | [S04.T03](../04-game-engine-core/T03-game-state-model.md), [S04.T10](../04-game-engine-core/T10-termination-stall-and-determinism.md), [S06.T01](T01-honest-information-view.md), [S06.T02](T02-deck-profile-analysis.md), [S06.T03](T03-planner-turn-policy.md), [S06.T04](T04-need-scoring-and-prompt-resolvers.md) |
 | Unblocks | [S06.T06](T06-ismcts-bot.md) |
 | Parallel with | — |
 | Gate | no |

@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 16 / 16 |
 | Depends on | [S03.T06](../03-tournament-meta-and-deck-builder/T06-meta-queries.md), [S03.T11](../03-tournament-meta-and-deck-builder/T11-user-decks-schema-and-api.md), [S04.T11](../04-game-engine-core/T11-baseline-bots-random-heuristic.md), [S04.T14](../04-game-engine-core/T14-jobs-schema-migration.md), [S04.T15](../04-game-engine-core/T15-worker-job-runner.md), [S05.T12](T12-evidence-and-coverage-metrics.md) |
-| Unblocks | [S06.T07](../06-bots/T07-bot-registry-and-freezing.md), [S06.T08](../06-bots/T08-measurement-score-and-mirror.md) |
+| Unblocks | [S06.T07](../06-bots/T07-bot-registry-and-freezing.md), [S06.T08](../06-bots/T08-measurement-score-and-mirror.md), [S07.T02](../07-deck-optimizer/T02-paired-seed-screening.md) |
 | Parallel with | [S05.T13](T13-rules-editor-ui.md), [S05.T14](T14-coverage-page-and-authoring-queue.md) |
 | Gate | no |
 | Owner / Updated | — / — |

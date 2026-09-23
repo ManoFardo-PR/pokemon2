@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 4 / 8 |
 | Depends on | [S04.T09](../04-game-engine-core/T09-prompt-protocol.md), [S06.T03](T03-planner-turn-policy.md) |
-| Unblocks | [S06.T05](T05-rollout-bot.md) |
+| Unblocks | [S06.T05](T05-rollout-bot.md), [S07.T07](../07-deck-optimizer/T07-coach-lost-game-review.md) |
 | Parallel with | — |
 | Gate | no |
 | Owner / Updated | — / — |
