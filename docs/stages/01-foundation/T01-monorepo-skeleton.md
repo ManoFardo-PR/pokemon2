@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | TODO |
+| Status | DONE |
 | Order in stage | 1 / 10 |
 | Depends on | — |
 | Unblocks | [S01.T02](T02-sqlite-database-client.md), [S01.T05](T05-shared-contracts-package.md), [S01.T06](T06-rust-toolchain-gate.md), [S01.T08](T08-web-skeleton.md), [S01.T09](T09-licensing-and-notice.md), [S01.T10](T10-quality-gates-and-docs-lint.md), [S02.T01](../02-card-data-and-search/T01-etl-cli-and-raw-cache.md) |
