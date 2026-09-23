@@ -2,3 +2,6 @@
 .continue/
 
 node_modules/
+
+.env
+.env*

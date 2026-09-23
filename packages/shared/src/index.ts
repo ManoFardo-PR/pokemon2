@@ -1,3 +1,2 @@
-console.log('Shared package placeholder');
+export * from './env.ts';
 
-module.exports = {};
