@@ -24,7 +24,7 @@ Build the deterministic Rust engine that plays complete Pokémon TCG games with 
 | 3 | [S04.T03](T03-game-state-model.md) | Game state model | [S04.T01](T01-engine-workspace-and-crates.md) | no | TODO |
 | 4 | [S04.T04](T04-setup-and-turn-structure.md) | Setup and turn structure | [S04.T03](T03-game-state-model.md) | no | TODO |
 | 5 | [S04.T05](T05-actions-and-legality.md) | Actions and legality | [S04.T02](T02-card-definition-model.md), [S04.T04](T04-setup-and-turn-structure.md) | no | TODO |
-| 6 | [S04.T06](T06-energy-provision-and-cost-payment.md) | Energy provision and cost payment | [S04.T05](T05-actions-and-legality.md) | no | TODO |
+| 6 | [S04.T06](T06-energy-provision-and-cost-payment.md) | Energy provision and cost payment | [S04.T02](T02-card-definition-model.md), [S04.T05](T05-actions-and-legality.md) | no | TODO |
 | 7 | [S04.T07](T07-damage-pipeline.md) | Damage pipeline | [S04.T05](T05-actions-and-legality.md), [S04.T06](T06-energy-provision-and-cost-payment.md) | no | TODO |
 | 8 | [S04.T08](T08-special-conditions-and-checkup.md) | Special Conditions and Pokémon Checkup | [S04.T07](T07-damage-pipeline.md) | no | TODO |
 | 9 | [S04.T09](T09-prompt-protocol.md) | Prompt protocol | [S04.T03](T03-game-state-model.md), [S04.T05](T05-actions-and-legality.md) | no | TODO |
@@ -68,6 +68,7 @@ graph LR
   S04_T03 --> S04_T04
   S04_T02 --> S04_T05
   S04_T04 --> S04_T05
+  S04_T02 --> S04_T06
   S04_T05 --> S04_T06
   S04_T05 --> S04_T07
   S04_T06 --> S04_T07
