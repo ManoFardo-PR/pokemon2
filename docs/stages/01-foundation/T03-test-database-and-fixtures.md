@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | TODO |
+| Status | COMPLETED |
 | Order in stage | 3 / 10 |
 | Depends on | [S01.T02](T02-sqlite-database-client.md) |
 | Unblocks | [S01.T04](T04-database-migration-framework.md) |
@@ -129,13 +129,13 @@ export function listFixtures(): string[];
 
 ## Acceptance / verification
 
-- [ ] `pnpm --filter @pokesearch/db test testing.spec.ts` green: the database is created under `os.tmpdir()`, the registered initializer runs, and the directory with its sidecars is gone after both a returning and a throwing callback (BR-S01.T03-02, -05).
-- [ ] `testing.spec.ts > refuses to open the real database` fails the call and names `DATABASE_PATH` (BR-S01.T03-01).
-- [ ] `fixtures.spec.ts` validates every file in `packages/db/fixtures/`, rejects a deck line citing an unknown card id, and finds no secret-shaped value (BR-S01.T03-04, -06).
-- [ ] `loadFixture` applied twice returns identical `tables` counts and an identical row checksum (BR-S01.T03-03).
-- [ ] A generated spec of 50 `withTempDb` tests completes in under 5 s on this machine.
-- [ ] `loadFixture(db, "cards-basic")` against today's schema throws `FixtureTableMissing: sets`, proving the documented error path.
-- [ ] After a full `pnpm test`, no `pokesearch-test-*` directory remains in the temp folder.
+- [x] `pnpm --filter @pokesearch/db test testing.spec.ts` green: the database is created under `os.tmpdir()`, the registered initializer runs, and the directory with its sidecars is gone after both a returning and a throwing callback (BR-S01.T03-02, -05).
+- [x] `testing.spec.ts > refuses to open the real database` fails the call and names `DATABASE_PATH` (BR-S01.T03-01).
+- [x] `fixtures.spec.ts` validates every file in `packages/db/fixtures/`, rejects a deck line citing an unknown card id, and finds no secret-shaped value (BR-S01.T03-04, -06).
+- [x] `loadFixture` applied twice returns identical `tables` counts and an identical row checksum (BR-S01.T03-03).
+- [x] A generated spec of 50 `withTempDb` tests completes in under 5 s on this machine.
+- [x] `loadFixture(db, "cards-basic")` against today's schema throws `FixtureTableMissing: sets`, proving the documented error path.
+- [x] After a full `pnpm test`, no `pokesearch-test-*` directory remains in the temp folder.
 
 ## Risks and open questions
 
@@ -156,3 +156,32 @@ export function listFixtures(): string[];
 
 ---
 Context docs: [Vision and scope](../../project/01-vision-and-scope.md) · [Decision log](../../project/02-decision-log.md) · [Architecture](../../project/03-architecture-overview.md) · [Data model](../../project/04-data-model-overview.md) · [Business rules traceability](../../project/05-business-rules-traceability.md) · [Legacy reference map](../../project/06-legacy-reference-map.md) · [Glossary](../../project/07-glossary.md) · [Conventions](../../project/08-conventions.md) · [Stage README](README.md)
+
+## Execution Summary
+
+- **Date of Completion**: 2026-03-30
+- **Files Created/Modified**:
+  - `packages/db/src/client.ts` (modified) — Added real database guard under `NODE_ENV === "test"` (BR-S01.T03-01), exported `TestDbError`.
+  - `packages/db/src/testing/index.ts` (created/implemented) — Lifecycle helper `withTempDb` and `withTempDbAsync`, template-copy optimization, registry functions (`registerSchemaInitializer`, `resetSchemaInitializer`, `getRegisteredSchemaInitializer`), retry cleanup with backoff, boundary checks (`POKESEARCH_TEST_TMPDIR` outside OneDrive and repo root), `validateFixture`, `readFixture`, `listFixtures`, and idempotent `loadFixture`.
+  - `packages/db/src/testing/vitest.setup.ts` (created) — Vitest setup file enforcing `NODE_ENV = "test"` and performing an `afterAll` sweep of orphaned temp test directories older than 1 hour.
+  - `packages/db/vitest.config.ts` (modified) — Configured `setupFiles` and suppressed Node SQLite experimental warnings via `poolOptions.forks.execArgv = ["--no-warnings=ExperimentalWarning"]`.
+  - `packages/db/package.json` (modified) — Exposed `./testing` submodule in package exports for downstream tasks.
+  - `packages/db/fixtures/empty.json` (created) — Minimal empty fixture document conforming to `fixtureSchema`.
+  - `packages/db/fixtures/cards-basic.json` (created) — 5 realistic Pokémon card printings covering Basic, Stage 2 + ability, Tera ex, Trainer Supporter, and Special Energy with synchronized `source` and `rows`.
+  - `packages/db/fixtures/decks-basic.json` (created) — 2 tournament decklists in TCG Live format with resolved card rows and one intentional unresolved card.
+  - `packages/db/fixtures/README.md` (created) — Fixture documentation, security checklist (no keys, no base64/blobs, public-source only), and schema-drift guidelines.
+  - `packages/db/src/testing/testing.spec.ts` (created) — Unit test suite verifying real database guard, lifecycle cleanup, `keepOnFailure`, registry, and 50-run performance benchmark.
+  - `packages/db/src/testing/fixtures.spec.ts` (created) — Test suite verifying fixture validation, referential integrity check, no-secrets pattern check, idempotent `loadFixture`, and `FixtureTableMissing` check.
+  - `docs/stages/01-foundation/T03-test-database-and-fixtures.log.md` (created) — Companion task execution log.
+- **Key Technical Decisions**:
+  - Enforced strict separation between tests and production databases: tests cannot open `DATABASE_PATH` or `pokesearch.db` when `NODE_ENV === "test"`.
+  - Used template-copy caching optimization (`pokesearch-template-<pid>-<key>.sqlite`) to easily pass the 50 runs in <5s benchmark (~479ms total execution).
+  - Used schema initializer registry pattern avoiding circular dependencies between the test database helper and migration framework (S01.T04).
+  - Built comprehensive fixture validation ensuring referential integrity while gracefully tolerating intentional unresolved tournament deck lines (`unresolved: 1` or `card_id: null`).
+  - Strict filesystem guard disallowing test temp directories inside OneDrive or inside the repo root.
+- **Test Execution Status**:
+  - `packages/db/src/testing/testing.spec.ts`: 10/10 passed.
+  - `packages/db/src/testing/fixtures.spec.ts`: 9/9 passed.
+  - Full suite `@pokesearch/db`: 38/38 tests passing across 5 test suites.
+  - Typecheck (`tsc --noEmit`): 0 errors.
+
