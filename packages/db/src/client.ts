@@ -1,6 +1,14 @@
 import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
+import pathModule from "node:path";
 import type { DatabaseSync, StatementSync } from "node:sqlite";
+
+export class TestDbError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TestDbError";
+  }
+}
 
 const esmRequire = createRequire(import.meta.url);
 const nodeSqlite = esmRequire("node:sqlite") as {
@@ -352,6 +360,23 @@ class DatabaseAdapter implements Db {
 }
 
 export function openDatabase(path: string, opts?: OpenOptions): Db {
+  if (process.env.NODE_ENV === "test") {
+    const envDbPath = process.env.DATABASE_PATH;
+    const defaultRealDbPath = pathModule.resolve(process.cwd(), "pokesearch.db");
+    const normalizedTarget = pathModule.resolve(path);
+
+    if (envDbPath && normalizedTarget === pathModule.resolve(envDbPath)) {
+      throw new TestDbError(
+        `[BR-S01.T03-01] Refusing to open real database under NODE_ENV=test (DATABASE_PATH=${path})`
+      );
+    }
+    if (normalizedTarget === defaultRealDbPath || path.endsWith("pokesearch.db")) {
+      throw new TestDbError(
+        `[BR-S01.T03-01] Refusing to open real database under NODE_ENV=test (${path})`
+      );
+    }
+  }
+
   const isReadonly = opts?.readonly === true;
   const busyTimeoutMs = opts?.busyTimeoutMs ?? 5000;
   const synchronous = opts?.synchronous ?? "NORMAL";

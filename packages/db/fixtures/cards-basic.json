@@ -1,0 +1,211 @@
+{
+  "fixture": "cards-basic",
+  "version": 1,
+  "description": "5 printings covering Basic, Stage 2 + ability, ex, Trainer, Special Energy",
+  "source": {
+    "ptcg": {
+      "sets": [
+        {
+          "id": "sv4pt5",
+          "name": "Paldean Fates",
+          "series": "Scarlet & Violet",
+          "printedTotal": 91,
+          "total": 245,
+          "releaseDate": "2024/01/26"
+        },
+        {
+          "id": "sv1",
+          "name": "Scarlet & Violet",
+          "series": "Scarlet & Violet",
+          "printedTotal": 198,
+          "total": 258,
+          "releaseDate": "2023/03/31"
+        }
+      ],
+      "cards": [
+        {
+          "id": "sv4pt5-54",
+          "name": "Charizard ex",
+          "supertype": "Pokémon",
+          "subtypes": ["Stage 2", "Tera", "ex"],
+          "hp": "330",
+          "types": ["Darkness"]
+        },
+        {
+          "id": "sv1-25",
+          "name": "Pikachu",
+          "supertype": "Pokémon",
+          "subtypes": ["Basic"],
+          "hp": "70",
+          "types": ["Lightning"]
+        },
+        {
+          "id": "sv1-86",
+          "name": "Gardevoir ex",
+          "supertype": "Pokémon",
+          "subtypes": ["Stage 2", "ex"],
+          "hp": "310",
+          "types": ["Psychic"]
+        },
+        {
+          "id": "sv1-186",
+          "name": "Professor's Research",
+          "supertype": "Trainer",
+          "subtypes": ["Supporter"],
+          "rules": ["Discard your hand and draw 7 cards."]
+        },
+        {
+          "id": "sv1-196",
+          "name": "Double Turbo Energy",
+          "supertype": "Energy",
+          "subtypes": ["Special"],
+          "rules": ["As long as this card is attached to a Pokémon, it provides 2 Colorless Energy."]
+        }
+      ]
+    },
+    "tcgdex": {
+      "cards": []
+    },
+    "limitless": {
+      "tournaments": [],
+      "decklists": []
+    }
+  },
+  "rows": {
+    "sets": [
+      {
+        "id": "sv4pt5",
+        "name": "Paldean Fates",
+        "release_date": "2024-01-26"
+      },
+      {
+        "id": "sv1",
+        "name": "Scarlet & Violet",
+        "release_date": "2023-03-31"
+      }
+    ],
+    "cards": [
+      {
+        "id": "sv4pt5-54",
+        "set_id": "sv4pt5",
+        "name": "Charizard ex",
+        "supertype": "Pokémon",
+        "subtypes": "Stage 2,Tera,ex",
+        "hp": 330,
+        "types": "Darkness",
+        "rarity": "Double Rare"
+      },
+      {
+        "id": "sv1-25",
+        "set_id": "sv1",
+        "name": "Pikachu",
+        "supertype": "Pokémon",
+        "subtypes": "Basic",
+        "hp": 70,
+        "types": "Lightning",
+        "rarity": "Common"
+      },
+      {
+        "id": "sv1-86",
+        "set_id": "sv1",
+        "name": "Gardevoir ex",
+        "supertype": "Pokémon",
+        "subtypes": "Stage 2,ex",
+        "hp": 310,
+        "types": "Psychic",
+        "rarity": "Double Rare"
+      },
+      {
+        "id": "sv1-186",
+        "set_id": "sv1",
+        "name": "Professor's Research",
+        "supertype": "Trainer",
+        "subtypes": "Supporter",
+        "hp": null,
+        "types": null,
+        "rarity": "Common"
+      },
+      {
+        "id": "sv1-196",
+        "set_id": "sv1",
+        "name": "Double Turbo Energy",
+        "supertype": "Energy",
+        "subtypes": "Special",
+        "hp": null,
+        "types": null,
+        "rarity": "Uncommon"
+      }
+    ],
+    "attacks": [
+      {
+        "id": "att-sv4pt5-54-1",
+        "card_id": "sv4pt5-54",
+        "name": "Burning Darkness",
+        "cost": "Fire,Fire",
+        "damage": "180+",
+        "text": "This attack does 30 more damage for each Prize card your opponent has taken."
+      },
+      {
+        "id": "att-sv1-25-1",
+        "card_id": "sv1-25",
+        "name": "Thunder Shock",
+        "cost": "Lightning",
+        "damage": "20",
+        "text": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      },
+      {
+        "id": "att-sv1-86-1",
+        "card_id": "sv1-86",
+        "name": "Miracle Force",
+        "cost": "Psychic,Psychic,Colorless",
+        "damage": "190",
+        "text": "This Pokémon recovers from all Special Conditions."
+      }
+    ],
+    "abilities": [
+      {
+        "id": "ab-sv4pt5-54-1",
+        "card_id": "sv4pt5-54",
+        "name": "Infernal Reign",
+        "type": "Ability",
+        "text": "When you play this Pokémon from your hand to evolve 1 of your Pokémon during your turn, you may search your deck for up to 3 Basic Fire Energy cards and attach them to your Pokémon in any way you like. Then, shuffle your deck."
+      },
+      {
+        "id": "ab-sv1-86-1",
+        "card_id": "sv1-86",
+        "name": "Psychic Embrace",
+        "type": "Ability",
+        "text": "As often as you like during your turn, you may attach a Basic Psychic Energy card from your discard pile to 1 of your Psychic Pokémon. If you attached Energy to a Pokémon in this way, put 2 damage counters on that Pokémon. You can't use this Ability on a Pokémon that would be Knocked Out."
+      }
+    ],
+    "weaknesses": [
+      {
+        "card_id": "sv4pt5-54",
+        "type": "Grass",
+        "value": "×2"
+      },
+      {
+        "card_id": "sv1-25",
+        "type": "Fighting",
+        "value": "×2"
+      },
+      {
+        "card_id": "sv1-86",
+        "type": "Darkness",
+        "value": "×2"
+      }
+    ],
+    "resistances": [
+      {
+        "card_id": "sv1-86",
+        "type": "Fighting",
+        "value": "-30"
+      }
+    ],
+    "tournaments": [],
+    "decks": [],
+    "deck_cards": [],
+    "user_decks": [],
+    "user_deck_versions": []
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "fixture": "decks-basic",
+  "version": 1,
+  "description": "2 TCG Live decks with resolved card rows and one intentional unresolved card",
+  "source": {
+    "ptcg": {
+      "sets": [],
+      "cards": []
+    },
+    "tcgdex": {
+      "cards": []
+    },
+    "limitless": {
+      "tournaments": [
+        {
+          "id": "tourney-1",
+          "name": "Champions League 2024",
+          "date": "2024-03-10"
+        }
+      ],
+      "decklists": [
+        {
+          "deckId": "deck-1",
+          "player": "Ash Ketchum"
+        },
+        {
+          "deckId": "deck-2",
+          "player": "Red"
+        }
+      ]
+    }
+  },
+  "rows": {
+    "sets": [
+      {
+        "id": "sv4pt5",
+        "name": "Paldean Fates",
+        "release_date": "2024-01-26"
+      },
+      {
+        "id": "sv1",
+        "name": "Scarlet & Violet",
+        "release_date": "2023-03-31"
+      }
+    ],
+    "cards": [
+      {
+        "id": "sv4pt5-54",
+        "set_id": "sv4pt5",
+        "name": "Charizard ex",
+        "supertype": "Pokémon",
+        "subtypes": "Stage 2,Tera,ex",
+        "hp": 330,
+        "types": "Darkness",
+        "rarity": "Double Rare"
+      },
+      {
+        "id": "sv1-25",
+        "set_id": "sv1",
+        "name": "Pikachu",
+        "supertype": "Pokémon",
+        "subtypes": "Basic",
+        "hp": 70,
+        "types": "Lightning",
+        "rarity": "Common"
+      },
+      {
+        "id": "sv1-186",
+        "set_id": "sv1",
+        "name": "Professor's Research",
+        "supertype": "Trainer",
+        "subtypes": "Supporter",
+        "hp": null,
+        "types": null,
+        "rarity": "Common"
+      },
+      {
+        "id": "sv1-196",
+        "set_id": "sv1",
+        "name": "Double Turbo Energy",
+        "supertype": "Energy",
+        "subtypes": "Special",
+        "hp": null,
+        "types": null,
+        "rarity": "Uncommon"
+      }
+    ],
+    "attacks": [],
+    "abilities": [],
+    "weaknesses": [],
+    "resistances": [],
+    "tournaments": [
+      {
+        "id": "tourney-1",
+        "name": "Champions League 2024",
+        "date": "2024-03-10"
+      }
+    ],
+    "decks": [
+      {
+        "id": "deck-1",
+        "tournament_id": "tourney-1",
+        "name": "Charizard ex Beatdown",
+        "player": "Ash Ketchum"
+      },
+      {
+        "id": "deck-2",
+        "tournament_id": "tourney-1",
+        "name": "Pikachu Turbo",
+        "player": "Red"
+      }
+    ],
+    "deck_cards": [
+      {
+        "deck_id": "deck-1",
+        "card_id": "sv4pt5-54",
+        "count": 3,
+        "raw_name": "Charizard ex PAF 54",
+        "unresolved": 0
+      },
+      {
+        "deck_id": "deck-1",
+        "card_id": "sv1-186",
+        "count": 4,
+        "raw_name": "Professor's Research SVI 186",
+        "unresolved": 0
+      },
+      {
+        "deck_id": "deck-1",
+        "card_id": null,
+        "count": 1,
+        "raw_name": "Unreleased Secret Tech 999",
+        "unresolved": 1
+      },
+      {
+        "deck_id": "deck-2",
+        "card_id": "sv1-25",
+        "count": 4,
+        "raw_name": "Pikachu SVI 25",
+        "unresolved": 0
+      },
+      {
+        "deck_id": "deck-2",
+        "card_id": "sv1-196",
+        "count": 4,
+        "raw_name": "Double Turbo Energy SVI 196",
+        "unresolved": 0
+      }
+    ],
+    "user_decks": [],
+    "user_deck_versions": []
+  }
+}

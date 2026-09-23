@@ -79,6 +79,13 @@ describe("BR-S01.T02-04: Multi-process concurrency spec", () => {
       { cwd: dbPkgDir, encoding: "utf-8" }
     );
 
+    if (proc1.status !== 0) {
+      console.error("proc1 error:", proc1.stdout, proc1.stderr);
+    }
+    if (proc2.status !== 0) {
+      console.error("proc2 error:", proc2.stdout, proc2.stderr);
+    }
+
     expect(proc1.status).toBe(0);
     expect(proc2.status).toBe(0);
 
