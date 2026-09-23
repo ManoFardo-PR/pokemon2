@@ -1,0 +1,38 @@
+# Build Artifacts & Generated Code
+dist/
+build/
+out/
+target/
+*.generated.*
+
+# Dependencies
+node_modules/
+.venv/
+vendor/
+
+# Environment & Secrets
+.env
+.env.*
+*.pem
+*.key
+*.secret
+
+# Logs & Data Databases
+*.log
+*.sqlite
+*.db
+*.csv
+*.jsonl
+
+# Version Control & IDE
+.git/
+.idea/
+.vscode/
+.continue/
+
+# Large Binary Files & Media
+*.pdf
+*.zip
+*.tar.gz
+*.png
+*.jpg
