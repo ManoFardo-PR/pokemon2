@@ -5,7 +5,7 @@
 | Stage | S05 — Card rules base |
 | Status | TODO |
 | Order in stage | 7 / 16 |
-| Depends on | [S05.T01](T01-rules-schema-migration.md), [S05.T03](T03-effect-ir-vocabulary.md), [S05.T04](T04-ir-compiler-and-vm.md), [S05.T06](T06-builtins-escape-hatch.md) |
+| Depends on | [S05.T01](T01-rules-schema-migration.md), [S05.T02](T02-effect-texts-and-card-parts.md), [S05.T03](T03-effect-ir-vocabulary.md), [S05.T04](T04-ir-compiler-and-vm.md), [S05.T06](T06-builtins-escape-hatch.md) |
 | Unblocks | [S05.T08](T08-spreadsheet-import.md), [S05.T09](T09-import-attack-effects-json.md), [S05.T10](T10-import-catalog-recipes.md), [S05.T13](T13-rules-editor-ui.md), [S05.T15](T15-rules-export-import-seed.md), [S08.T06](../08-operations-and-extensions/T06-llm-assisted-authoring.md) |
 | Parallel with | [S05.T11](T11-legacy-tests-to-scenarios.md) |
 | Gate | no |

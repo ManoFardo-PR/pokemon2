@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 3 / 16 |
 | Depends on | [S01.T05](../01-foundation/T05-shared-contracts-package.md), [S04.T07](../04-game-engine-core/T07-damage-pipeline.md), [S04.T09](../04-game-engine-core/T09-prompt-protocol.md) |
-| Unblocks | [S05.T04](T04-ir-compiler-and-vm.md), [S05.T07](T07-rule-codes-composition-semantics.md), [S06.T02](../06-bots/T02-deck-profile-analysis.md) |
+| Unblocks | [S05.T04](T04-ir-compiler-and-vm.md), [S05.T05](T05-continuous-modifiers-and-triggers.md), [S05.T07](T07-rule-codes-composition-semantics.md), [S05.T15](T15-rules-export-import-seed.md), [S06.T02](../06-bots/T02-deck-profile-analysis.md) |
 | Parallel with | [S05.T01](T01-rules-schema-migration.md) |
 | Gate | no |
 | Owner / Updated | — / — |

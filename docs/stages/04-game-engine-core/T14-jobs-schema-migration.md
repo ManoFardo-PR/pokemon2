@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 14 / 18 |
 | Depends on | [S01.T04](../01-foundation/T04-database-migration-framework.md) |
-| Unblocks | [S04.T15](T15-worker-job-runner.md), [S07.T07](../07-deck-optimizer/T07-coach-lost-game-review.md), [S08.T04](../08-operations-and-extensions/T04-wasm-replay-and-play.md) |
+| Unblocks | [S04.T15](T15-worker-job-runner.md), [S05.T16](../05-card-rules-base/T16-measurement-model-and-suite-v6-freeze.md), [S07.T07](../07-deck-optimizer/T07-coach-lost-game-review.md), [S08.T04](../08-operations-and-extensions/T04-wasm-replay-and-play.md) |
 | Parallel with | [S04.T01](T01-engine-workspace-and-crates.md) |
 | Gate | no |
 | Owner / Updated | — / — |

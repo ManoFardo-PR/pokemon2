@@ -5,7 +5,7 @@
 | Stage | S05 — Card rules base |
 | Status | TODO |
 | Order in stage | 13 / 16 |
-| Depends on | [S01.T08](../01-foundation/T08-web-skeleton.md), [S05.T07](T07-rule-codes-composition-semantics.md), [S05.T12](T12-evidence-and-coverage-metrics.md) |
+| Depends on | [S01.T08](../01-foundation/T08-web-skeleton.md), [S05.T02](T02-effect-texts-and-card-parts.md), [S05.T07](T07-rule-codes-composition-semantics.md), [S05.T12](T12-evidence-and-coverage-metrics.md) |
 | Unblocks | [S08.T06](../08-operations-and-extensions/T06-llm-assisted-authoring.md) |
 | Parallel with | [S05.T14](T14-coverage-page-and-authoring-queue.md), [S05.T16](T16-measurement-model-and-suite-v6-freeze.md) |
 | Gate | no |

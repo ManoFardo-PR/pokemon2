@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 11 / 13 |
 | Depends on | [S01.T07](../01-foundation/T07-api-skeleton-and-health.md), [S03.T09](T09-decklist-parser-and-exporter.md), [S03.T10](T10-deck-validation-rules.md) |
-| Unblocks | [S03.T12](T12-web-deck-builder.md), [S03.T13](T13-deck-comparison-with-tournament-lists.md), [S07.T01](../07-deck-optimizer/T01-candidate-pool-and-move-generation.md), [S07.T04](../07-deck-optimizer/T04-holdout-acceptance-and-versioning.md) |
+| Unblocks | [S03.T12](T12-web-deck-builder.md), [S03.T13](T13-deck-comparison-with-tournament-lists.md), [S05.T16](../05-card-rules-base/T16-measurement-model-and-suite-v6-freeze.md), [S07.T01](../07-deck-optimizer/T01-candidate-pool-and-move-generation.md), [S07.T04](../07-deck-optimizer/T04-holdout-acceptance-and-versioning.md) |
 | Parallel with | [S03.T07](T07-api-meta-endpoints.md) |
 | Gate | no |
 | Owner / Updated | — / — |

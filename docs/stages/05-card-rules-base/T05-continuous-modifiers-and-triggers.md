@@ -5,7 +5,7 @@
 | Stage | S05 — Card rules base |
 | Status | TODO |
 | Order in stage | 5 / 16 |
-| Depends on | [S04.T06](../04-game-engine-core/T06-energy-provision-and-cost-payment.md), [S04.T07](../04-game-engine-core/T07-damage-pipeline.md), [S04.T08](../04-game-engine-core/T08-special-conditions-and-checkup.md), [S05.T04](T04-ir-compiler-and-vm.md) |
+| Depends on | [S04.T06](../04-game-engine-core/T06-energy-provision-and-cost-payment.md), [S04.T07](../04-game-engine-core/T07-damage-pipeline.md), [S04.T08](../04-game-engine-core/T08-special-conditions-and-checkup.md), [S05.T03](T03-effect-ir-vocabulary.md), [S05.T04](T04-ir-compiler-and-vm.md) |
 | Unblocks | [S05.T11](T11-legacy-tests-to-scenarios.md) |
 | Parallel with | [S05.T06](T06-builtins-escape-hatch.md) |
 | Gate | no |

@@ -6,7 +6,7 @@
 | Status | TODO |
 | Order in stage | 2 / 16 |
 | Depends on | [S02.T06](../02-card-data-and-search/T06-load-cards.md), [S05.T01](T01-rules-schema-migration.md) |
-| Unblocks | [S05.T08](T08-spreadsheet-import.md) |
+| Unblocks | [S05.T07](T07-rule-codes-composition-semantics.md), [S05.T08](T08-spreadsheet-import.md), [S05.T11](T11-legacy-tests-to-scenarios.md), [S05.T13](T13-rules-editor-ui.md) |
 | Parallel with | [S05.T04](T04-ir-compiler-and-vm.md) |
 | Gate | no |
 | Owner / Updated | — / — |

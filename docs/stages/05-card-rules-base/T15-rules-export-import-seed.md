@@ -5,7 +5,7 @@
 | Stage | S05 — Card rules base |
 | Status | TODO |
 | Order in stage | 15 / 16 |
-| Depends on | [S05.T01](T01-rules-schema-migration.md), [S05.T07](T07-rule-codes-composition-semantics.md) |
+| Depends on | [S05.T01](T01-rules-schema-migration.md), [S05.T03](T03-effect-ir-vocabulary.md), [S05.T07](T07-rule-codes-composition-semantics.md) |
 | Unblocks | — |
 | Parallel with | [S05.T08](T08-spreadsheet-import.md), [S05.T09](T09-import-attack-effects-json.md), [S05.T10](T10-import-catalog-recipes.md), [S05.T12](T12-evidence-and-coverage-metrics.md) |
 | Gate | no |

@@ -5,7 +5,7 @@
 | Stage | S05 — Card rules base |
 | Status | TODO |
 | Order in stage | 11 / 16 |
-| Depends on | [S04.T13](../04-game-engine-core/T13-scenario-format-and-runner.md), [S05.T04](T04-ir-compiler-and-vm.md), [S05.T05](T05-continuous-modifiers-and-triggers.md) |
+| Depends on | [S04.T13](../04-game-engine-core/T13-scenario-format-and-runner.md), [S05.T02](T02-effect-texts-and-card-parts.md), [S05.T04](T04-ir-compiler-and-vm.md), [S05.T05](T05-continuous-modifiers-and-triggers.md) |
 | Unblocks | [S05.T12](T12-evidence-and-coverage-metrics.md) |
 | Parallel with | [S05.T07](T07-rule-codes-composition-semantics.md) |
 | Gate | no |
