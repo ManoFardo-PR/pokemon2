@@ -1,4 +1,4 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src"]
+  "include": ["src", "../../packages/db/src/node-sqlite.d.ts"]
 }

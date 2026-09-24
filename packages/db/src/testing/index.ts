@@ -7,6 +7,54 @@ import path from "node:path";
 
 export { TestDbError };
 
+export interface TestDb {
+  db: Db;
+  path: string;
+  dir: string;
+  cleanup: () => void;
+}
+
+export function createTestDb(opts?: TempDbOptions): TestDb {
+  const baseDir = getTestTmpDir();
+  const dir = fs.mkdtempSync(path.join(baseDir, `pokesearch-test-${process.pid}-`));
+  const dbPath = path.join(dir, "db.sqlite");
+  const openOpts = opts?.readonly !== undefined ? { readonly: opts.readonly } : undefined;
+
+  let db: Db;
+  if (currentInitializer) {
+    try {
+      const templatePath = getOrCreateTemplate(currentInitializer);
+      fs.copyFileSync(templatePath, dbPath);
+      db = openDatabase(dbPath, openOpts);
+    } catch {
+      db = openDatabase(dbPath, openOpts);
+      currentInitializer.apply(db);
+    }
+  } else {
+    db = openDatabase(dbPath, openOpts);
+  }
+
+  if (opts?.fixtures) {
+    for (const fixName of opts.fixtures) {
+      loadFixture(db, fixName);
+    }
+  }
+
+  return {
+    db,
+    path: dbPath,
+    dir,
+    cleanup: () => {
+      try {
+        db.close();
+      } catch {
+        // ignore
+      }
+      cleanDirWithRetry(dir);
+    },
+  };
+}
+
 export class FixtureTableMissing extends Error {
   readonly table: string;
   readonly fixture: string;
