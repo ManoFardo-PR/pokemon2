@@ -1,0 +1,65 @@
+{
+  "$id": "https://pokesearch.invalid/schema/v1/validation-report.json",
+  "$ref": "#/definitions/ValidationReport",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "ValidationReport": {
+      "additionalProperties": false,
+      "description": "Deck validation report (refined in S03.T10)",
+      "properties": {
+        "issues": {
+          "description": "List of validation errors and warnings",
+          "items": {
+            "additionalProperties": false,
+            "description": "Individual deck validation issue",
+            "properties": {
+              "code": {
+                "description": "Stable machine code, e.g. 'not_60_cards'",
+                "type": "string"
+              },
+              "line": {
+                "description": "Line index associated with issue if applicable",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "message": {
+                "description": "English; pt-BR copy comes from the web strings module",
+                "type": "string"
+              },
+              "severity": {
+                "description": "Issue severity level",
+                "enum": [
+                  "error",
+                  "warning"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "severity",
+              "code",
+              "message"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "ok": {
+          "description": "False when any issue has severity 'error'",
+          "type": "boolean"
+        },
+        "total": {
+          "description": "Sum of line counts; 60 for a legal deck (RN-10)",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ok",
+        "total",
+        "issues"
+      ],
+      "type": "object"
+    }
+  }
+}

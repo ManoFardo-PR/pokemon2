@@ -1,0 +1,45 @@
+{
+  "$id": "https://pokesearch.invalid/schema/v1/search-query.json",
+  "$ref": "#/definitions/SearchQuery",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "SearchQuery": {
+      "additionalProperties": false,
+      "description": "Search query parameters placeholder (refined in S02.T09)",
+      "properties": {
+        "page": {
+          "default": 1,
+          "description": "1-based page index",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "pageSize": {
+          "default": 60,
+          "description": "Cards per page, up to 200",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sort": {
+          "default": "relevance",
+          "description": "Sort order for search results",
+          "enum": [
+            "relevance",
+            "name",
+            "number",
+            "release",
+            "price"
+          ],
+          "type": "string"
+        },
+        "text": {
+          "description": "Free-text query; FTS5 in S02.T08",
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  }
+}

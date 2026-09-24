@@ -1,0 +1,51 @@
+{
+  "$id": "https://pokesearch.invalid/schema/v1/job-request.json",
+  "$ref": "#/definitions/JobRequest",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "JobRequest": {
+      "additionalProperties": false,
+      "description": "Job request payload passed to the simulator engine (refined in S04.T12)",
+      "properties": {
+        "contractVersion": {
+          "description": "Must share the major with the engine's CONTRACT_VERSION",
+          "type": "string"
+        },
+        "jobId": {
+          "description": "Unique identifier for this compute job",
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind of job operation to execute",
+          "enum": [
+            "simulate",
+            "measure",
+            "optimize",
+            "scenarios"
+          ],
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": false,
+          "description": "Per-kind payload; refined in S04.T12",
+          "properties": {},
+          "type": "object"
+        },
+        "seed0": {
+          "description": "Base seed; per-game seeds derive from it (RN-46)",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "contractVersion",
+        "jobId",
+        "kind",
+        "seed0",
+        "params"
+      ],
+      "type": "object"
+    }
+  }
+}

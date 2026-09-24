@@ -1,0 +1,85 @@
+{
+  "$id": "https://pokesearch.invalid/schema/v1/decklist.json",
+  "$ref": "#/definitions/Decklist",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Decklist": {
+      "additionalProperties": false,
+      "description": "TCG Live decklist representation (refined in S03.T09)",
+      "properties": {
+        "format": {
+          "const": "standard",
+          "description": "Deck format constraint, currently standard",
+          "type": "string"
+        },
+        "lines": {
+          "description": "Decklist lines, up to 120 unique printings",
+          "items": {
+            "additionalProperties": false,
+            "description": "Single decklist line entry",
+            "properties": {
+              "cardId": {
+                "anyOf": [
+                  {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Resolved cards.id, null when unresolved (RN-02)"
+              },
+              "count": {
+                "description": "Copies of this printing",
+                "maximum": 60,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "name": {
+                "description": "Card name as printed in the TCG Live export",
+                "minLength": 1,
+                "type": "string"
+              },
+              "number": {
+                "description": "Collector number as printed",
+                "maxLength": 8,
+                "minLength": 1,
+                "type": "string"
+              },
+              "setCode": {
+                "description": "PTCGO/PTCGL set code, e.g. TWM",
+                "maxLength": 8,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "count",
+              "name"
+            ],
+            "type": "object"
+          },
+          "maxItems": 120,
+          "type": "array"
+        },
+        "source": {
+          "default": "paste",
+          "description": "Source origin of the decklist",
+          "enum": [
+            "paste",
+            "tournament",
+            "builder"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "lines"
+      ],
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$id": "https://pokesearch.invalid/schema/v1/card-def.json",
+  "$ref": "#/definitions/CardDef",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "CardDef": {
+      "additionalProperties": false,
+      "description": "Card definition derived from card database for engine use (refined in S04.T02)",
+      "properties": {
+        "id": {
+          "description": "Canonical card identifier, e.g. sv1-189",
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "description": "Card name as recognized by engine",
+          "minLength": 1,
+          "type": "string"
+        },
+        "rules": {
+          "description": "Card rules and effect text definitions",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "subtypes": {
+          "description": "List of subtypes, e.g. Basic, Item, Supporter",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "supertype": {
+          "description": "Primary card supertype",
+          "enum": [
+            "Pokémon",
+            "Trainer",
+            "Energy"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "supertype",
+        "subtypes",
+        "rules"
+      ],
+      "type": "object"
+    }
+  }
+}

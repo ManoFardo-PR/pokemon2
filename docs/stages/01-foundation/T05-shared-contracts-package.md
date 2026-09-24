@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | TODO |
+| Status | COMPLETED |
 | Order in stage | 5 / 10 |
 | Depends on | [S01.T01](T01-monorepo-skeleton.md) |
 | Unblocks | [S01.T07](T07-api-skeleton-and-health.md), [S01.T10](T10-quality-gates-and-docs-lint.md), [S02.T09](../02-card-data-and-search/T09-search-query-model-and-sql.md), [S02.T10](../02-card-data-and-search/T10-natural-language-parser.md), [S03.T09](../03-tournament-meta-and-deck-builder/T09-decklist-parser-and-exporter.md), [S04.T02](../04-game-engine-core/T02-card-definition-model.md), [S04.T12](../04-game-engine-core/T12-cli-job-protocol.md), [S04.T13](../04-game-engine-core/T13-scenario-format-and-runner.md), [S05.T03](../05-card-rules-base/T03-effect-ir-vocabulary.md) |
@@ -202,3 +202,72 @@ export const scenarioSchema = z.object({
 
 ---
 Context docs: [Vision and scope](../../project/01-vision-and-scope.md) · [Decision log](../../project/02-decision-log.md) · [Architecture](../../project/03-architecture-overview.md) · [Data model](../../project/04-data-model-overview.md) · [Business rules traceability](../../project/05-business-rules-traceability.md) · [Legacy reference map](../../project/06-legacy-reference-map.md) · [Glossary](../../project/07-glossary.md) · [Conventions](../../project/08-conventions.md) · [Stage README](README.md)
+
+## Execution Summary
+
+- **Date of Completion**: 2025-05-18
+- **Files Created/Modified**:
+  - `packages/shared/package.json` (modified) — Subpath exports, build/check scripts, dependencies (`zod-to-json-schema`).
+  - `packages/shared/src/index.ts` (modified) — Barrel export for contracts, version, registry, and env.
+  - `packages/shared/src/version.ts` (created) — `CONTRACT_VERSION = "1.0.0"`, `CONTRACT_MAJOR = 1`, and SemVer compatibility check.
+  - `packages/shared/src/version.spec.ts` (created) — Unit test suite for versioning and compatibility check.
+  - `packages/shared/src/search/index.ts` (created) — `searchQuerySchema`, type, and sample.
+  - `packages/shared/src/decklist/index.ts` (created) — `decklistLineSchema`, `decklistSchema`, `validationReportSchema`, types, and samples.
+  - `packages/shared/src/ir/index.ts` (created) — `effectIrSchema`, type, and sample (closed vocabulary v0).
+  - `packages/shared/src/jobs/index.ts` (created) — `jobRequestSchema`, `jobEventSchema`, types, and samples.
+  - `packages/shared/src/scenario/index.ts` (created) — `scenarioSchema`, type, and sample.
+  - `packages/shared/src/card-def/index.ts` (created) — `cardDefSchema`, type, and sample.
+  - `packages/shared/src/registry.ts` (created) — `CONTRACTS` registry definition.
+  - `packages/shared/src/contracts.spec.ts` (created) — Invariant verification test suite.
+  - `packages/shared/scripts/schema-build.mjs` (created) — Deterministic JSON Schema draft 2020-12 exporter.
+  - `packages/shared/scripts/schema-check.mjs` (created) — Deterministic verification script for generated schemas.
+  - `packages/shared/schema/*.json` (created) — 8 exported JSON Schema definitions.
+  - `packages/shared/CONTRACTS.md` (created) — Boundaries, structural schema invariants, and changelog.
+  - `package.json` (modified) — Integrated `schema:build` and `schema:check` in root check pipeline.
+  - `docs/stages/01-foundation/T05-shared-contracts-package.log.md` (created) — Execution companion log.
+- **Key Technical Decisions**:
+  - Version negotiation anchored by `CONTRACT_MAJOR = 1` matching SemVer major equality for engine-handshake negotiation.
+  - Pure JSON serializability across all boundary objects (`BR-S01.T05-05`).
+  - Strict key enforcement via `.strict()` on all objects (`BR-S01.T05-04`).
+  - English description tags (`.describe(...)`) attached to all properties for schema preservation (`BR-S01.T05-07`).
+  - Deterministic serialization in `schema-build.mjs` enforcing sorted keys, 2-space indentation, trailing newline, and standardized `$id` (`BR-S01.T05-03`).
+- **Test Execution Status**:
+  - `pnpm --filter @pokesearch/shared test`: 3 test suites, 53 tests passed.
+  - `pnpm --filter @pokesearch/shared schema:check`: clean exit 0.
+  - `pnpm check`: all workspaces type check, lint, and 123 tests passed.
+
+
+## Execution Summary
+
+- **Date of Completion**: 2025-05-18
+- **Files Created/Modified**:
+  - `packages/shared/package.json` (modified) — subpath exports, schema scripts, zod-to-json-schema dev dependency.
+  - `package.json` (modified) — added `schema:build`, `schema:check`, and tsx dev dependency.
+  - `packages/shared/src/version.ts` (created) — `CONTRACT_VERSION` = "1.0.0", `CONTRACT_MAJOR` = 1, `isCompatible` SemVer check.
+  - `packages/shared/src/version.spec.ts` (created) — SemVer compatibility test suite.
+  - `packages/shared/src/search/index.ts` (created) — `SearchQuery` placeholder schema and sample.
+  - `packages/shared/src/decklist/index.ts` (created) — `DecklistLine`, `Decklist`, `ValidationReport` schemas and samples.
+  - `packages/shared/src/ir/index.ts` (created) — `EffectIr` closed-vocabulary placeholder schema and sample.
+  - `packages/shared/src/jobs/index.ts` (created) — `JobRequest` and `JobEvent` discriminated union schemas and samples.
+  - `packages/shared/src/scenario/index.ts` (created) — `Scenario` placeholder schema and sample.
+  - `packages/shared/src/card-def/index.ts` (created) — `CardDef` placeholder schema and sample.
+  - `packages/shared/src/registry.ts` (created) — `CONTRACTS` registry with 8 core contracts.
+  - `packages/shared/src/index.ts` (modified) — Barrel export of all contract modules and versioning.
+  - `packages/shared/src/contracts.spec.ts` (created) — Invariant verification test suite (strictness, JSON purity, round-trip, descriptions, discriminators, schema sync).
+  - `packages/shared/scripts/schema-build.mjs` (created) — Deterministic JSON Schema draft 2020-12 emitter.
+  - `packages/shared/scripts/schema-check.mjs` (created) — Schema drift and determinism validator.
+  - `packages/shared/schema/*.json` (created) — 8 emitted JSON Schemas matching registry.
+  - `packages/shared/CONTRACTS.md` (created) — Contracts architecture, invariants, SemVer rules, engine handshake, and changelog.
+  - `docs/stages/01-foundation/T05-shared-contracts-package.log.md` (created) — Companion execution log.
+- **Key Technical Decisions**:
+  - Pinned single Zod dependency at monorepo root.
+  - Strict enforcement of `.strict()` on all object schemas to ensure breaking changes are captured explicitly via versioning rather than ignored keys.
+  - Pure JSON types only; enforced in unit test AST walker banning non-JSON types.
+  - All field descriptions in English preserved into emitted JSON Schemas.
+  - Deterministic serialization sorting keys alphabetically, 2-space indented, ending with LF.
+- **Test Execution Status**:
+  - `packages/shared/src/version.spec.ts`: 5 passed.
+  - `packages/shared/src/contracts.spec.ts`: 35 passed.
+  - `packages/shared/src/env.spec.ts`: 13 passed.
+  - `@pokesearch/shared` total: 53 tests passed.
+  - Root `pnpm check`: 100% clean across all 6 packages (typecheck, lint, sql-lint, schema:check, 123 tests).

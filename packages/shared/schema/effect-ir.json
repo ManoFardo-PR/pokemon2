@@ -1,0 +1,30 @@
+{
+  "$id": "https://pokesearch.invalid/schema/v1/effect-ir.json",
+  "$ref": "#/definitions/EffectIr",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "EffectIr": {
+      "additionalProperties": false,
+      "description": "Effect intermediate representation placeholder (refined in S05.T03)",
+      "properties": {
+        "ir": {
+          "const": "v0",
+          "description": "IR format version tag",
+          "type": "string"
+        },
+        "ops": {
+          "description": "Adding an op is a deliberate act (S05.T03)",
+          "items": {
+            "not": {}
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "ir",
+        "ops"
+      ],
+      "type": "object"
+    }
+  }
+}

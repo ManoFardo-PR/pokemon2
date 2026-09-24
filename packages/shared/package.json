@@ -1,1 +1,34 @@
-{"name":"@pokesearch/shared","version":"0.1.0","private":true,"type":"module","scripts":{"typecheck":"tsc --noEmit","test":"vitest run","lint":"echo \"No linting configured\""},"dependencies":{"zod":"^3.0.0"},"devDependencies":{"@types/node":"^20.0.0","vitest":"^1.0.0"},"main":"src/index.js"}
+{
+  "name": "@pokesearch/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./env": "./src/env.ts",
+    "./version": "./src/version.ts",
+    "./registry": "./src/registry.ts",
+    "./search": "./src/search/index.ts",
+    "./decklist": "./src/decklist/index.ts",
+    "./ir": "./src/ir/index.ts",
+    "./jobs": "./src/jobs/index.ts",
+    "./scenario": "./src/scenario/index.ts",
+    "./card-def": "./src/card-def/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "schema:build": "node --import tsx scripts/schema-build.mjs",
+    "schema:check": "node --import tsx scripts/schema-check.mjs",
+    "lint": "echo \"No linting configured\""
+  },
+  "dependencies": {
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^1.0.0",
+    "zod-to-json-schema": "^3.25.2"
+  }
+}
+

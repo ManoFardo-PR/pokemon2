@@ -1,0 +1,124 @@
+{
+  "$id": "https://pokesearch.invalid/schema/v1/job-event.json",
+  "$ref": "#/definitions/JobEvent",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "JobEvent": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "description": "Job progress event",
+          "properties": {
+            "done": {
+              "description": "Number of items completed",
+              "type": "integer"
+            },
+            "jobId": {
+              "description": "Job identifier",
+              "type": "string"
+            },
+            "total": {
+              "description": "Total number of items",
+              "type": "integer"
+            },
+            "type": {
+              "const": "progress",
+              "description": "Discriminator tag for progress event",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "jobId",
+            "done",
+            "total"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Job result event",
+          "properties": {
+            "jobId": {
+              "description": "Job identifier",
+              "type": "string"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "description": "Intermediate or final result payload",
+              "properties": {},
+              "type": "object"
+            },
+            "type": {
+              "const": "result",
+              "description": "Discriminator tag for result event",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "jobId",
+            "payload"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Job completion event",
+          "properties": {
+            "fingerprint": {
+              "description": "SHA-256 over per-game outcomes",
+              "type": "string"
+            },
+            "jobId": {
+              "description": "Job identifier",
+              "type": "string"
+            },
+            "type": {
+              "const": "done",
+              "description": "Discriminator tag for done event",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "jobId",
+            "fingerprint"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Job error event",
+          "properties": {
+            "code": {
+              "description": "Machine-readable error code",
+              "type": "string"
+            },
+            "jobId": {
+              "description": "Job identifier",
+              "type": "string"
+            },
+            "message": {
+              "description": "Human-readable error explanation",
+              "type": "string"
+            },
+            "type": {
+              "const": "error",
+              "description": "Discriminator tag for error event",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "jobId",
+            "code",
+            "message"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "Stream event emitted by the engine over JSON Lines (refined in S04.T12)"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "$id": "https://pokesearch.invalid/schema/v1/scenario.json",
+  "$ref": "#/definitions/Scenario",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Scenario": {
+      "additionalProperties": false,
+      "description": "Deterministic scenario specification for the engine (refined in S04.T13)",
+      "properties": {
+        "expect": {
+          "description": "Assertions verified at the end of scenario (refined in S04.T13)",
+          "items": {
+            "not": {}
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "Stable id, also the file name under engine/scenarios/",
+          "pattern": "^[a-z0-9-]+$",
+          "type": "string"
+        },
+        "setup": {
+          "additionalProperties": false,
+          "description": "Board setup specification (refined in S04.T13)",
+          "properties": {},
+          "type": "object"
+        },
+        "source": {
+          "additionalProperties": false,
+          "description": "Provenance information of scenario origin",
+          "properties": {
+            "kind": {
+              "description": "Origin category of the test scenario",
+              "enum": [
+                "legacy_test",
+                "rulebook",
+                "manual"
+              ],
+              "type": "string"
+            },
+            "ref": {
+              "description": "Reference identifier or path from legacy test or manual case",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "ref"
+          ],
+          "type": "object"
+        },
+        "steps": {
+          "description": "Sequence of actions executed in scenario (refined in S04.T13)",
+          "items": {
+            "not": {}
+          },
+          "type": "array"
+        },
+        "title": {
+          "description": "Human-readable title describing the scenario",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "source",
+        "setup",
+        "steps",
+        "expect"
+      ],
+      "type": "object"
+    }
+  }
+}

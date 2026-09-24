@@ -1,6 +1,1 @@
-{"name":"pokesearch2","version":"0.1.0","private":true,"type":"module","packageManager":"pnpm@12.0.0","engines":{"node":">=24.13"},"scripts":{"dev":"pnpm -r --parallel run dev","typecheck":"pnpm -r run typecheck","lint": "pnpm -r run lint",
-"test": "pnpm -r run test",
-"db:backup": "node --no-warnings=ExperimentalWarning scripts/db-backup.mjs",
-"db:migrate": "node --no-warnings=ExperimentalWarning scripts/db-migrate.mjs",
-"db:status": "node --no-warnings=ExperimentalWarning scripts/db-status.mjs",
-"check": "pnpm typecheck && pnpm lint && node scripts/sql-lint.mjs && pnpm test"},"devDependencies":{"@types/node":"^20.0.0"}}
+{"name":"pokesearch2","version":"0.1.0","private":true,"type":"module","packageManager":"pnpm@12.0.0","engines":{"node":">=24.13"},"scripts":{"dev":"pnpm -r --parallel run dev","typecheck":"pnpm -r run typecheck","lint":"pnpm -r run lint","test":"pnpm -r run test","schema:build":"pnpm --filter @pokesearch/shared schema:build","schema:check":"pnpm --filter @pokesearch/shared schema:check","db:backup":"node --no-warnings=ExperimentalWarning scripts/db-backup.mjs","db:migrate":"node --no-warnings=ExperimentalWarning scripts/db-migrate.mjs","db:status":"node --no-warnings=ExperimentalWarning scripts/db-status.mjs","check":"pnpm typecheck && pnpm lint && node scripts/sql-lint.mjs && pnpm schema:check && pnpm test"},"devDependencies":{"@types/node":"^20.0.0","tsx":"^4.23.15"}}
