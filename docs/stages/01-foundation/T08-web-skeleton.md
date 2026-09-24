@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | TODO |
+| Status | COMPLETED |
 | Order in stage | 8 / 10 |
 | Depends on | [S01.T01](T01-monorepo-skeleton.md), [S01.T07](T07-api-skeleton-and-health.md) |
 | Unblocks | [S02.T12](../02-card-data-and-search/T12-web-search-page.md), [S02.T13](../02-card-data-and-search/T13-web-card-detail-page.md), [S02.T14](../02-card-data-and-search/T14-web-sets-page.md), [S03.T08](../03-tournament-meta-and-deck-builder/T08-web-meta-pages.md), [S05.T13](../05-card-rules-base/T13-rules-editor-ui.md), [S05.T14](../05-card-rules-base/T14-coverage-page-and-authoring-queue.md), [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md) |
@@ -191,3 +191,46 @@ The footer keeps the legacy attributions (pokemon-tcg-data, TCGdex, Limitless) a
 
 ---
 Context docs: [Vision and scope](../../project/01-vision-and-scope.md) · [Decision log](../../project/02-decision-log.md) · [Architecture](../../project/03-architecture-overview.md) · [Data model](../../project/04-data-model-overview.md) · [Business rules traceability](../../project/05-business-rules-traceability.md) · [Legacy reference map](../../project/06-legacy-reference-map.md) · [Glossary](../../project/07-glossary.md) · [Conventions](../../project/08-conventions.md) · [Stage README](README.md)
+
+## Execution Summary
+
+- **Date of Completion**: 2025-02-18
+- **Files Created/Modified**:
+  - `apps/web/package.json`
+  - `apps/web/tsconfig.json`
+  - `apps/web/vitest.config.ts`
+  - `apps/web/vite.config.ts`
+  - `apps/web/index.html`
+  - `apps/web/src/main.tsx`
+  - `apps/web/src/strings.ts`
+  - `apps/web/src/api/client.ts`
+  - `apps/web/src/api/hooks.ts`
+  - `apps/web/src/styles/tokens.css`
+  - `apps/web/src/styles/base.css`
+  - `apps/web/src/components/CardImage.tsx`
+  - `apps/web/src/components/QueryState.tsx`
+  - `apps/web/src/components/HealthBadge.tsx`
+  - `apps/web/src/components/RootLayout.tsx`
+  - `apps/web/src/components/NotFound.tsx`
+  - `apps/web/src/routeTree.gen.tsx`
+  - `apps/web/test/setup.ts`
+  - `apps/web/test/client.spec.ts`
+  - `apps/web/test/card-image.spec.tsx`
+  - `apps/web/test/query-state.spec.tsx`
+  - `apps/web/test/router.spec.tsx`
+  - `apps/web/test/theme.spec.tsx`
+  - `apps/web/test/bundle.spec.ts`
+  - `docs/stages/01-foundation/T08-web-skeleton.log.md`
+- **Key Technical Decisions & Configurations Applied**:
+  - Configured Vite + React 19 + TypeScript with bundler module resolution, strict typing, and automated dev proxy for `/api` and `/health`.
+  - Enforced relative-only URLs in `apiFetch` (BR-S01.T08-05) and schema validation with `@pokesearch/shared` (BR-S01.T08-02).
+  - Designed pure client application without server modules, `node:*`, or `@pokesearch/db` imports, validated via bundle purity tests (BR-S01.T08-03).
+  - Built `CardImage` with locked aspect-ratio `245 / 337`, sequential image fallback, and inline SVG fallback (BR-S01.T08-04).
+  - Standardized zero-flash CSS tokens and media queries for dark mode (BR-S01.T08-06).
+  - Centralized pt-BR UI text in `strings.ts` with error code mapping (BR-S01.T08-01).
+  - Created TanStack Router tree with `validateSearch` for URL state retention and placeholders tagged with owner subtask IDs (`S02.T12`, `S02.T13`, `S02.T14`, `S03`, `S03.T08`, `S04`, `S05.T13`) plus 404 handler (BR-S01.T08-07).
+  - Implemented `<QueryState>` component providing loading, empty, and mapped error states with retry support (BR-S01.T08-08).
+- **Test Execution Results**:
+  - `pnpm --filter web test`: 6 test suites passed, 20 tests passed.
+  - `pnpm --filter web typecheck`: 0 errors.
+  - `pnpm --filter web build`: Production bundle built cleanly with zero server leaks.

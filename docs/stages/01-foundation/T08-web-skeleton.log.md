@@ -1,0 +1,41 @@
+# Task Execution Companion Log: S01.T08 — Web application skeleton
+
+- **Status**: `COMPLETED`
+- **Completion Date**: 2025-02-18
+- **Subtask ID**: S01.T08
+- **Files Created/Modified**:
+  - `apps/web/package.json`
+  - `apps/web/tsconfig.json`
+  - `apps/web/vitest.config.ts`
+  - `apps/web/vite.config.ts`
+  - `apps/web/index.html`
+  - `apps/web/src/main.tsx`
+  - `apps/web/src/strings.ts`
+  - `apps/web/src/api/client.ts`
+  - `apps/web/src/api/hooks.ts`
+  - `apps/web/src/styles/tokens.css`
+  - `apps/web/src/styles/base.css`
+  - `apps/web/src/components/CardImage.tsx`
+  - `apps/web/src/components/QueryState.tsx`
+  - `apps/web/src/components/HealthBadge.tsx`
+  - `apps/web/src/components/RootLayout.tsx`
+  - `apps/web/src/components/NotFound.tsx`
+  - `apps/web/src/routeTree.gen.tsx`
+  - `apps/web/test/setup.ts`
+  - `apps/web/test/client.spec.ts`
+  - `apps/web/test/card-image.spec.tsx`
+  - `apps/web/test/query-state.spec.tsx`
+  - `apps/web/test/router.spec.tsx`
+  - `apps/web/test/theme.spec.tsx`
+  - `apps/web/test/bundle.spec.ts`
+
+- **Technical Decisions & Design Enforcements**:
+  - **BR-S01.T08-01 (pt-BR Strings)**: Consolidated UI strings in `src/strings.ts` with error code mapping.
+  - **BR-S01.T08-02 & BR-S01.T08-05 (API Client)**: Relative-only URLs enforced (`apiFetch`), Zod schema parsing throwing `ApiSchemaError` on mismatch, structured `ApiError` envelope mapping.
+  - **BR-S01.T08-03 (Bundle Purity)**: Source code verified to have zero Node built-in or server-side DB dependencies. Production build cleanly generated.
+  - **BR-S01.T08-04 (CardImage Aspect Ratio & Fallback)**: Locked aspect ratio `245 / 337` preventing layout shift, with graceful chain fallback ending at SVG inline placeholder.
+  - **BR-S01.T08-06 (Theme Tokens)**: CSS tokens matching legacy palette with automatic `@media (prefers-color-scheme: dark)` overrides and `data-theme` hooks.
+  - **BR-S01.T08-07 (Router & Placeholders)**: TanStack Router file-based tree with search param restoration for `/` and ownership tags for all 7 subtask placeholders (`S02.T12`, `S02.T13`, `S02.T14`, `S03`, `S03.T08`, `S04`, `S05.T13`), plus a dedicated not-found view.
+  - **BR-S01.T08-08 (Query State)**: Loading, empty, and pt-BR mapped error states with retry handler.
+
+- **Test Status**: `PASSED` (All 6 test suites, 20 tests passing; build and typecheck clean).
