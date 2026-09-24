@@ -2,8 +2,22 @@ import { afterAll } from "vitest";
 import os from "node:os";
 import fs from "node:fs";
 import path from "node:path";
+import { registerSchemaInitializer } from "./index.js";
+import { migrate, migrationsHash } from "../migrate.js";
 
 process.env.NODE_ENV = "test";
+
+// Register default schema initializer with current migrations
+try {
+  registerSchemaInitializer({
+    key: migrationsHash(),
+    apply: (db) => {
+      migrate(db);
+    },
+  });
+} catch {
+  // Ignore initialization errors if migrations not ready
+}
 
 // Sweep old pokesearch-test-* directories older than 1 hour in temp folder
 afterAll(() => {
