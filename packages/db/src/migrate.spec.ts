@@ -57,11 +57,11 @@ describe("Database Migration Runner (packages/db/src/migrate.ts)", () => {
 
       const discovered = discoverMigrations(migrationsDir);
       expect(discovered).toHaveLength(2);
-      expect(discovered[0].version).toBe(1);
-      expect(discovered[0].name).toBe("first_step");
-      expect(discovered[1].version).toBe(2);
-      expect(discovered[1].name).toBe("second_step");
-      expect(discovered[0].checksum).toBeDefined();
+      expect(discovered[0]?.version).toBe(1);
+      expect(discovered[0]?.name).toBe("first_step");
+      expect(discovered[1]?.version).toBe(2);
+      expect(discovered[1]?.name).toBe("second_step");
+      expect(discovered[0]?.checksum).toBeDefined();
     });
 
     it("rejects non-conforming filenames with MigrationValidationError", () => {
@@ -80,7 +80,7 @@ describe("Database Migration Runner (packages/db/src/migrate.ts)", () => {
         "-- @no-transaction\nPRAGMA foreign_keys = OFF;\nCREATE TABLE rebuild_table (id INT);"
       );
       const discovered = discoverMigrations(migrationsDir);
-      expect(discovered[0].noTransaction).toBe(true);
+      expect(discovered[0]?.noTransaction).toBe(true);
     });
   });
 
@@ -248,7 +248,7 @@ describe("Database Migration Runner (packages/db/src/migrate.ts)", () => {
 
       const pending = pendingMigrations(db, migrationsDir);
       expect(pending).toHaveLength(1);
-      expect(pending[0].version).toBe(3);
+      expect(pending[0]?.version).toBe(3);
     });
 
     it("rejects down-migration requests with MigrationValidationError", () => {
@@ -364,9 +364,9 @@ describe("Database Migration Runner (packages/db/src/migrate.ts)", () => {
       const status = migrationStatus(db, migrationsDir);
 
       expect(status.applied).toHaveLength(1);
-      expect(status.applied[0].version).toBe(1);
+      expect(status.applied[0]?.version).toBe(1);
       expect(status.pending).toHaveLength(1);
-      expect(status.pending[0].version).toBe(2);
+      expect(status.pending[0]?.version).toBe(2);
       expect(status.schemaVersion).toBe(1);
       expect(status.sqliteVersion).toMatch(/^\d+\.\d+\.\d+/);
     });

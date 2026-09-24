@@ -77,6 +77,19 @@ Still open from that list and owned by whoever writes `CODES.md`: the wrapper ne
 | O-1 | Project `LICENSE` | S01.T09 | Record source licences first (NOTICE), then choose |
 | O-2 | GitHub repository name for `pokemon2` | S01.T01 | e.g. `ManoFardo-PR/pokemon2` next to the legacy `pokemon` |
 | O-3 | Which Supabase-like host to target later | S08.T03 only | Any managed PostgreSQL ≥ 15 |
-| O-4 | Typed schema layer: Drizzle (if its `node:sqlite` driver exists at implementation time) vs Kysely vs hand-written types | S01.T04 | Decide during S01.T04 and record here |
+| O-4 | Typed schema layer: Drizzle (if its `node:sqlite` driver exists at implementation time) vs Kysely vs hand-written types | S01.T04 | **Resolved 2026-03-30** (see below) |
+
+---
+
+## D-009 — Resolution of O-4: Hand-written row types with schema drift verification (2026-03-30)
+
+- **Context.** S01.T04 mandated resolving O-4 by scoring candidate typing approaches (Drizzle, Kysely, hand-written row types) against five architectural criteria: (a) zero native dependency; (b) migrations remain single source of truth without an ORM DSL; (c) deterministic codegen inside `pnpm check`; (d) clean raw SQL escape hatch for FTS5, `json_each` and dialect modules; (e) zero abstraction overhead on hot paths.
+- **Decision.** Adopt hand-written row types in `@pokesearch/db/schema` paired with SQLite runtime `PRAGMA table_info` drift verification (`packages/db/src/schema.spec.ts`).
+- **Verified facts.**
+  1. `node:sqlite` is Node 24's built-in synchronous module. Neither Drizzle nor Kysely provides seamless first-class synchronous zero-dependency driver parity without external wrappers or asynchronous promises mismatching `DatabaseSync`.
+  2. Migrations in `packages/db/migrations/NNNN_*.sql` are strictly the single source of truth. Maintaining duplicate schema declarations in Drizzle/Kysely DSLs violates criterion (b).
+  3. The runtime `TABLES` descriptor in `@pokesearch/db/schema` enables automated drift tests (BR-S01.T04-09) with zero external dependencies and zero build step. Hot query paths use native prepared statements with exact typing at boundary interfaces.
+- **Consequences.** `@pokesearch/db/schema` exports `SchemaMigrationRow`, `EtlRunRow`, domain unions, and the `TABLES` descriptor. Every subsequent stage adds its table types directly to `@pokesearch/db/schema` and verifies parity with SQLite pragmas.
+
 
 [Docs index](../README.md) · [Vision and scope](01-vision-and-scope.md) · [Architecture](03-architecture-overview.md)

@@ -41,15 +41,15 @@ describe("Schema Drift & Constraints Specification (packages/db/src/schema.ts)",
 
   describe("BR-S01.T04-09: Schema Drift against PRAGMA table_info", () => {
     it("matches TABLES descriptor exactly against SQLite PRAGMA table_info for schema_migrations", () => {
-      const descriptor = TABLES.schema_migrations;
+      const descriptor = TABLES.schema_migrations!;
       expect(descriptor).toBeDefined();
 
       const pragmaCols = db.all<PragmaTableInfo>("PRAGMA table_info(schema_migrations);");
       expect(pragmaCols.length).toBe(descriptor.columns.length);
 
       for (let i = 0; i < descriptor.columns.length; i++) {
-        const expected = descriptor.columns[i];
-        const actual = pragmaCols[i];
+        const expected = descriptor.columns[i]!;
+        const actual = pragmaCols[i]!;
 
         expect(actual.name).toBe(expected.name);
         expect(actual.type.toUpperCase()).toBe(expected.type);
@@ -60,15 +60,15 @@ describe("Schema Drift & Constraints Specification (packages/db/src/schema.ts)",
     });
 
     it("matches TABLES descriptor exactly against SQLite PRAGMA table_info for etl_runs", () => {
-      const descriptor = TABLES.etl_runs;
+      const descriptor = TABLES.etl_runs!;
       expect(descriptor).toBeDefined();
 
       const pragmaCols = db.all<PragmaTableInfo>("PRAGMA table_info(etl_runs);");
       expect(pragmaCols.length).toBe(descriptor.columns.length);
 
       for (let i = 0; i < descriptor.columns.length; i++) {
-        const expected = descriptor.columns[i];
-        const actual = pragmaCols[i];
+        const expected = descriptor.columns[i]!;
+        const actual = pragmaCols[i]!;
 
         expect(actual.name).toBe(expected.name);
         expect(actual.type.toUpperCase()).toBe(expected.type);
@@ -81,7 +81,7 @@ describe("Schema Drift & Constraints Specification (packages/db/src/schema.ts)",
     it("fails when an undocumented column is added to database schema", () => {
       db.exec("ALTER TABLE etl_runs ADD COLUMN rogue_col TEXT;");
 
-      const descriptor = TABLES.etl_runs;
+      const descriptor = TABLES.etl_runs!;
       const pragmaCols = db.all<PragmaTableInfo>("PRAGMA table_info(etl_runs);");
       expect(pragmaCols.length).not.toBe(descriptor.columns.length);
     });
