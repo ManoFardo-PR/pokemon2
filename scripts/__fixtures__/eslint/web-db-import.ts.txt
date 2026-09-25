@@ -1,0 +1,2 @@
+import { openDatabase } from "@pokesearch/db";
+export const x = openDatabase;
