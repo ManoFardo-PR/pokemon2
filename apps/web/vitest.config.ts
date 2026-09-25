@@ -3,7 +3,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  esbuild: { target: "esnext" },
   test: {
+    name: "web",
     globals: true,
     environment: "jsdom",
     setupFiles: ["./test/setup.ts"],

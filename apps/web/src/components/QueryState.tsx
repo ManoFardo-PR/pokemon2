@@ -46,7 +46,7 @@ export function QueryState({
         <p style={{ fontWeight: 600, marginBottom: "8px" }}>{localizedMessage}</p>
         {code && (
           <p style={{ fontSize: "0.85rem", opacity: 0.8, marginBottom: "12px" }}>
-            Código: {code}
+            {strings.errors.codeLabel} {code}
           </p>
         )}
         {onRetry && (

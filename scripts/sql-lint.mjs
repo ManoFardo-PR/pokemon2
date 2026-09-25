@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { resolve, join, relative } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 const SQLITE_ONLY_PATTERNS = [
   /\bjson_each\b/i,

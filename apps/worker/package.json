@@ -1,1 +1,15 @@
-{"name":"worker","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"node --experimental-strip-types src/index.ts","typecheck":"tsc --noEmit"}}
+{
+  "name": "worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --experimental-strip-types src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.7"
+  }
+}

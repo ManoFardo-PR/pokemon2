@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
@@ -9,7 +9,6 @@ import {
   resetSchemaInitializer,
   getRegisteredSchemaInitializer,
   TestDbError,
-  type TempDbInfo,
 } from "./index.js";
 import { openDatabase } from "../client.js";
 
@@ -124,7 +123,7 @@ describe("Testing helper & withTempDb lifecycle", () => {
       } finally {
         if (dirPath && existsSync(dirPath)) {
           // Manual cleanup for test hygiene
-          import("node:fs").then((fs) => fs.rmSync(dirPath, { recursive: true, force: true }));
+          rmSync(dirPath, { recursive: true, force: true });
         }
       }
     });

@@ -267,7 +267,7 @@ export function migrationStatus(db: Db, dir?: string): MigrationStatus {
   const sqliteVerRow = db.get<{ version: string }>("SELECT sqlite_version() as version;");
   const sqliteVersion = sqliteVerRow?.version ?? "unknown";
 
-  const dbPath = (db as any).filename ?? "in-memory";
+  const dbPath = db.path || "in-memory";
 
   return {
     applied,

@@ -268,7 +268,7 @@ export function withTempDb<T>(fn: (info: TempDbInfo) => T, opts?: TempDbOptions)
         const templatePath = getOrCreateTemplate(currentInitializer);
         fs.copyFileSync(templatePath, dbPath);
         schemaApplied = true;
-      } catch (err) {
+      } catch {
         // Fallback: apply directly
         db = openDatabase(dbPath, openOpts);
         currentInitializer.apply(db);

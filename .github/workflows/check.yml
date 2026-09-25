@@ -1,0 +1,21 @@
+# S01.T10 — BR-S01.T10-07: CI runs exactly the commands a developer runs, on the Node version pinned in
+# package.json `engines` and the pnpm version pinned in `packageManager` (via corepack). No CI-only flag, no skip.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm docs:lint

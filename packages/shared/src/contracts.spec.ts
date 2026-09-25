@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { z, type ZodTypeAny, ZodObject, ZodDiscriminatedUnion } from "zod";
+import { type ZodTypeAny, type ZodObject, type ZodDiscriminatedUnion } from "zod";
 import { CONTRACTS } from "./registry.js";
 import { CONTRACT_MAJOR } from "./version.js";
 

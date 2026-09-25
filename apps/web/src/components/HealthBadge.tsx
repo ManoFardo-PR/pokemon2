@@ -1,16 +1,13 @@
 import React from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { QueryClientContext } from "@tanstack/react-query";
 import { useHealth } from "../api/hooks.js";
 import { strings } from "../strings.js";
 import { ApiError } from "../api/client.js";
 
 export function HealthBadge() {
-  let queryClient;
-  try {
-    queryClient = useQueryClient();
-  } catch {
-    queryClient = null;
-  }
+  // Read the context directly: useQueryClient() throws without a provider, and a hook inside try/catch
+  // breaks the rules of hooks.
+  const queryClient = React.useContext(QueryClientContext);
 
   if (!queryClient) {
     return (
@@ -60,7 +57,9 @@ function HealthBadgeWithQuery() {
     return (
       <button
         type="button"
-        onClick={() => refetch()}
+        onClick={() => {
+          void refetch();
+        }}
         title={`Status API: ${code}`}
         style={{
           fontSize: "0.8rem",
@@ -80,7 +79,9 @@ function HealthBadgeWithQuery() {
   return (
     <button
       type="button"
-      onClick={() => refetch()}
+      onClick={() => {
+        void refetch();
+      }}
       title={`SQLite v${data.sqliteVersion ?? "?"} (${data.databasePath ?? "memory"})`}
       style={{
         fontSize: "0.8rem",

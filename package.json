@@ -1,1 +1,36 @@
-{"name":"pokesearch2","version":"0.1.0","private":true,"type":"module","packageManager":"pnpm@12.0.0","engines":{"node":">=24.13"},"scripts":{"dev":"pnpm -r --parallel run dev","typecheck":"pnpm -r run typecheck","lint":"pnpm -r run lint","test":"pnpm -r run test","schema:build":"pnpm --filter @pokesearch/shared schema:build","schema:check":"pnpm --filter @pokesearch/shared schema:check","db:backup":"node --no-warnings=ExperimentalWarning scripts/db-backup.mjs","db:migrate":"node --no-warnings=ExperimentalWarning scripts/db-migrate.mjs","db:status":"node --no-warnings=ExperimentalWarning scripts/db-status.mjs","notice:lint":"node scripts/notice-lint.mjs","check":"pnpm typecheck && pnpm lint && node scripts/sql-lint.mjs && node scripts/notice-lint.mjs && pnpm schema:check && pnpm test"},"devDependencies":{"@types/node":"^20.0.0","tsx":"^4.23.15"}}
+{
+  "name": "pokesearch2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.0.0",
+  "engines": {
+    "node": ">=24.13"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "typecheck": "pnpm -r run typecheck && tsc -p scripts/tsconfig.json",
+    "lint": "pnpm -r run lint && eslint scripts",
+    "test": "vitest run",
+    "schema:build": "pnpm --filter @pokesearch/shared schema:build",
+    "schema:check": "pnpm --filter @pokesearch/shared schema:check",
+    "db:backup": "node --no-warnings=ExperimentalWarning scripts/db-backup.mjs",
+    "db:migrate": "node --no-warnings=ExperimentalWarning scripts/db-migrate.mjs",
+    "db:status": "node --no-warnings=ExperimentalWarning scripts/db-status.mjs",
+    "notice:lint": "node scripts/notice-lint.mjs",
+    "docs:lint": "node scripts/docs-lint.mjs",
+    "check": "pnpm typecheck && pnpm lint && node scripts/sql-lint.mjs && node scripts/notice-lint.mjs && pnpm schema:check && pnpm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^20.0.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^16.5.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^3.2.7"
+  }
+}

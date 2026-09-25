@@ -105,8 +105,8 @@ describe("Fixture Schema, Validation & Integrity", () => {
         /tcgplayer[_-]?key/i,
         /limitless[_-]?key/i,
         /anthropic[_-]?key/i,
-        /bearer\s+[a-zA-Z0-9_\-\.]+/i,
-        /sk-[a-zA-Z0-9_\-]{20,}/,
+        /bearer\s+[a-zA-Z0-9_.-]+/i,
+        /sk-[a-zA-Z0-9_-]{20,}/,
         /data:image\/[a-z]+;base64,/i,
       ];
 

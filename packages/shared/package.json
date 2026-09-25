@@ -17,17 +17,17 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "test": "vitest run",
     "schema:build": "node --import tsx scripts/schema-build.mjs",
-    "schema:check": "node --import tsx scripts/schema-check.mjs",
-    "lint": "echo \"No linting configured\""
+    "schema:check": "node --import tsx scripts/schema-check.mjs"
   },
   "dependencies": {
     "zod": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "vitest": "^1.0.0",
+    "vitest": "^3.2.7",
     "zod-to-json-schema": "^3.25.2"
   }
 }

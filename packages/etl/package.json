@@ -1,1 +1,16 @@
-{"name":"@pokesearch/etl","version":"0.1.0","private":true,"type":"module","scripts":{"typecheck":"tsc --noEmit","dev":"node --experimental-strip-types src/index.ts"},"devDependencies":{"@types/node":"^20.0.0"}}
+{
+  "name": "@pokesearch/etl",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --experimental-strip-types src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "vitest": "^3.2.7"
+  }
+}

@@ -3,25 +3,14 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   esbuild: { target: "esnext" },
   test: {
-    name: "api",
+    name: "worker",
     environment: "node",
+    passWithNoTests: true,
     pool: "forks",
     poolOptions: {
       forks: {
         execArgv: ["--no-warnings=ExperimentalWarning"],
       },
     },
-    deps: {
-      optimizer: {
-        ssr: {
-          include: [],
-          exclude: ["node:sqlite"],
-        },
-      },
-      moduleDirectories: ["node_modules"],
-    },
-  },
-  ssr: {
-    external: ["node:sqlite"],
   },
 });

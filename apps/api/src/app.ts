@@ -62,10 +62,12 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   });
 
   // Error handler (BR-S01.T07-04, BR-S01.T07-09)
+  type ValidationIssue = { instancePath?: string; params?: { missingProperty?: string }; message?: string };
+  type ErrorLike = { message?: string; statusCode?: number; validation?: ValidationIssue[] };
   app.setErrorHandler((error: unknown, request, reply) => {
     const requestId = request.id;
-    const err = error as Record<string, any>;
-    request.log.error({ err, requestId }, err?.message || "Error");
+    const err = (error ?? {}) as ErrorLike;
+    request.log.error({ err, requestId }, err.message || "Error");
 
     if (error instanceof AppError) {
       return reply.status(error.statusCode).send({
@@ -78,22 +80,22 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
       });
     }
 
-    if (err?.validation && Array.isArray(err.validation)) {
-      const details = err.validation.map((v: Record<string, any>) => ({
-        path: (v.instancePath || v.params?.missingProperty || "unknown") as string,
-        message: (v.message || "Invalid input") as string,
+    if (Array.isArray(err.validation)) {
+      const details = err.validation.map((v) => ({
+        path: v.instancePath || v.params?.missingProperty || "unknown",
+        message: v.message || "Invalid input",
       }));
       return reply.status(400).send({
         error: {
           code: "validation_error",
-          message: (err.message as string) || "Validation error",
+          message: err.message || "Validation error",
           details,
           requestId,
         },
       });
     }
 
-    const statusCode = typeof err?.statusCode === "number" ? err.statusCode : 500;
+    const statusCode = typeof err.statusCode === "number" ? err.statusCode : 500;
 
     if (statusCode === 413) {
       return reply.status(413).send({

@@ -1,7 +1,10 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  esbuild: { target: "esnext" },
   test: {
+    name: "@pokesearch/db",
+    environment: "node",
     pool: "forks",
     setupFiles: ["./src/testing/vitest.setup.ts"],
     poolOptions: {

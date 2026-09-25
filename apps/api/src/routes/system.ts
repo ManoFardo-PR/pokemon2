@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
+import type { Db } from "@pokesearch/db";
 import { CONTRACT_VERSION } from "@pokesearch/shared/version";
 import { errorEnvelopeSchema } from "../errors.js";
 
@@ -26,20 +27,21 @@ const versionResponseSchema = z.object({
   engineBuild: z.string().nullable(),
 });
 
-function countOrZero(db: any, tableName: string): number {
+function countOrZero(db: Db, tableName: string): number {
   try {
-    const tableExists = db.get(
+    const tableExists = db.get<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
       [tableName]
     );
     if (!tableExists) return 0;
-    const row = db.get(`SELECT COUNT(*) as count FROM ${tableName}`);
+    const row = db.get<{ count: number }>(`SELECT COUNT(*) as count FROM ${tableName}`);
     return row?.count ?? 0;
   } catch {
     return 0;
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await -- FastifyPluginAsync is an async contract
 export const systemRoutes: FastifyPluginAsync = async (app) => {
   const typedApp = app.withTypeProvider<ZodTypeProvider>();
 
@@ -93,7 +95,7 @@ export const systemRoutes: FastifyPluginAsync = async (app) => {
             decks,
           },
         });
-      } catch (err: any) {
+      } catch (err) {
         request.log.error(err, "Health check database failure");
         return reply.status(503).send({
           error: {
@@ -138,7 +140,7 @@ export const systemRoutes: FastifyPluginAsync = async (app) => {
           commit: null,
           engineBuild: null,
         });
-      } catch (err: any) {
+      } catch (err) {
         request.log.error(err, "Version endpoint database failure");
         return reply.status(503).send({
           error: {

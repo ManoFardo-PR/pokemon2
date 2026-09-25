@@ -28,7 +28,7 @@ export async function startServer() {
         `Database schema outdated: applied=${err.applied}, expected=${err.expected}. Run "pnpm db:migrate".`
       );
     } else {
-      console.error("Schema assertion failed:", (err as any)?.message);
+      console.error("Schema assertion failed:", err instanceof Error ? err.message : String(err));
     }
     db.close();
     process.exit(2);
@@ -83,10 +83,14 @@ export async function startServer() {
       process.exit(0);
     };
 
-    process.on("SIGINT", () => shutdown("SIGINT"));
-    process.on("SIGTERM", () => shutdown("SIGTERM"));
-  } catch (err: any) {
-    if (err.code === "EADDRINUSE") {
+    process.on("SIGINT", () => {
+      void shutdown("SIGINT");
+    });
+    process.on("SIGTERM", () => {
+      void shutdown("SIGTERM");
+    });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "EADDRINUSE") {
       console.error(
         `Port ${config.API_PORT} is already in use. Please specify a different API_PORT.`
       );

@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { openDatabase, DbError, type Db } from "./client.js";
 import { migrate, defaultMigrationsDir } from "./migrate.js";
-import { TABLES, type SchemaMigrationRow, type EtlRunRow } from "./schema.js";
+import { TABLES, type EtlRunRow } from "./schema.js";
 
 interface PragmaTableInfo {
   cid: number;

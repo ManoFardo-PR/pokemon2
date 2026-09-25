@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { type z } from "zod";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -111,7 +111,7 @@ export async function apiFetch<T>(path: `/${string}`, opts: ApiFetchOptions<T>):
       typeof json === "object" &&
       json !== null &&
       "error" in json &&
-      typeof (json as { error: unknown }).error === "object" &&
+      typeof (json).error === "object" &&
       (json as { error: { code?: unknown } }).error !== null
     ) {
       const errPayload = (

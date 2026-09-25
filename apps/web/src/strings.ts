@@ -17,6 +17,7 @@ export const strings = {
   loading: "Carregando...",
   errors: {
     generic: "Algo deu errado.",
+    codeLabel: "Código:",
     byCode: {
       not_found: "Não encontrado.",
       validation_error: "Parâmetros inválidos.",

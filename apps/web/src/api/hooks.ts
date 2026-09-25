@@ -1,7 +1,6 @@
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiFetch, queryKeys, ApiError } from "./client.js";
+import { apiFetch, queryKeys } from "./client.js";
 
 export const healthResponseSchema = z.object({
   ok: z.boolean(),

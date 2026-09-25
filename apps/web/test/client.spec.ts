@@ -49,7 +49,7 @@ describe("apiFetch client", () => {
 
     expect(res).toEqual({ count: 42 });
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    const calledUrl = mockFetch.mock.calls[0][0];
+    const calledUrl = mockFetch.mock.calls[0]?.[0] as string;
     expect(calledUrl).toContain("/api/cards?");
     expect(calledUrl).toContain("q=charizard");
     expect(calledUrl).toContain("page=1");

@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   esbuild: { target: "esnext" },
   test: {
-    name: "api",
+    name: "@pokesearch/shared",
     environment: "node",
     pool: "forks",
     poolOptions: {
@@ -11,17 +11,5 @@ export default defineConfig({
         execArgv: ["--no-warnings=ExperimentalWarning"],
       },
     },
-    deps: {
-      optimizer: {
-        ssr: {
-          include: [],
-          exclude: ["node:sqlite"],
-        },
-      },
-      moduleDirectories: ["node_modules"],
-    },
-  },
-  ssr: {
-    external: ["node:sqlite"],
   },
 });

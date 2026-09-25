@@ -60,8 +60,7 @@ describe("BR-S01.T02-04: Multi-process concurrency spec", () => {
     `;
 
     // Run two processes concurrently
-    const scriptPath = join(tempDir, "worker.mjs");
-    // We write worker.mjs or execute node with inline code.
+    // We execute node with inline code.
     // Notice: in RED phase, packages/db/src/client.ts doesn't exist yet, so this will fail to run or import.
     const dbPkgDir = process.cwd().endsWith("packages/db") || process.cwd().endsWith("packages\\db")
       ? process.cwd()

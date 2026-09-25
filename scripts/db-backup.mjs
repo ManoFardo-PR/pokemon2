@@ -114,7 +114,7 @@ async function run() {
     if (check === "ok") {
       verified = true;
     }
-  } catch (err) {
+  } catch {
     verified = false;
   } finally {
     if (backupDb) {

@@ -107,36 +107,10 @@ class LruStatementCache {
   }
 }
 
-const SQLiteErrorMap: Record<number, string> = {
-  1: "SQLITE_ERROR",
-  2: "SQLITE_INTERNAL",
-  3: "SQLITE_PERM",
-  4: "SQLITE_ABORT",
-  5: "SQLITE_BUSY",
-  6: "SQLITE_LOCKED",
-  7: "SQLITE_NOMEM",
-  8: "SQLITE_READONLY",
-  9: "SQLITE_INTERRUPT",
-  10: "SQLITE_IOERR",
-  11: "SQLITE_CORRUPT",
-  12: "SQLITE_NOTFOUND",
-  13: "SQLITE_FULL",
-  14: "SQLITE_CANTOPEN",
-  15: "SQLITE_PROTOCOL",
-  16: "SQLITE_EMPTY",
-  17: "SQLITE_SCHEMA",
-  18: "SQLITE_TOOBIG",
-  19: "SQLITE_CONSTRAINT",
-  20: "SQLITE_MISMATCH",
-  21: "SQLITE_MISUSE",
-  22: "SQLITE_NOLFS",
-  23: "SQLITE_AUTH",
-  24: "SQLITE_FORMAT",
-  25: "SQLITE_RANGE",
-  26: "SQLITE_NOTADB",
-  27: "SQLITE_NOTICE",
-  28: "SQLITE_WARNING",
-};
+/** Positional parameters, narrowed without Array.isArray (which widens a readonly array union to any[]). */
+function isPositional(params: Params): params is readonly SqlValue[] {
+  return Array.isArray(params);
+}
 
 class DatabaseAdapter implements Db {
   readonly path: string;
@@ -217,7 +191,7 @@ class DatabaseAdapter implements Db {
   run(sql: string, params?: Params): { changes: number; lastInsertRowid: number | bigint } {
     try {
       const stmt = this.getStatement(sql);
-      const res = params ? (Array.isArray(params) ? stmt.run(...params) : stmt.run(params)) : stmt.run();
+      const res = params ? (isPositional(params) ? stmt.run(...params) : stmt.run(params)) : stmt.run();
       return {
         changes: Number(res.changes),
         lastInsertRowid: res.lastInsertRowid,
@@ -230,7 +204,7 @@ class DatabaseAdapter implements Db {
   get<T>(sql: string, params?: Params): T | undefined {
     try {
       const stmt = this.getStatement(sql);
-      const row = params ? (Array.isArray(params) ? stmt.get(...params) : stmt.get(params)) : stmt.get();
+      const row = params ? (isPositional(params) ? stmt.get(...params) : stmt.get(params)) : stmt.get();
       return (row as T) ?? undefined;
     } catch (err) {
       throw this.wrapError(err, sql, params);
@@ -240,7 +214,7 @@ class DatabaseAdapter implements Db {
   all<T>(sql: string, params?: Params): T[] {
     try {
       const stmt = this.getStatement(sql);
-      const rows = params ? (Array.isArray(params) ? stmt.all(...params) : stmt.all(params)) : stmt.all();
+      const rows = params ? (isPositional(params) ? stmt.all(...params) : stmt.all(params)) : stmt.all();
       return (rows as T[]) ?? [];
     } catch (err) {
       throw this.wrapError(err, sql, params);
@@ -250,7 +224,7 @@ class DatabaseAdapter implements Db {
   iterate<T>(sql: string, params?: Params): IterableIterator<T> {
     try {
       const stmt = this.getStatement(sql);
-      const iter = params ? (Array.isArray(params) ? stmt.iterate(...params) : stmt.iterate(params)) : stmt.iterate();
+      const iter = params ? (isPositional(params) ? stmt.iterate(...params) : stmt.iterate(params)) : stmt.iterate();
       return iter as IterableIterator<T>;
     } catch (err) {
       throw this.wrapError(err, sql, params);
