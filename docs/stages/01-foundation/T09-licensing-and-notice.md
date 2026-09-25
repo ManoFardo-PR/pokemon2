@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | TODO |
+| Status | COMPLETED |
 | Order in stage | 9 / 10 |
 | Depends on | [S01.T01](T01-monorepo-skeleton.md) |
 | Unblocks | — |
@@ -146,3 +146,46 @@ No table, no endpoint: this subtask produces documents and a register.
 
 ---
 Context docs: [Vision and scope](../../project/01-vision-and-scope.md) · [Decision log](../../project/02-decision-log.md) · [Architecture](../../project/03-architecture-overview.md) · [Data model](../../project/04-data-model-overview.md) · [Business rules traceability](../../project/05-business-rules-traceability.md) · [Legacy reference map](../../project/06-legacy-reference-map.md) · [Glossary](../../project/07-glossary.md) · [Conventions](../../project/08-conventions.md) · [Stage README](README.md)
+
+## Execution Summary
+
+- **Date of Completion**: 2026-09-25
+- **Files Created/Modified**:
+  - `scripts/notice-lint.mjs`: NOTICE linter CLI validating field sets, status format, unverified rationale, and cross-checks with ETL sources and web footer strings.
+  - `docs/NOTICE.md`: External source register covering twelve sources with verified facts as of 2026-09-25.
+  - `package.json`: Added `notice:lint` and integrated `node scripts/notice-lint.mjs` into `check`.
+  - `README.md`: Added "Licence pending — all rights reserved" section.
+  - `docs/project/02-decision-log.md`: Appended findings and recommendation to open item O-1 while leaving the final choice to the user.
+  - `scripts/notice-lint.spec.ts`: Test suite verifying notice lint behavior (42 tests).
+  - `docs/stages/01-foundation/T09-licensing-and-notice.log.md`: Companion execution log.
+  - `docs/stages/01-foundation/T09-licensing-and-notice.md`: Updated status to `COMPLETED` and added execution summary.
+- **Key Technical Decisions & Configurations**:
+  - Enforced strict business rules BR-S01.T09-01 through BR-S01.T09-07.
+  - Validated that `wjsutton` now has MIT upstream; documented `twinleafgg` lacking root LICENSE file; preserved `pokemon-tcg-data` as unverified with explicit consent requirements.
+  - Script exit codes standardized to 0 (valid), 1 (lint violations), and 2 (structural/IO errors).
+- **Test Execution Results**:
+  - `vitest run scripts/notice-lint.spec.ts`: 42/42 passed.
+  - `node scripts/notice-lint.mjs`: Passed (0 errors, registry absent check acknowledged).
+  - Monorepo test suites in `@pokesearch/shared`, `@pokesearch/db`, `apps/api`, `apps/web`: All passing.
+
+
+## Execution Summary
+
+- **Date of Completion**: 2026-09-25
+- **Files Created/Modified**:
+  - `scripts/notice-lint.mjs`: NOTICE linter CLI validating field sets, status format, unverified rationale, and cross-checks with ETL sources and web footer strings.
+  - `docs/NOTICE.md`: External source register covering twelve sources with verified facts as of 2026-09-25.
+  - `package.json`: Added `notice:lint` and integrated `node scripts/notice-lint.mjs` into `check`.
+  - `README.md`: Added "Licence pending — all rights reserved" section.
+  - `docs/project/02-decision-log.md`: Appended findings and recommendation to open item O-1 while leaving the final choice to the user.
+  - `scripts/notice-lint.spec.ts`: Test suite verifying notice lint behavior (42 tests).
+  - `docs/stages/01-foundation/T09-licensing-and-notice.log.md`: Companion execution log.
+  - `docs/stages/01-foundation/T09-licensing-and-notice.md`: Updated status to `COMPLETED` and added execution summary.
+- **Key Technical Decisions & Configurations**:
+  - Enforced strict business rules BR-S01.T09-01 through BR-S01.T09-07.
+  - Validated that `wjsutton` now has MIT upstream; documented `twinleafgg` lacking root LICENSE file; preserved `pokemon-tcg-data` as unverified with explicit consent requirements.
+  - Script exit codes standardized to 0 (valid), 1 (lint violations), and 2 (structural/IO errors).
+- **Test Execution Results**:
+  - `vitest run scripts/notice-lint.spec.ts`: 42/42 passed.
+  - `node scripts/notice-lint.mjs`: Passed (0 errors, registry absent check acknowledged).
+  - Monorepo test suites in `@pokesearch/shared`, `@pokesearch/db`, `apps/api`, `apps/web`: All passing.
