@@ -25,3 +25,7 @@ The application uses the following environment variables:
 - `LLM_MODEL` - LLM model name
 
 For more information, see the documentation in the `docs/` directory.
+
+## Licence
+
+Licence pending — all rights reserved. No `LICENSE` file has been chosen yet (open item O-1 in [docs/project/02-decision-log.md](docs/project/02-decision-log.md)). External data sources, their terms and attributions are listed in [docs/NOTICE.md](docs/NOTICE.md).

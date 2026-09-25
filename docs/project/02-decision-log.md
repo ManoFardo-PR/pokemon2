@@ -74,10 +74,20 @@ Still open from that list and owned by whoever writes `CODES.md`: the wrapper ne
 
 | ID | Question | Needed by | Recommendation |
 |---|---|---|---|
-| O-1 | Project `LICENSE` | S01.T09 | Record source licences first (NOTICE), then choose |
+| O-1 | Project `LICENSE` | S01.T09 | Record source licences first (NOTICE), then choose — **findings attached 2026-09-25, still open** (see below) |
 | O-2 | GitHub repository name for `pokemon2` | S01.T01 | e.g. `ManoFardo-PR/pokemon2` next to the legacy `pokemon` |
 | O-3 | Which Supabase-like host to target later | S08.T03 only | Any managed PostgreSQL ≥ 15 |
 | O-4 | Typed schema layer: Drizzle (if its `node:sqlite` driver exists at implementation time) vs Kysely vs hand-written types | S01.T04 | **Resolved 2026-03-30** (see below) |
+
+---
+
+## O-1 — Findings from S01.T09 (2026-09-25, decision still open)
+
+- **Register.** [docs/NOTICE.md](../NOTICE.md) lists twelve sources with dated `status:` lines. The README states "Licence pending — all rights reserved".
+- **Verified.** `tcgdex/cards-database` MIT; `wjsutton/pokemon_tcg_stockmarket` MIT (the legacy spec said "não declarada"; upstream has since added a LICENSE); `gemelom/ptcg-engine` MIT (nothing ported); `the-epsd/twinleafgg` MIT, declared only in `ptcg-server/package.json`, with no LICENSE file and no copyright holder named.
+- **Unverified.** `PokemonTCG/pokemon-tcg-data` declares no licence (HTTP 404, `license: null`). The Limitless API/site terms, the images.pokemontcg.io and Limitless CDN hotlinking terms, and the pokemon.com rulebook terms were not read. Each section in NOTICE names its exact question.
+- **Dependencies.** 425 npm packages, all permissive except MPL-2.0 `lightningcss` (build-time only), flagged for the user.
+- **Recommendation.** Keep the repository private and unlicensed until the pokemon-tcg-data and Limitless questions are answered. If it is published, use a permissive licence (e.g. MIT) for the *code* only, plus an explicit "data and images belong to their sources" note that points to NOTICE. The choice remains the user's.
 
 ---
 

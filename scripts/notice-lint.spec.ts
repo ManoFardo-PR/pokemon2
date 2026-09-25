@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { pathToFileURL, fileURLToPath } from "node:url";
+import { fileURLToPath } from "node:url";
 
 // S01.T09 — docs/NOTICE.md structure lint (scripts/notice-lint.mjs).
 // Module contract assumed by this suite (besides the CLI):
@@ -187,8 +187,9 @@ type JsonReport = {
   registry?: string;
 };
 
+// A plain path, not pathToFileURL(): Vite cannot resolve the %20-encoded file URL of "VS Code".
 async function loadModule(): Promise<any> {
-  return import(pathToFileURL(scriptPath).href);
+  return import(/* @vite-ignore */ scriptPath);
 }
 
 describe("S01.T09: notice-lint (scripts/notice-lint.mjs)", () => {
