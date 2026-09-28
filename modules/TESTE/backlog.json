@@ -1,0 +1,282 @@
+[
+  {
+    "id": "T01",
+    "title": "T01 — Estrutura de diretórios do Validador de CPF",
+    "stage": "Validador de CPF (Isolado em tests/cpf_validator/)",
+    "depends_on": "Nenhuma",
+    "unblocks": "T02",
+    "inputs": [
+      "Nenhum"
+    ],
+    "outputs": [
+      "`tests/cpf_validator/src/__init__.py`"
+    ],
+    "objective": "Criar a estrutura base de pastas e arquivos para o validador de CPF de forma isolada.",
+    "context": "Garantir que a pasta de testes 'tests/cpf_validator/' exista e contenha a subpasta de código 'src/' para isolamento total.",
+    "interfaces": [],
+    "business_rules": [
+      {
+        "id": "BR-T01-01",
+        "rule": "A pasta 'tests/cpf_validator/src' deve existir e ser um pacote Python válido."
+      }
+    ],
+    "test_scenarios": [
+      "importlib.import_module('src') não levanta exceção quando tests/cpf_validator está no sys.path"
+    ],
+    "done_when": [
+      "python -m unittest discover -s tests/cpf_validator passa"
+    ],
+    "read_files": [],
+    "target_files": [
+      "tests/cpf_validator/src/__init__.py",
+      "tests/cpf_validator/test_structure.py"
+    ],
+    "seq": 1
+  },
+  {
+    "id": "T02",
+    "title": "T02 — Sanitização e limpeza da string do CPF",
+    "stage": "Validador de CPF (Isolado em tests/cpf_validator/)",
+    "depends_on": "T01",
+    "unblocks": "T03, T06",
+    "inputs": [
+      "`string` crua informada pelo usuário (ex: '123.456.789-00')"
+    ],
+    "outputs": [
+      "`tests/cpf_validator/src/sanitizer.py` contendo `clean_cpf(cpf_raw: str) -> str`"
+    ],
+    "objective": "Remover todos os caracteres não numéricos (pontos, traços, espaços) da string de entrada.",
+    "context": "Antes de qualquer validação matemática ou de tamanho, a string precisa ser higienizada mantendo apenas dígitos numéricos.",
+    "interfaces": [
+      "def clean_cpf(cpf_raw: str) -> str"
+    ],
+    "business_rules": [
+      {
+        "id": "BR-T02-01",
+        "rule": "A função deve remover pontos, hífens e espaços em branco."
+      },
+      {
+        "id": "BR-T02-02",
+        "rule": "Se a entrada for nula ou não-string, deve retornar string vazia ''."
+      }
+    ],
+    "test_scenarios": [
+      "clean_cpf('123.456.789-00') == '12345678900'",
+      "clean_cpf(' 123 ') == '123'",
+      "clean_cpf(None) == ''",
+      "clean_cpf(123) == ''"
+    ],
+    "done_when": [
+      "Testes de tests/cpf_validator passam"
+    ],
+    "read_files": [
+      "tests/cpf_validator/src/__init__.py"
+    ],
+    "target_files": [
+      "tests/cpf_validator/src/sanitizer.py",
+      "tests/cpf_validator/test_sanitizer.py"
+    ],
+    "seq": 2
+  },
+  {
+    "id": "T03",
+    "title": "T03 — Validação de formato e dígitos repetidos",
+    "stage": "Validador de CPF (Isolado em tests/cpf_validator/)",
+    "depends_on": "T02",
+    "unblocks": "T04, T06",
+    "inputs": [
+      "`tests/cpf_validator/src/sanitizer.py` — função `clean_cpf`"
+    ],
+    "outputs": [
+      "`tests/cpf_validator/src/format_validator.py` contendo `is_valid_format(cpf_clean: str) -> bool`"
+    ],
+    "objective": "Verificar se a string limpa possui exatamente 11 dígitos e não é uma sequência de dígitos iguais.",
+    "context": "CPFs com 11 dígitos repetidos passam no cálculo dos dígitos verificadores, mas são notoriamente inválidos.",
+    "interfaces": [
+      "def is_valid_format(cpf_clean: str) -> bool"
+    ],
+    "business_rules": [
+      {
+        "id": "BR-T03-01",
+        "rule": "O CPF limpo deve ter exatamente 11 caracteres numéricos."
+      },
+      {
+        "id": "BR-T03-02",
+        "rule": "CPFs com todos os dígitos iguais (ex: '00000000000') devem retornar False."
+      }
+    ],
+    "test_scenarios": [],
+    "done_when": [
+      "Testes de tests/cpf_validator passam"
+    ],
+    "read_files": [
+      "tests/cpf_validator/src/sanitizer.py"
+    ],
+    "target_files": [
+      "tests/cpf_validator/src/format_validator.py",
+      "tests/cpf_validator/test_format_validator.py"
+    ],
+    "seq": 3
+  },
+  {
+    "id": "T04",
+    "title": "T04 — Cálculo do primeiro dígito verificador (DV1)",
+    "stage": "Validador de CPF (Isolado em tests/cpf_validator/)",
+    "depends_on": "T03",
+    "unblocks": "T05",
+    "inputs": [
+      "Primeiros 9 dígitos numéricos do CPF"
+    ],
+    "outputs": [
+      "`tests/cpf_validator/src/verifier.py` contendo `calculate_dv1(cpf_9_digits: str) -> int`"
+    ],
+    "objective": "Implementar o algoritmo oficial para calcular o 10º dígito do CPF (Primeiro Dígito Verificador).",
+    "context": "Multiplica-se os 9 primeiros dígitos pelos pesos de 10 a 2. Soma-se os resultados, multiplica por 10 e pega o resto da divisão por 11.",
+    "interfaces": [
+      "def calculate_dv1(cpf_9_digits: str) -> int"
+    ],
+    "business_rules": [
+      {
+        "id": "BR-T04-01",
+        "rule": "Soma ponderada dos 9 dígitos com pesos decrescentes de 10 a 2."
+      },
+      {
+        "id": "BR-T04-02",
+        "rule": "Se o resto do módulo 11 for 10 ou 11 (ou resultado da regra >= 10), o DV1 deve ser 0."
+      }
+    ],
+    "test_scenarios": [
+      "calculate_dv1('529982247') == 2"
+    ],
+    "done_when": [
+      "Testes de tests/cpf_validator passam"
+    ],
+    "read_files": [],
+    "target_files": [
+      "tests/cpf_validator/src/verifier.py",
+      "tests/cpf_validator/test_verifier_dv1.py"
+    ],
+    "seq": 4
+  },
+  {
+    "id": "T05",
+    "title": "T05 — Cálculo do segundo dígito verificador (DV2)",
+    "stage": "Validador de CPF (Isolado em tests/cpf_validator/)",
+    "depends_on": "T04",
+    "unblocks": "T06",
+    "inputs": [
+      "Primeiros 9 dígitos + DV1 calculado na T04"
+    ],
+    "outputs": [
+      "Função `calculate_dv2(cpf_10_digits: str) -> int` em `tests/cpf_validator/src/verifier.py`"
+    ],
+    "objective": "Implementar o cálculo do 11º dígito do CPF (Segundo Dígito Verificador) no módulo existente, por edição.",
+    "context": "Multiplica-se os 10 primeiros dígitos (incluindo o DV1) pelos pesos decrescentes de 11 a 2. O módulo verifier.py já existe (T04) e deve ser editado, não reescrito.",
+    "interfaces": [
+      "def calculate_dv2(cpf_10_digits: str) -> int"
+    ],
+    "business_rules": [
+      {
+        "id": "BR-T05-01",
+        "rule": "Soma ponderada dos 10 dígitos com pesos decrescentes de 11 a 2."
+      },
+      {
+        "id": "BR-T05-02",
+        "rule": "Se o resto do módulo 11 for 10 ou 11 (ou resultado >= 10), o DV2 deve ser 0."
+      }
+    ],
+    "test_scenarios": [
+      "calculate_dv2('5299822472') == 5"
+    ],
+    "done_when": [
+      "Testes de tests/cpf_validator passam",
+      "calculate_dv1 continua intacta"
+    ],
+    "read_files": [
+      "tests/cpf_validator/src/verifier.py"
+    ],
+    "target_files": [
+      "tests/cpf_validator/src/verifier.py",
+      "tests/cpf_validator/test_verifier_dv2.py"
+    ],
+    "seq": 5
+  },
+  {
+    "id": "T06",
+    "title": "T06 — Fachada do Validador de CPF (Validação Completa)",
+    "stage": "Validador de CPF (Isolado em tests/cpf_validator/)",
+    "depends_on": "T02, T03, T05",
+    "unblocks": "T07",
+    "inputs": [
+      "Módulos `sanitizer`, `format_validator` e `verifier`"
+    ],
+    "outputs": [
+      "`tests/cpf_validator/src/validator.py` contendo `validate_cpf(cpf_raw: str) -> dict`"
+    ],
+    "objective": "Unificar todas as etapas de sanitização, formato e cálculo de DV em uma única função de fachada.",
+    "context": "Fornecer uma interface amigável que recebe a string de CPF crua e retorna o diagnóstico completo.",
+    "interfaces": [
+      "def validate_cpf(cpf_raw: str) -> dict"
+    ],
+    "business_rules": [
+      {
+        "id": "BR-T06-01",
+        "rule": "Deve retornar `{ 'valid': True/False, 'cpf_clean': '...', 'reason': '...' }`."
+      },
+      {
+        "id": "BR-T06-02",
+        "rule": "A validação deve falhar rapidamente se a sanitização ou formato falharem."
+      }
+    ],
+    "test_scenarios": [
+      "validate_cpf('529.982.247-25')['valid'] is True",
+      "validate_cpf('111.111.111-11')['valid'] is False"
+    ],
+    "done_when": [
+      "Testes de tests/cpf_validator passam"
+    ],
+    "read_files": [
+      "tests/cpf_validator/src/sanitizer.py",
+      "tests/cpf_validator/src/format_validator.py",
+      "tests/cpf_validator/src/verifier.py"
+    ],
+    "target_files": [
+      "tests/cpf_validator/src/validator.py",
+      "tests/cpf_validator/test_validator_facade.py"
+    ],
+    "seq": 6
+  },
+  {
+    "id": "T07",
+    "title": "T07 — Teste de Integração e Suíte Global do Validador",
+    "stage": "Validador de CPF (Isolado em tests/cpf_validator/)",
+    "depends_on": "T06",
+    "unblocks": "Nenhum",
+    "inputs": [
+      "Módulo unificado `tests/cpf_validator/src/validator.py`"
+    ],
+    "outputs": [
+      "`tests/cpf_validator/test_full_suite.py` com bateria de testes reais e borda"
+    ],
+    "objective": "Validar a suíte completa contra CPFs válidos conhecidos e casos de borda.",
+    "context": "Garantir cobertura e funcionamento em um teste end-to-end do módulo criado. Não alterar os módulos de produção salvo bug real.",
+    "interfaces": [],
+    "business_rules": [
+      {
+        "id": "BR-T07-01",
+        "rule": "Todos os testes dentro da pasta 'tests/cpf_validator/' devem passar com sucesso via unittest."
+      }
+    ],
+    "test_scenarios": [],
+    "done_when": [
+      "python -m unittest discover -s tests/cpf_validator passa com a suíte completa"
+    ],
+    "read_files": [
+      "tests/cpf_validator/src/validator.py"
+    ],
+    "target_files": [
+      "tests/cpf_validator/test_full_suite.py"
+    ],
+    "seq": 7
+  }
+]
