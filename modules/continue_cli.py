@@ -28,15 +28,22 @@ Contrato de resposta (ver PROMPT/PROMPT_02.MD e PROMPT_03.MD):
     trecho novo
     >>>>>>> REPLACE
 """
+import json
 import os
 import re
 import shutil
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from validation_handler import run_terminal_command
 
 MODULES_DIR = os.path.dirname(os.path.abspath(__file__))
+CN_LOG_PATH = os.path.expanduser(os.path.join("~", ".continue", "logs", "cn.log"))
+
+# Linhas de rotina do cn.log que não dizem nada sobre a tarefa (ruído de serviço).
+_TRACE_NOISE = ("Received chunk", "state updated", "Context usage check",
+                "Service", "service", "Indexed ", "FileIndexService")
+_REASONING_RE = re.compile(r'"reasoning":"((?:[^"\\]|\\.)*)"')
 
 HEADER_RE = re.compile(r"^#{0,4}[ \t]*(FILE|PATCH):[ \t]*`?([^`\n]+?)`?[ \t]*$", re.MULTILINE)
 FENCE_RE = re.compile(
@@ -81,6 +88,51 @@ class ContinueCLIHandler:
             )
         return [exe] + parts[1:]
 
+    # ------------------------------------------------------------------
+    # Trilha interna da CLI (~/.continue/logs/cn.log, escrita com --verbose)
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _cn_log_offset() -> int:
+        try:
+            return os.path.getsize(CN_LOG_PATH)
+        except OSError:
+            return 0
+
+    @staticmethod
+    def _cn_log_delta(offset: int) -> str:
+        """Bytes novos do cn.log desde `offset` (0 se o arquivo foi rotacionado)."""
+        try:
+            size = os.path.getsize(CN_LOG_PATH)
+            with open(CN_LOG_PATH, "r", encoding="utf-8", errors="replace") as f:
+                f.seek(offset if size >= offset else 0)
+                return f.read()
+        except OSError:
+            return ""
+
+    @staticmethod
+    def _digest_trace(trace: str) -> Tuple[str, str]:
+        """(pensamento do modelo, trilha de atividade) a partir do delta do cn.log.
+
+        - pensamento: fragmentos `"reasoning":"..."` dos chunks, concatenados;
+        - trilha: linhas do log sem o ruído de rotina (chunks, serviços, índice),
+          preservando chamadas de ferramenta, erros e avisos.
+        """
+        thinking_parts = []
+        for frag in _REASONING_RE.findall(trace):
+            try:
+                thinking_parts.append(json.loads(f'"{frag}"'))
+            except ValueError:
+                thinking_parts.append(frag)
+        lines = [l for l in trace.splitlines()
+                 if l.strip() and not any(n in l for n in _TRACE_NOISE)]
+        return "".join(thinking_parts), "\n".join(lines)
+
+    @staticmethod
+    def _clean_stderr(stderr: str) -> str:
+        """Stderr sem os avisos de rotina do npm."""
+        return "\n".join(l for l in (stderr or "").splitlines()
+                         if l.strip() and not l.startswith("npm warn")).strip()
+
     def execute_prompt(self, prompt: str, model_type: str = "strong") -> Dict[str, Any]:
         """
         Envia o prompt à CLI (por stdin) e devolve
@@ -90,7 +142,9 @@ class ContinueCLIHandler:
         """
         del model_type  # decisão do usuário: um só modelo para todos os estágios
 
-        cmd = self.cli_args + ["-p", "--silent", "--readonly"]
+        # --verbose faz a CLI escrever a trilha interna (pensamento, ferramentas,
+        # chunks, erros) em ~/.continue/logs/cn.log; lemos o delta a cada tentativa.
+        cmd = self.cli_args + ["-p", "--silent", "--readonly", "--verbose"]
         if self.config_path:
             cmd += ["--config", self.config_path]
 
@@ -103,9 +157,23 @@ class ContinueCLIHandler:
         for attempt in range(1, self.retries + 2):
             print(f"\n🤖 [Continue CLI] Enviando prompt ({len(prompt)} caracteres) via stdin"
                   + (f" (tentativa {attempt})" if attempt > 1 else "") + "...")
+            if self.on_event:
+                self.on_event("LLM_CALL", f"tentativa {attempt}", " ".join(cmd))
+            log_offset = self._cn_log_offset()
             result = run_terminal_command(cmd, timeout=self.timeout_sec, cwd=MODULES_DIR, env=env, input_text=prompt)
             output = result["stdout"].strip()
             exit_code = result["exit_code"]
+
+            # Tudo que a CLI fez internamente vai para a trilha viva, com ou sem sucesso.
+            thinking, trace = self._digest_trace(self._cn_log_delta(log_offset))
+            stderr_clean = self._clean_stderr(result["stderr"])
+            if self.on_event:
+                if thinking:
+                    self.on_event("LLM_THINKING", f"tentativa {attempt}", thinking[:30000])
+                if trace:
+                    self.on_event("LLM_TRACE", f"tentativa {attempt}", trace[:20000])
+                if stderr_clean:
+                    self.on_event("LLM_STDERR", f"tentativa {attempt} (exit {exit_code})", stderr_clean[:8000])
 
             if output:
                 if not result["success"]:
@@ -115,10 +183,10 @@ class ContinueCLIHandler:
                 return {"raw_response": output, "success": True, "error": "",
                         "elapsed": round(time.time() - started, 1), "exit_code": exit_code, "attempts": attempt}
 
-            err = result["stderr"] or f"exit code {exit_code}"
+            err = stderr_clean or result["stderr"] or f"exit code {exit_code}"
             print(f"   ❌ CLI sem resposta (exit {exit_code}): {err[:300]}")
             if self.on_event:
-                self.on_event("LLM_ERROR", f"tentativa {attempt}: sem resposta (exit {exit_code})", err[:2000])
+                self.on_event("LLM_ERROR", f"tentativa {attempt}: sem resposta (exit {exit_code})", err[:4000])
             if attempt <= self.retries:
                 print(f"   ⏳ aguardando {self.retry_wait_sec}s antes de repetir...")
                 time.sleep(self.retry_wait_sec)

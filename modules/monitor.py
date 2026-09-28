@@ -29,6 +29,7 @@ DIM = "\033[2m"
 COLORS = {
     "TASK_START": "\033[1;97;44m", "TASK_END": "\033[1;97;42m",
     "LLM_PROMPT": "\033[36m", "LLM_WAIT": "\033[2;36m", "LLM_RESPONSE": "\033[96m", "LLM_ERROR": "\033[1;31m",
+    "LLM_CALL": "\033[2;36m", "LLM_THINKING": "\033[95m", "LLM_TRACE": "\033[2;37m", "LLM_STDERR": "\033[33m",
     "CHECKS": "\033[33m", "GATE": "\033[1;35m", "AUDIT": "\033[1;35m",
     "FILE_WRITE": "\033[32m", "FILE_SKIP": "\033[2;32m", "FILE_REJECT": "\033[31m",
     "LOCAL_VALIDATION": "\033[33m", "GIT": "\033[34m", "GITHUB": "\033[94m",

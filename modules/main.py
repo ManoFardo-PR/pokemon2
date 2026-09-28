@@ -764,11 +764,13 @@ class Orchestrator:
 
         except StageError as e:
             print(f"\n🛑 {e}")
+            self.rep.event("WARN", task_id, "falha de estágio", str(e))
             self._write_log(task_id, number, "FAILED", {})
             self.gh.mark_failed(number, f"{e}\n\nChamadas à LLM: {self.llm_calls}", self.cfg["failed_label"])
         except Exception as e:  # noqa: BLE001 - o polling não pode morrer
             tb = traceback.format_exc()
             print(f"\n💥 Erro inesperado na issue #{number}: {e}\n{tb}")
+            self.rep.event("WARN", task_id, f"erro inesperado: {e}", tb[-4000:])
             self._write_log(task_id, number, "FAILED", {})
             self.gh.mark_failed(number, f"Erro inesperado no orquestrador: `{e}`\n\n```text\n{tb[-3000:]}\n```", self.cfg["failed_label"])
         finally:

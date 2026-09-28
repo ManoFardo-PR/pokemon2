@@ -19,6 +19,7 @@ from typing import Any, Dict, Iterator, Optional
 
 KINDS = (
     "TASK_START", "TASK_END", "LLM_PROMPT", "LLM_WAIT", "LLM_RESPONSE", "LLM_ERROR",
+    "LLM_CALL", "LLM_THINKING", "LLM_TRACE", "LLM_STDERR",
     "CHECKS", "GATE", "FILE_WRITE", "FILE_SKIP", "FILE_REJECT", "LOCAL_VALIDATION",
     "AUDIT", "GIT", "GITHUB", "WARN", "INFO",
 )
