@@ -1,0 +1,135 @@
+[
+  {
+    "id": "sv1-1",
+    "name": "Sprigatito",
+    "supertype": "Pokémon",
+    "subtypes": ["Basic"],
+    "hp": "60",
+    "types": ["Grass"],
+    "evolvesTo": ["Floragato"],
+    "attacks": [
+      {
+        "name": "Scratch",
+        "cost": ["Grass"],
+        "convertedEnergyCost": 1,
+        "damage": "10",
+        "text": ""
+      }
+    ],
+    "weaknesses": [
+      {
+        "type": "Fire",
+        "value": "×2"
+      }
+    ],
+    "retreatCost": ["Colorless"],
+    "convertedRetreatCost": 1,
+    "number": "1",
+    "artist": "Kouki Saitou",
+    "rarity": "Common",
+    "flavorText": "Its fluffy fur is similar in composition to plants. It frequently washes its face to keep it from drying out.",
+    "nationalPokedexNumbers": [906],
+    "legalities": {
+      "unlimited": "Legal",
+      "standard": "Legal",
+      "expanded": "Legal"
+    },
+    "regulationMark": "G",
+    "images": {
+      "small": "https://images.pokemontcg.io/sv1/1.png",
+      "large": "https://images.pokemontcg.io/sv1/1_hires.png"
+    }
+  },
+  {
+    "id": "sv1-25",
+    "name": "Pikachu",
+    "supertype": "Pokémon",
+    "subtypes": ["Basic"],
+    "hp": "70",
+    "types": ["Lightning"],
+    "attacks": [
+      {
+        "name": "Thunder Shock",
+        "cost": ["Lightning"],
+        "convertedEnergyCost": 1,
+        "damage": "20",
+        "text": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      }
+    ],
+    "weaknesses": [
+      {
+        "type": "Fighting",
+        "value": "×2"
+      }
+    ],
+    "retreatCost": ["Colorless"],
+    "convertedRetreatCost": 1,
+    "number": "25",
+    "artist": "Naoki Saito",
+    "rarity": "Common",
+    "flavorText": "When it smashes its electricity against other Pokémon, it uses its tail to stand upright.",
+    "nationalPokedexNumbers": [25],
+    "legalities": {
+      "unlimited": "Legal",
+      "standard": "Legal",
+      "expanded": "Legal"
+    },
+    "regulationMark": "G",
+    "images": {
+      "small": "https://images.pokemontcg.io/sv1/25.png",
+      "large": "https://images.pokemontcg.io/sv1/25_hires.png"
+    }
+  },
+  {
+    "id": "sv1-86",
+    "name": "Gardevoir ex",
+    "supertype": "Pokémon",
+    "subtypes": ["Stage 2", "ex"],
+    "hp": "310",
+    "types": ["Psychic"],
+    "evolvesFrom": "Kirlia",
+    "abilities": [
+      {
+        "name": "Psychic Embrace",
+        "text": "As often as you like during your turn, you may attach a Basic Psychic Energy card from your discard pile to 1 of your Psychic Pokémon. If you attached Energy to a Pokémon in this way, put 2 damage counters on that Pokémon. You can't use this Ability on a Pokémon that would be Knocked Out.",
+        "type": "Ability"
+      }
+    ],
+    "attacks": [
+      {
+        "name": "Miracle Force",
+        "cost": ["Psychic", "Psychic", "Colorless"],
+        "convertedEnergyCost": 3,
+        "damage": "190",
+        "text": "This Pokémon recovers from all Special Conditions."
+      }
+    ],
+    "weaknesses": [
+      {
+        "type": "Darkness",
+        "value": "×2"
+      }
+    ],
+    "resistances": [
+      {
+        "type": "Fighting",
+        "value": "-30"
+      }
+    ],
+    "retreatCost": ["Colorless", "Colorless"],
+    "convertedRetreatCost": 2,
+    "number": "86",
+    "artist": "PLANETA Yamashita",
+    "rarity": "Double Rare",
+    "legalities": {
+      "unlimited": "Legal",
+      "standard": "Legal",
+      "expanded": "Legal"
+    },
+    "regulationMark": "G",
+    "images": {
+      "small": "https://images.pokemontcg.io/sv1/86.png",
+      "large": "https://images.pokemontcg.io/sv1/86_hires.png"
+    }
+  }
+]
