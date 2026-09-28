@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, vi } from "vitest";
 import { withTempDbAsync } from "@pokesearch/db/testing";
 import { runLoad, NotImplementedError, defaultStepRegistry } from "./orchestrator.js";

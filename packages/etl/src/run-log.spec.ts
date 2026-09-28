@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect } from "vitest";
 import { withTempDbAsync } from "@pokesearch/db/testing";
 import {
@@ -11,6 +10,13 @@ import {
   ConcurrentRunError,
 } from "./run-log.js";
 
+type RunRow = {
+  status: string;
+  finished_at: string | null;
+  stats_json: string;
+  error: string | null;
+};
+
 describe("run-log bookkeeping", () => {
   it("withRun inserts status='running', finishes with status='ok' and duration counter (BR-S02.T01-01)", async () => {
     await withTempDbAsync(async ({ db }) => {
@@ -22,7 +28,7 @@ describe("run-log bookkeeping", () => {
         expect(run.startedAt).toBeDefined();
 
         // While running, verify row status in database
-        const row = db.get(
+        const row = db.get<RunRow>(
           "SELECT status, finished_at FROM etl_runs WHERE id = ?",
           [run.id]
         );
@@ -36,7 +42,7 @@ describe("run-log bookkeeping", () => {
       expect(result).toBe("success-result");
 
       // Verify row updated to ok with stats and finished_at
-      const row = db.get(
+      const row = db.get<RunRow>(
         "SELECT status, finished_at, stats_json, error FROM etl_runs WHERE id = ?",
         [capturedId]
       );
@@ -64,7 +70,7 @@ describe("run-log bookkeeping", () => {
         })
       ).rejects.toThrow("Network timeout during fetch");
 
-      const row = db.get(
+      const row = db.get<RunRow>(
         "SELECT status, finished_at, stats_json, error FROM etl_runs WHERE id = ?",
         [capturedId]
       );
@@ -86,10 +92,12 @@ describe("run-log bookkeeping", () => {
       const run = startRun(db, "prices");
       try {
         expect(() => {
+          // @ts-expect-error deliberately passes a nested object to exercise the runtime scalar validation
           run.add({ nested: { a: 1 } });
         }).toThrow(TypeError);
 
         expect(() => {
+          // @ts-expect-error deliberately passes an array to exercise the runtime scalar validation
           run.add({ list: [1, 2, 3] });
         }).toThrow(TypeError);
 
@@ -115,7 +123,7 @@ describe("run-log bookkeeping", () => {
           startRun(db, "full");
         } catch (err) {
           expect(err).toBeInstanceOf(ConcurrentRunError);
-          const cre = err;
+          const cre = err as ConcurrentRunError;
           expect(cre.activeRunId).toBe(run1.id);
           expect(cre.startedAt).toBe(run1.startedAt);
         }
@@ -152,20 +160,20 @@ describe("run-log bookkeeping", () => {
         "INSERT INTO etl_runs (kind, started_at, status, stats_json) VALUES (?, ?, 'running', '{}')",
         ["full", oldStartedAt]
       );
-      const staleId = Number(db.get("SELECT last_insert_rowid() AS id")!.id);
+      const staleId = Number(db.get<{ id: number }>("SELECT last_insert_rowid() AS id")!.id);
 
       // Seed a recent active running row
       db.run(
         "INSERT INTO etl_runs (kind, started_at, status, stats_json) VALUES (?, ?, 'running', '{}')",
         ["delta", recentStartedAt]
       );
-      const recentId = Number(db.get("SELECT last_insert_rowid() AS id")!.id);
+      const recentId = Number(db.get<{ id: number }>("SELECT last_insert_rowid() AS id")!.id);
 
       const reconciledCount = reconcileStaleRuns(db, STALE_RUN_MINUTES);
       expect(reconciledCount).toBe(1);
 
       // Stale row must be cancelled with finished_at set
-      const staleRow = db.get(
+      const staleRow = db.get<RunRow>(
         "SELECT status, finished_at FROM etl_runs WHERE id = ?",
         [staleId]
       );
@@ -173,7 +181,7 @@ describe("run-log bookkeeping", () => {
       expect(staleRow?.finished_at).not.toBeNull();
 
       // Recent row must remain running
-      const recentRow = db.get(
+      const recentRow = db.get<RunRow>(
         "SELECT status, finished_at FROM etl_runs WHERE id = ?",
         [recentId]
       );

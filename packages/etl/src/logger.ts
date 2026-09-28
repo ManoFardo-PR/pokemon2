@@ -1,10 +1,8 @@
 import pinoModule, { type Logger, type DestinationStream } from "pino";
 
-const pino = (
-  typeof pinoModule === "function"
+const pino = typeof pinoModule === "function"
     ? pinoModule
-    : (pinoModule as unknown as { default: typeof pinoModule }).default
-) as unknown as typeof pinoModule;
+    : (pinoModule as unknown as { default: typeof pinoModule }).default;
 
 export interface LoggerOptions {
   json?: boolean | undefined;

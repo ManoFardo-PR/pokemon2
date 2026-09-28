@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -52,11 +51,11 @@ describe("CLI entry point (etl)", () => {
       );
       return { code: 0, stdout, stderr };
     } catch (err: unknown) {
-      const error = err;
+      const error = err as { code?: unknown; stdout?: string; stderr?: string };
       return {
-        code: typeof error?.code === "number" ? error.code : 1,
-        stdout: error?.stdout ?? "",
-        stderr: error?.stderr ?? "",
+        code: typeof error.code === "number" ? error.code : 1,
+        stdout: error.stdout ?? "",
+        stderr: error.stderr ?? "",
       };
     }
   }
@@ -95,7 +94,7 @@ describe("CLI entry point (etl)", () => {
 
     // Must not create any etl_runs row
     const dbCheck = openDatabase(dbPath);
-    const tableCheck = dbCheck.get(
+    const tableCheck = dbCheck.get<{ count: number }>(
       "SELECT count(*) as count FROM sqlite_master WHERE type='table' AND name='etl_runs'"
     );
     expect(tableCheck?.count).toBe(0);
@@ -127,7 +126,7 @@ describe("CLI entry point (etl)", () => {
     expect(result.code).toBe(1);
 
     const dbCheck = openDatabase(dbPath);
-    const runRow = dbCheck.get(
+    const runRow = dbCheck.get<{ status: string; error: string | null }>(
       "SELECT status, error FROM etl_runs WHERE kind = 'full' ORDER BY id DESC LIMIT 1"
     );
     expect(runRow).toBeDefined();

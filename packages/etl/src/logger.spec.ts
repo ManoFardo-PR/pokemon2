@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect } from "vitest";
 import { Writable } from "node:stream";
 import { createEtlLogger, REDACTED_KEYS } from "./logger.js";

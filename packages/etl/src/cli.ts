@@ -46,9 +46,10 @@ function getDatabase(dbPath?: string): Db {
 }
 
 function handleCliError(err: unknown): never {
-  if (activeDb) {
+  const dbToClose = activeDb;
+  if (dbToClose) {
     try {
-      activeDb.close();
+      dbToClose.close();
     } catch {
       // ignore close error
     }
@@ -308,10 +309,11 @@ program
 try {
   await program.parseAsync(process.argv);
 } catch (err: unknown) {
+  const currentDb = activeDb as Db | null;
   if (err instanceof CommanderError) {
-    if (activeDb) {
+    if (currentDb) {
       try {
-        activeDb.close();
+        currentDb.close();
       } catch {
         // ignore
       }
