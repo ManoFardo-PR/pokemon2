@@ -19,6 +19,7 @@
   "max_diff_chars": 8000,
   "poll_interval_sec": 10,
   "cli_timeout_sec": 300,
+  "cli_max_sec": 3600,
   "cli_retries": 1,
   "cli_retry_wait_sec": 15,
   "live_log": "logs/live.log",

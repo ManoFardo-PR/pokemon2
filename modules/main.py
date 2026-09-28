@@ -98,7 +98,8 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     cfg.setdefault("max_inject_chars", 40000)
     cfg.setdefault("max_diff_chars", 8000)
     cfg.setdefault("poll_interval_sec", 10)
-    cfg.setdefault("cli_timeout_sec", 300)
+    cfg.setdefault("cli_timeout_sec", 300)   # inatividade: conta da última atividade da CLI
+    cfg.setdefault("cli_max_sec", 3600)      # teto absoluto por chamada
     cfg.setdefault("cli_retries", 1)
     cfg.setdefault("cli_retry_wait_sec", 15)
     cfg.setdefault("live_log", "logs/live.log")
@@ -139,6 +140,7 @@ class Orchestrator:
             cli_path=cfg["continue_cli_path"],
             config_path=cfg["continue_config"],
             timeout_sec=cfg["cli_timeout_sec"],
+            max_sec=cfg["cli_max_sec"],
             retries=cfg["cli_retries"],
             retry_wait_sec=cfg["cli_retry_wait_sec"],
             on_event=relay,
