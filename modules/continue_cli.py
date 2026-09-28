@@ -35,6 +35,8 @@ import shutil
 import subprocess
 import threading
 import time
+import urllib.error
+import urllib.request
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 MODULES_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -263,23 +265,75 @@ class ContinueCLIHandler:
         return {"stdout": "".join(stdout_parts).strip(), "stderr": stderr,
                 "exit_code": exit_code, "success": exit_code == 0}
 
-    def execute_prompt(self, prompt: str, model_type: str = "strong") -> Dict[str, Any]:
+    # ------------------------------------------------------------------
+    # Chamada direta ao provedor (single-shot, sem a CLI)
+    # ------------------------------------------------------------------
+    def _gemini_config(self) -> Tuple[str, str]:
+        """(model, apiKey) do primeiro modelo `provider: gemini` do config.yaml."""
+        with open(self.config_path, "r", encoding="utf-8", errors="replace") as f:
+            text = f.read()
+        after = text[text.index("provider: gemini"):] if "provider: gemini" in text else ""
+        model = re.search(r"^\s*model:\s*(\S+)", after, re.MULTILINE)
+        key = re.search(r"^\s*apiKey:\s*(\S+)", after, re.MULTILINE)
+        if not (model and key):
+            raise ValueError("config.yaml sem modelo 'provider: gemini' com model/apiKey")
+        return model.group(1), key.group(1)
+
+    def _run_direct(self, prompt: str, attempt: int) -> Dict[str, Any]:
         """
-        Envia o prompt à CLI (por stdin) e devolve
+        Uma única requisição generateContent à API do Gemini, sem a CLI.
+        Motivo (medido em 28/09): cada chamada da CLI vira 2-6 requisições de
+        45-58k tokens (loop de ferramentas reenvia a conversa inteira, com 39
+        definições de ferramenta), e o `--exclude` da CLI 1.5.x é ignorado.
+        Os estágios 2-4 e os portões têm prompts autocontidos: uma requisição basta.
+        """
+        try:
+            model, key = self._gemini_config()
+        except (OSError, ValueError) as e:
+            return {"stdout": "", "stderr": f"config do Gemini indisponível: {e}", "exit_code": -1, "success": False}
+        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+               f"{model}:generateContent?key={key}")
+        body = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode("utf-8")
+        req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=self.max_sec) as r:
+                data = json.load(r)
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode("utf-8", errors="replace")[:2000]
+            return {"stdout": "", "stderr": f"HTTP {e.code}: {detail}", "exit_code": 1, "success": False}
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            return {"stdout": "", "stderr": f"falha de rede na API do Gemini: {e}", "exit_code": 1, "success": False}
+        candidates = data.get("candidates") or [{}]
+        parts = (candidates[0].get("content") or {}).get("parts") or []
+        text = "".join(p.get("text", "") for p in parts)
+        usage = data.get("usageMetadata", {})
+        if self.on_event and usage:
+            self.on_event("LLM_TRACE", f"tentativa {attempt}",
+                          f"gemini direto {model}: entrada={usage.get('promptTokenCount', '?')} "
+                          f"saída={usage.get('candidatesTokenCount', '?')} "
+                          f"pensamento={usage.get('thoughtsTokenCount', 0)} tokens; "
+                          f"finishReason={candidates[0].get('finishReason', '?')}")
+        if not text:
+            return {"stdout": "", "stderr": f"resposta sem texto: {json.dumps(data)[:1500]}",
+                    "exit_code": 1, "success": False}
+        return {"stdout": text, "stderr": "", "exit_code": 0, "success": True}
+
+    def execute_prompt(self, prompt: str, model_type: str = "strong",
+                       single_shot: bool = False) -> Dict[str, Any]:
+        """
+        Envia o prompt ao modelo e devolve
         {'raw_response', 'success', 'error', 'elapsed', 'exit_code', 'attempts'}.
         Resposta vazia ou timeout: repete até `retries` vezes com espera.
         `model_type` é aceito (assinatura do documento) mas ignorado: um único modelo.
+        `single_shot=True` pula a CLI e faz UMA requisição direta ao provedor,
+        para prompts autocontidos (estágios 2-4 e portões); o caminho da CLI
+        (estágio 1) mantém as ferramentas de exploração do workspace.
         """
         del model_type  # decisão do usuário: um só modelo para todos os estágios
 
         # --verbose faz a CLI escrever a trilha interna (pensamento, ferramentas,
         # chunks, erros) em ~/.continue/logs/cn.log; lemos o delta a cada tentativa.
-        # --exclude Bash: a ferramenta Bash da CLI roda via perfil interativo do
-        # PowerShell e pode travar para sempre (visto em 28/09: `git ls-files ..`
-        # preso em "calling" até o timeout); Read/List/Fetch bastam para explorar.
-        # (obrigatório --exclude=Bash em um único argumento: separado, a CLI o
-        # confunde com o prompt posicional e ignora o stdin.)
-        cmd = self.cli_args + ["-p", "--silent", "--readonly", "--verbose", "--exclude=Bash"]
+        cmd = self.cli_args + ["-p", "--silent", "--readonly", "--verbose"]
         if self.config_path:
             cmd += ["--config", self.config_path]
 
@@ -290,13 +344,18 @@ class ContinueCLIHandler:
         err = ""
         exit_code = -1
         for attempt in range(1, self.retries + 2):
-            print(f"\n🤖 [Continue CLI] Enviando prompt ({len(prompt)} caracteres) via stdin"
+            via = "API direta" if single_shot else "Continue CLI"
+            print(f"\n🤖 [{via}] Enviando prompt ({len(prompt)} caracteres)"
                   + (f" (tentativa {attempt})" if attempt > 1 else "") + "...")
             if self.on_event:
-                self.on_event("LLM_CALL", f"tentativa {attempt}", " ".join(cmd))
+                self.on_event("LLM_CALL", f"tentativa {attempt}",
+                              "gemini generateContent (direto)" if single_shot else " ".join(cmd))
             # A trilha interna (pensamento, ferramentas, erros) é publicada AO VIVO
             # durante a chamada por _run_cli_streaming; aqui só resta o stderr.
-            result = self._run_cli_streaming(cmd, env, prompt, attempt)
+            if single_shot:
+                result = self._run_direct(prompt, attempt)
+            else:
+                result = self._run_cli_streaming(cmd, env, prompt, attempt)
             output = result["stdout"].strip()
             exit_code = result["exit_code"]
 

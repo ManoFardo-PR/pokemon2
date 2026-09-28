@@ -96,6 +96,7 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     cfg.setdefault("verify_max_rounds", 2)
     cfg.setdefault("audit_mode", "llm")
     cfg.setdefault("max_inject_chars", 40000)
+    cfg.setdefault("gate_prompt_sent_chars", 12000)  # PROMPT_SENT embutido no portão
     cfg.setdefault("max_diff_chars", 8000)
     cfg.setdefault("poll_interval_sec", 10)
     cfg.setdefault("cli_timeout_sec", 300)   # inatividade: conta da última atividade da CLI
@@ -199,12 +200,13 @@ class Orchestrator:
         self.events.append(f"{time.strftime('%H:%M:%S')} {text}")
         self.rep.event(kind, self.current_task, text)
 
-    def _ask_cli(self, prompt: str, tag: str, task_id: str) -> str:
+    def _ask_cli(self, prompt: str, tag: str, task_id: str, single_shot: bool = False) -> str:
         self._save_artifact(task_id, f"{tag}_prompt.md", prompt)
         self.llm_calls += 1
-        self.rep.event("LLM_PROMPT", task_id, tag, prompt, {"chars": len(prompt), "call": self.llm_calls})
+        self.rep.event("LLM_PROMPT", task_id, tag, prompt,
+                       {"chars": len(prompt), "call": self.llm_calls, "single_shot": single_shot})
         with self.rep.waiting(task_id, tag):
-            res = self.cli.execute_prompt(prompt)
+            res = self.cli.execute_prompt(prompt, single_shot=single_shot)
         if not res["success"]:
             self.rep.event("LLM_ERROR", task_id, tag, res["error"], {"attempts": res.get("attempts", 1)})
             raise StageError(f"{tag}: a Continue CLI falhou: {res['error'][:500]}")
@@ -428,9 +430,17 @@ class Orchestrator:
     # ------------------------------------------------------------------
     def _gate(self, stage_no: int, round_no: int, prompt_sent: str, output: str,
               checks_report: str, task_id: str) -> Tuple[str, str]:
+        # O prompt original embute plano/testes/arquivos que o OUTPUT repete em
+        # grande parte; mandar tudo de novo dobrava o custo do portão (104k chars
+        # para um veredito de 16). O cabeçalho (requisitos e formato) basta.
+        limit = int(self.cfg["gate_prompt_sent_chars"])
+        if len(prompt_sent) > limit:
+            prompt_sent = (prompt_sent[:limit]
+                           + "\n... (truncated by the orchestrator: the worker received the "
+                           + "full prompt; judge the requirements above against the OUTPUT)")
         prompt = self._fill(self._tpl("VERIFY.MD"), STAGE_NAME=STAGE_NAME[stage_no], ROUND=str(round_no),
                             PROMPT_SENT=prompt_sent, OUTPUT=output, CHECKS_REPORT=checks_report)
-        raw = self._ask_cli(prompt, f"stage{stage_no}_r{round_no}_gate", task_id)
+        raw = self._ask_cli(prompt, f"stage{stage_no}_r{round_no}_gate", task_id, single_shot=True)
         verdict = self.cli.extract_verdict(raw, kind="gate")
         reasons = "\n".join(l for l in raw.strip().split("\n") if l.strip().startswith("-"))[:2000]
         if verdict is None:
@@ -446,11 +456,14 @@ class Orchestrator:
         """
         max_rework = int(self.cfg["verify_max_rounds"])
         use_gate = stage_no in [int(s) for s in self.cfg["verify_stages"]]
+        # Só o Estágio 1 lê o workspace (princípio do pipeline); os demais
+        # recebem tudo injetado e rodam sem ferramentas (uma requisição só).
+        single_shot = stage_no != 1
         prompt = self._fill(base_prompt, FEEDBACK=base_feedback)
         prev_hash, output, checks = None, "", {"ok": False, "report": "", "feedback": ""}
 
         for round_no in range(1, max_rework + 2):
-            output = self._ask_cli(prompt, f"stage{stage_no}_r{round_no}", task_id)
+            output = self._ask_cli(prompt, f"stage{stage_no}_r{round_no}", task_id, single_shot=single_shot)
             checks = check_fn(output)
             self.rep.event("CHECKS", task_id, f"fase {stage_no} rodada {round_no}", checks["report"], {"ok": checks["ok"]})
             verdict, reasons = "CORRECT", ""
@@ -684,7 +697,7 @@ class Orchestrator:
                 self._tpl("PROMPT_04.MD"), TASK_ID=task_id, PLAN_OUTPUT=plan, TASK_DIFF=self._task_diff(),
                 FILES_WRITTEN="\n".join(f"- {w}" for w in self.files_touched) or "(none)", LOCAL_REPORT=local["text"],
             )
-            audit = self._ask_cli(audit_prompt, f"stage4_audit_try{attempt}", task_id)
+            audit = self._ask_cli(audit_prompt, f"stage4_audit_try{attempt}", task_id, single_shot=True)
             verdict = self.cli.extract_verdict(audit, kind="audit")
             self.events.append(f"{time.strftime('%H:%M:%S')} auditoria (tentativa {attempt}): {verdict or 'sem VERDICT'}")
             self.rep.event("AUDIT", task_id, f"tentativa {attempt}: {verdict or 'sem VERDICT'}", audit)
