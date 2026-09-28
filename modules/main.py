@@ -385,6 +385,18 @@ class Orchestrator:
         return {"written": written, "skipped": skipped, "problems": problems, "warnings": warnings}
 
     @staticmethod
+    def _diag_tail(res: Dict[str, Any], limit: int = 1500) -> str:
+        """Trecho útil de um comando que falhou: prioriza as linhas de diagnóstico
+        (error TS..., FAIL, AssertionError) sobre o epílogo do pnpm, que era a
+        única coisa que sobrava com um simples tail e deixava o modelo às cegas."""
+        full = ((res.get("stdout") or "") + "\n" + (res.get("stderr") or "")).strip()
+        diags = [l for l in full.splitlines()
+                 if re.search(r"error TS\d+|\berror\b|\bFAIL\b|AssertionError", l)
+                 and "ELIFECYCLE" not in l and "ERR_PNPM" not in l]
+        picked = "\n".join(diags)[:limit]
+        return picked if picked.strip() else full[-limit:]
+
+    @staticmethod
     def _apply_report(res: Dict[str, Any]) -> str:
         lines = []
         if res["written"]:
@@ -577,7 +589,7 @@ class Orchestrator:
                 return {"ok": False, "report": report, "feedback": "\n".join(f"- {p}" for p in res["problems"])}
             comp = self.validator.check_compilation()
             if not comp["success"]:
-                err = (comp["stderr"] or comp["stdout"])[-1500:]
+                err = self._diag_tail(comp)
                 return {"ok": False, "report": report + f"\nCompile FAILED:\n{err}",
                         "feedback": f"- the test files do not compile:\n```text\n{err}\n```"}
             red = self.validator.run_tests()
@@ -635,7 +647,7 @@ class Orchestrator:
                 return {"ok": False, "report": report, "feedback": "\n".join(f"- {p}" for p in res["problems"])}
             comp = self.validator.check_compilation()
             if not comp["success"]:
-                err = (comp["stderr"] or comp["stdout"])[-1500:]
+                err = self._diag_tail(comp)
                 return {"ok": False, "report": report + f"\nCompile FAILED:\n{err}",
                         "feedback": f"- the code does not compile:\n```text\n{err}\n```"}
             return {"ok": True, "report": report + "\nCompile OK.", "feedback": ""}
