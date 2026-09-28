@@ -1,1 +1,10 @@
 *.md text eol=lf
+# vitest's transform breaks on CRLF checkouts (seen 2026-09-28: SyntaxError
+# importing scripts/*.mjs); with core.autocrlf=true these must be pinned to LF.
+*.mjs text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
