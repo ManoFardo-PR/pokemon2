@@ -381,7 +381,7 @@ export function listFixtures(): string[] {
   }
   const files = fs.readdirSync(dir);
   return files
-    .filter((f) => f.endsWith(".json"))
+    .filter((f) => f.endsWith(".json") && !f.endsWith("-sample.json"))
     .map((f) => f.slice(0, -5));
 }
 
