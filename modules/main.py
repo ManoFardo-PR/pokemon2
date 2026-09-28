@@ -222,10 +222,22 @@ class Orchestrator:
 
     @staticmethod
     def _issue_section_paths(body: str, *heading_keys: str) -> List[str]:
-        """Caminhos em crase dentro da seção '## ... <heading_key> ...' do corpo da issue."""
+        """Caminhos em crase dentro da seção '## ... <heading_key> ...' do corpo da issue.
+
+        Lines inside code fences (``` or ~~~, any length) are skipped, so a '## ' that
+        belongs to a spec example can never open or close a section.
+        """
         lines = (body or "").split("\n")
-        collecting, found = False, []
+        collecting, found, fence = False, [], ""
         for line in lines:
+            stripped = line.lstrip()
+            if not fence and stripped[:3] in ("```", "~~~"):
+                fence = stripped[0] * (len(stripped) - len(stripped.lstrip(stripped[0])))
+                continue
+            if fence:
+                if stripped.startswith(fence):  # closing fence: same char, at least as long
+                    fence = ""
+                continue
             if line.startswith("## "):
                 collecting = any(k.lower() in line.lower() for k in heading_keys)
                 continue
@@ -466,7 +478,12 @@ class Orchestrator:
 
         print(f"\n📄 [{STAGE_NAME[1]}] PROMPT_01.MD")
         self.gh.set_stage(issue["number"], STAGE_LABEL[1])
-        body = issue.get("body") or ""
+        # The seeder may have moved trailing sections into continuation comments
+        # (GitHub body limit); merge them back so the planner sees the whole spec.
+        list_body = issue.get("body") or ""
+        body = self.gh.get_issue_full_body(issue["number"]) or list_body
+        if len(body) > len(list_body):
+            self._event(f"Stage 1: merged {len(body) - len(list_body)} chars from continuation comments into the specification")
         target_files = self._issue_section_paths(body, "Arquivos Alvo", "Target Files")
         read_files = self._issue_section_paths(body, "Arquivos para ler", "Files to read")
         spec = f"# {issue['title']}\n\n{body}"

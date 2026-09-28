@@ -173,4 +173,5 @@ O portão dobra o volume enviado porque cada verificação recebe o prompt intei
 - No Windows a CLI 1.5.47 às vezes aborta na saída (assert do libuv, exit 3221226505) depois de imprimir a resposta completa; o orquestrador julga sucesso pelo stdout.
 - A CLI não aceitou `--prompt <arquivo>` como prompt em modo `-p`; por isso o prompt vai por stdin.
 - `mcpServers` do `config.yaml` são iniciados a cada chamada da CLI; remova os que não usa para acelerar (esse arquivo é seu; o orquestrador não o altera).
+- A single `test_command` / `typecheck_command` pair (`pnpm test` / `pnpm typecheck`) covers the TypeScript workspace. Rust tasks (S04 onwards) need `test_command` switched to `pnpm engine:test`, or a per-issue override, which does not exist yet.
 - Backlog: modo só-planejar (Estágio 1 e parar para aprovação), portão mais barato (só regras do template + saída), modo PR por batelada, anotações de tipo para o pyright.

@@ -4,6 +4,8 @@ Aplique a label gatilho (`trigger_label` do `config.json`, padrão `tdd-queue`).
 
 A dependência é obrigatória: `Nenhuma` para raiz, ou ids separados por vírgula (`T02, T03`). Issue sem declaração fica bloqueada na fila até o corpo ser editado. A issue só executa quando todas as dependências estiverem fechadas (ou vierem antes na mesma batelada).
 
+The rows `Depende de (outros estágios)`, `Desbloqueia (outros estágios)` and `Especificação` are optional and informational: the orchestrator does not use them for queue ordering (only `Depende de` and the `<!-- depends_on -->` marker count). When a body would exceed GitHub's 65,536-character limit, the seeder moves the trailing sections into comments that start with `<!-- continuação i/N -->`; the orchestrator merges those comments back into the specification in Stage 1. The file lists, the markers and the `Depende de` row always stay in the body.
+
 ---
 
 | Campo | Valor |
@@ -13,6 +15,9 @@ A dependência é obrigatória: `Nenhuma` para raiz, ou ids separados por vírgu
 | Depende de | Nenhuma |
 | Desbloqueia | T02 |
 | Ordem de lançamento | 1 |
+| Depende de (outros estágios) | Nenhuma |
+| Desbloqueia (outros estágios) | Nenhum |
+| Especificação | `docs/stages/NN-slug/T01-nome-da-tarefa.md` |
 
 <!-- depends_on: Nenhuma -->
 <!-- seq: 1 -->

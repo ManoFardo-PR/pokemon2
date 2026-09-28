@@ -14,6 +14,7 @@ comentário, mudança de label ou fechamento.
 """
 import json
 import os
+import re
 import time
 from typing import Any, Callable, Dict, List, Optional
 
@@ -31,6 +32,9 @@ DEFAULT_PIPELINE_LABELS = {
 }
 
 STAGE_LABELS = ["tdd-context", "tdd-red", "tdd-green", "tdd-audit"]
+
+# Marker the seeder puts at the top of each continuation comment (body split by GitHub's limit).
+CONTINUATION_RE = re.compile(r"^\s*<!--\s*continua[çc][ãa]o\s+(\d+)/(\d+)\s*-->", re.IGNORECASE)
 
 EventCallback = Callable[[str, str, str], None]
 
@@ -68,7 +72,7 @@ class GitHubHandler:
                         exclude_label: Optional[str] = None) -> List[Dict[str, Any]]:
         """Issues abertas (opcionalmente só com a label gatilho), em ordem crescente de número."""
         args = ["issue", "list", *self.repo_args, "--state", "open",
-                "--json", "number,title,body,labels", "--limit", "100"]
+                "--json", "number,title,body,labels", "--limit", "500"]
         if trigger_label:
             args += ["--label", trigger_label]
         res = self._gh(args)
@@ -97,6 +101,31 @@ class GitHubHandler:
         for issue in issues:
             issue["label_names"] = [l["name"] for l in issue.get("labels", [])]
         return issues
+
+    def get_issue_full_body(self, issue_number: int) -> str:
+        """Issue body followed by the seeder's continuation comments, in order.
+
+        The seeder moves the sections that do not fit GitHub's 65,536-character body
+        limit into numbered comments starting with `<!-- continuação i/N -->`. This
+        merges them back so Stage 1 sees the whole specification. Comments without the
+        marker (gate, stage and retry notes written by the orchestrator itself) are
+        ignored. Returns "" on any failure so the caller can fall back to the body it
+        already has from the issue list.
+        """
+        res = self._gh(["issue", "view", str(issue_number), *self.repo_args, "--json", "body,comments"])
+        if not (res["success"] and res["stdout"]):
+            return ""
+        try:
+            data = json.loads(res["stdout"])
+        except json.JSONDecodeError:
+            return ""
+        continuations = []
+        for c in data.get("comments") or []:
+            m = CONTINUATION_RE.match(c.get("body") or "")
+            if m:
+                continuations.append((int(m.group(1)), c["body"]))
+        parts = [data.get("body") or ""] + [body for _, body in sorted(continuations, key=lambda x: x[0])]
+        return "\n\n".join(parts)
 
     def get_issue_labels(self, issue_number: int) -> List[str]:
         res = self._gh(["issue", "view", str(issue_number), *self.repo_args, "--json", "labels"])

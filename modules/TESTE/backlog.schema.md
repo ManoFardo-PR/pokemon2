@@ -16,7 +16,9 @@ Cada item do backlog vira uma issue (`seed_issues.py`). O Estágio 1 (planejador
 | `test_scenarios` | não | Asserções já decididas. Se presentes, a seção 4 do plano as copia. |
 | `done_when` | recomendado | Critérios de aceite objetivos. |
 | `read_files` | não | Arquivos que o planejador deve ler primeiro (caminhos relativos à raiz). Vazio = exploração livre. |
-| `target_files` | sim | Arquivos a criar ou editar. O orquestrador confere que a seção 2 do plano os cobre. |
+| `target_files` | sim | Arquivos a criar ou editar. O orquestrador confere que a seção 2 do plano os cobre. An empty list aborts the seeder. |
+| `depends_on_external`, `unblocks_external` | não | Informational only: ids from other stages, rendered as the header rows "Depende de (outros estágios)" and "Desbloqueia (outros estágios)". The orchestrator does not use them for queue ordering. |
+| `spec_file` | não | Path of the source spec, rendered as the "Especificação" header row. |
 
 Exemplo mínimo:
 
@@ -35,5 +37,7 @@ Exemplo mínimo:
 ```
 
 O seeder valida antes de criar qualquer issue: ids duplicados, dependência que não existe nem no backlog nem no GitHub, e ciclos abortam. As issues são criadas em ordem topológica. `--dry-run` valida, grava a inferência no JSON e mostra os corpos sem criar nada.
+
+Body size: GitHub caps an issue body at 65,536 characters. When the rendered body would exceed the seeder's budget, the trailing sections (context, interfaces, rules, scenarios, acceptance criteria) move, in order, into numbered comments that start with `<!-- continuação i/N -->`; sections that hold only a placeholder stay put. The header table, the `<!-- depends_on -->` / `<!-- seq -->` markers, "Arquivos para ler" and "Arquivos Alvo" always stay in the body. The orchestrator merges the continuation comments back into the specification in Stage 1.
 
 O que o orquestrador lê no corpo renderizado: "Arquivos Alvo" (ou "Target Files"), "Arquivos para ler" (ou "Files to read"), a linha `| Depende de | ... |` (ou o marcador `<!-- depends_on: ... -->`, que tem prioridade) e `<!-- seq: N -->`. Ao criar uma issue à mão, use `modules/ISSUE_TEMPLATE.md`.
