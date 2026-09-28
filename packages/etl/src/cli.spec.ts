@@ -26,7 +26,11 @@ describe("CLI entry point (etl)", () => {
 
   afterEach(() => {
     if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      try {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      } catch {
+        // Windows file lock delay safety
+      }
     }
   });
 
@@ -34,11 +38,12 @@ describe("CLI entry point (etl)", () => {
     try {
       const { stdout, stderr } = await execFileAsync(
         process.execPath,
-        ["--no-warnings=ExperimentalWarning", cliPath, ...args],
+        ["--import=tsx", cliPath, ...args],
         {
           cwd: repoRoot,
           env: {
             ...process.env,
+            NODE_ENV: "development",
             DATABASE_PATH: dbPath,
             RAW_CACHE_DIR: cacheDir,
             ...envOverrides,

@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": {
+    "exports": {
     ".": "./src/index.ts",
+    "./migrate": "./src/migrate.ts",
     "./testing": "./src/testing/index.ts"
   },
   "main": "./src/index.ts",
