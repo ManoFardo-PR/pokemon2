@@ -1,20 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import * as http from "node:http";
-import * as crypto from "node:crypto";
 import { ptcg } from "./paths.js";
 import {
   fetchAll,
-  fetchSets,
-  fetchSetCards,
   loadSets,
   loadCards,
-  loadEtags,
-  saveEtags,
   CacheMissError,
-  PTCG_RAW_BASE,
   type PtcgSet,
   type PtcgCard,
 } from "./fetch-ptcg.js";
@@ -113,7 +107,7 @@ describe("fetch-ptcg (RED phase test suite)", () => {
     { id: "sv2-1", name: "Fuecoco", number: "1", supertype: "Pokémon", hp: "70" },
   ];
 
-  function setupStandardRoutes(baseUrlOverride?: string) {
+  function setupStandardRoutes(_baseUrlOverride?: string) {
     routes.set("/sets/en.json", {
       status: 200,
       etag: '"etag-sets-1"',

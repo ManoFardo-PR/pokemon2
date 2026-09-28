@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as crypto from "node:crypto";
 import { ptcg, writeJsonAtomic } from "./paths.js";
 import { createEtlLogger } from "./logger.js";
 
@@ -89,7 +88,7 @@ export function loadEtags(): Record<string, string> {
   }
   try {
     const raw = fs.readFileSync(file, "utf8");
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
       return parsed as Record<string, string>;
     }
@@ -110,7 +109,7 @@ function isValidJsonArray(filePath: string): boolean {
   }
   try {
     const content = fs.readFileSync(filePath, "utf8");
-    const parsed = JSON.parse(content);
+    const parsed: unknown = JSON.parse(content);
     return Array.isArray(parsed);
   } catch {
     try {
@@ -250,7 +249,7 @@ export async function fetchSets(opts?: {
     throw new Error(`Empty response body for ${url}`);
   }
 
-  const parsed = JSON.parse(res.body);
+  const parsed: unknown = JSON.parse(res.body);
   if (!Array.isArray(parsed)) {
     throw new Error(`Invalid sets format: expected array from ${url}`);
   }
@@ -259,7 +258,7 @@ export async function fetchSets(opts?: {
   if (fs.existsSync(setsFilePath)) {
     try {
       const existingBytes = fs.readFileSync(setsFilePath, "utf8");
-      const existingParsed = JSON.parse(existingBytes);
+      const existingParsed: unknown = JSON.parse(existingBytes);
       if (JSON.stringify(existingParsed) === JSON.stringify(parsed)) {
         changed = false;
       }
@@ -342,7 +341,7 @@ export async function fetchSetCards(
     throw new Error(`Empty response body for ${url}`);
   }
 
-  const parsed = JSON.parse(res.body);
+  const parsed: unknown = JSON.parse(res.body);
   if (!Array.isArray(parsed)) {
     throw new Error(`Invalid cards format: expected array for set ${setId}`);
   }
@@ -351,7 +350,7 @@ export async function fetchSetCards(
   if (fs.existsSync(cardsFilePath)) {
     try {
       const existingBytes = fs.readFileSync(cardsFilePath, "utf8");
-      const existingParsed = JSON.parse(existingBytes);
+      const existingParsed: unknown = JSON.parse(existingBytes);
       if (JSON.stringify(existingParsed) === JSON.stringify(parsed)) {
         changed = false;
       }
@@ -460,7 +459,7 @@ export function loadSets(): PtcgSet[] {
 
   try {
     const content = fs.readFileSync(setsPath, "utf8");
-    const parsed = JSON.parse(content);
+    const parsed: unknown = JSON.parse(content);
     if (!Array.isArray(parsed)) {
       throw new Error("Sets cache is not an array");
     }
@@ -486,7 +485,7 @@ export function loadCards(setId: string): PtcgCard[] {
 
   try {
     const content = fs.readFileSync(cardsPath, "utf8");
-    const parsed = JSON.parse(content);
+    const parsed: unknown = JSON.parse(content);
     if (!Array.isArray(parsed)) {
       throw new Error(`Cards cache for set ${setId} is not an array`);
     }
