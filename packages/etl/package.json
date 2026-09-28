@@ -3,11 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "etl": "./src/cli.ts"
+  },
   "scripts": {
     "dev": "node --experimental-strip-types src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@pokesearch/db": "workspace:*",
+    "@pokesearch/shared": "workspace:*",
+    "commander": "^12.0.0",
+    "pino": "^9.0.0",
+    "pino-pretty": "^11.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
