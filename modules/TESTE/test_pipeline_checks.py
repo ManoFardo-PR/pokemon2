@@ -248,7 +248,8 @@ class StageFlowOffline(unittest.TestCase):
         self.tmp = tempfile.mkdtemp(prefix="orch-flow-")
         os.makedirs(os.path.join(self.tmp, "repo", "packages", "demo", "src"))
         yaml = os.path.join(self.tmp, "config.yaml")
-        open(yaml, "w", encoding="utf-8").write("models: []\n")
+        with open(yaml, "w", encoding="utf-8") as f:
+            f.write("models: []\n")
         cfg_path = os.path.join(self.tmp, "config.json")
         json.dump({
             "continue_cli_path": "npx @continuedev/cli", "continue_config": yaml,
@@ -256,7 +257,8 @@ class StageFlowOffline(unittest.TestCase):
             "test_command": "pnpm test", "typecheck_command": "pnpm typecheck", "trigger_label": "tdd-queue",
             "verify_stages": [], "verify_max_rounds": 0, "audit_mode": "local", "preflight": False,
             "live_log": os.path.join(self.tmp, "live.log"),
-        }, open(cfg_path, "w", encoding="utf-8"))
+        }, cfg_file := open(cfg_path, "w", encoding="utf-8"))
+        cfg_file.close()
         self.orch = Orchestrator(load_config(cfg_path))
         self.orch.logs_dir = os.path.join(self.tmp, "logs")
         self.state = {"phase": "red", "runs": [], "asked": []}
