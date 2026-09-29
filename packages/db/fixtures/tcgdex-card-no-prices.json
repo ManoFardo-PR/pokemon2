@@ -1,0 +1,18 @@
+{
+  "id": "sv1-003",
+  "localId": "003",
+  "name": "Meowscarada",
+  "image": "https://assets.tcgdex.net/en/sv/sv1/003",
+  "stage": "Stage 2",
+  "regulationMark": "G",
+  "variants": {
+    "normal": false,
+    "reverse": true,
+    "holo": true,
+    "firstEdition": false
+  },
+  "legal": {
+    "standard": true,
+    "expanded": true
+  }
+}

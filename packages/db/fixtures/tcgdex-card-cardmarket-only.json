@@ -1,0 +1,27 @@
+{
+  "id": "sv1-002",
+  "localId": "002",
+  "name": "Floragato",
+  "image": "https://assets.tcgdex.net/en/sv/sv1/002",
+  "stage": "Stage 1",
+  "regulationMark": "G",
+  "variants": {
+    "normal": true,
+    "reverse": true,
+    "holo": false,
+    "firstEdition": false
+  },
+  "legal": {
+    "standard": true,
+    "expanded": true
+  },
+  "pricing": {
+    "cardmarket": {
+      "updated": "2024-01-01",
+      "unit": "EUR",
+      "avg": 0.25,
+      "low": 0.1,
+      "trend": 0.28
+    }
+  }
+}

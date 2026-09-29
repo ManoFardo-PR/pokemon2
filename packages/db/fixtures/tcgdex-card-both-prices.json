@@ -1,0 +1,37 @@
+{
+  "id": "sv1-001",
+  "localId": "001",
+  "name": "Sprigatito",
+  "image": "https://assets.tcgdex.net/en/sv/sv1/001",
+  "stage": "Basic",
+  "regulationMark": "G",
+  "variants": {
+    "normal": true,
+    "reverse": true,
+    "holo": false,
+    "firstEdition": false
+  },
+  "legal": {
+    "standard": true,
+    "expanded": true
+  },
+  "pricing": {
+    "tcgplayer": {
+      "updated": "2024-01-01",
+      "unit": "USD",
+      "normal": {
+        "low": 0.1,
+        "mid": 0.25,
+        "high": 1.0,
+        "market": 0.2
+      }
+    },
+    "cardmarket": {
+      "updated": "2024-01-01",
+      "unit": "EUR",
+      "avg": 0.15,
+      "low": 0.05,
+      "trend": 0.18
+    }
+  }
+}
