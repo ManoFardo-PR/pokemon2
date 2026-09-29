@@ -40,6 +40,13 @@ Cada fase recebe um prompt completo (template + saída da fase anterior + conte�
 | `live_log` / `live_log_max_mb` / `console_verbose` | trilha viva para o monitor, rotação, e corpo completo no console |
 | `max_inject_chars` | limite do conteúdo de arquivos existentes injetado nos prompts |
 | `max_diff_chars` | limite do diff enviado à auditoria |
+| `check_command` | Project gate run once per batch before any issue is touched (pre-flight), e.g. `pnpm check`; empty = typecheck + tests |
+| `preflight` | `true` (default) runs that baseline; a red baseline stops the batch with a CRLF hint when the working copy disagrees with `.gitattributes` |
+| `test_scope` | `true` (default): stages 2 and 4 run the task's own test files first (appended to `test_command`), then the full suite |
+| `test_timeout_sec` | timeout of one test run (default 600) |
+| `stage1_mode` | `direct` (default): two API requests, no CLI, files injected by the orchestrator; `cli`: Continue CLI with read tools |
+| `stage1_max_files`, `stage1_inject_chars` | how many extra files the selection call may pick and the injection budget (default 8, 60000) |
+| `forbidden_patterns`, `forbidden_test_patterns` | content the model may never write (`@ts-nocheck`, `eslint-disable`, `.skip(`, `.only(`, ...); a hit rejects the file |
 
 4. Criar as issues. Título `[T01] Descrição`, label gatilho, corpo conforme `ISSUE_TEMPLATE.md` (campos em `TESTE/backlog.schema.md`). `TESTE/seed_issues.py <arquivo.json> [--only X03,X04]` cria a partir de um backlog JSON já com a label.
 5. Rodar:
@@ -146,9 +153,11 @@ O orquestrador aplica: SEARCH deve ocorrer uma única vez (tolerância a espaço
 - `continue_cli.py`: chamada à CLI (prompt por stdin, sem shell, retry), parser de `FILE`/`PATCH`, extração de veredito
 - `file_ops.py`: cerca de segurança, `apply_patch`, snapshot/restore, linguagem da cerca de código
 - `github_handler.py`: `gh` CLI (labels, issues, comentários via `--body-file`)
-- `validation_handler.py`: `run_terminal_command`, testes, typecheck, relatório de erros
+- `validation_handler.py`: `run_terminal_command`, testes (whole suite or the task's files), typecheck, `check_command`, relatório de erros
+- `checks.py`: deterministic checks shared by the stages: diagnostics tail without ANSI, suppression guard, business-rule coverage, honest RED attribution, CRLF detection, repository tree and file-list parsing for the CLI-free Stage 1
+- `metrics.py`: per-task cost table from `logs/live.log` (calls, chars, tokens reported by the direct API, waiting time, rework rounds, files, outcome)
 - `decision_engine.py` + `auto_rules.json`: aprovação por tipo de ação (`AUTO_APPROVE` para headless)
-- `PROMPT/`: `PROMPT_01..04.MD` (estágios), `VERIFY.MD` (portão), `FEEDBACK_*.MD` (retroalimentações). Tudo em inglês; nada que vá à LLM fica no código
+- `PROMPT/`: `PROMPT_01..04.MD` (estágios), `PROMPT_01A.MD` (file selection for the CLI-free Stage 1), `VERIFY.MD` (portão), `FEEDBACK_*.MD` (retroalimentações). Tudo em inglês; nada que vá à LLM fica no código
 - `TESTE/`: `backlog.json` (validador de CPF), `backlog_hello_demo.json` (demo de patch), `backlog.schema.md`, `seed_issues.py`
 - `PROMPT/BACKLOG_FROM_SPECS.MD`: prompt para uma IA gerar o backlog JSON a partir dos arquivos de especificação de outro projeto (preencha os `{{...}}`, cole num assistente com acesso ao repositório, salve o JSON em `TESTE/` e rode `seed_issues.py <arquivo> --dry-run` antes de criar as issues)
 - `ISSUE_TEMPLATE.md`: modelo para criar issues à mão
@@ -164,6 +173,19 @@ O orquestrador aplica: SEARCH deve ocorrer uma única vez (tolerância a espaço
 | X02 (bye por PATCH) | fases 1, 2, 3 | 7 | 62 K | 33 K (53%) | ~2 min |
 
 O portão dobra o volume enviado porque cada verificação recebe o prompt inteiro da fase. Para tasks pequenas e confiáveis, `verify_stages: [1, 2]` ou `[]` corta esse custo.
+
+## Baseline measured on 2026-09-28 (before the phase-1 hardening)
+
+Real request logs (`~/.continue/logs/cn*.log` for the CLI, `~/.continue/dev_data` for the VS Code chat):
+
+| Run | Requests | Prompt tokens | Generated | Wall | Human turns |
+|---|---|---|---|---|---|
+| S02T01 orchestrator, productive run (CLI tool loop, 13 calls) | 233 | 13.75 M | 31 K | 32 min | 0 |
+| S02T01 failed attempts before that (partially logged) | 41 | 3.58 M | 7 K | 23 min | 0 |
+| S02T01 manual finish in the VS Code chat | 244 | 12.19 M | 19 K | 49 min | many |
+| S02T02 entirely manual in the VS Code chat (agent mode) | 241 | 7.80 M | 41 K | 46 min | 10 |
+
+What the numbers showed and what changed on 2026-09-29: each CLI call became 37 to 47 hidden requests re-sending up to 125 K tokens (stages 2 to 4 and the gates already moved to single direct requests; Stage 1 now follows with `stage1_mode: direct`); rework loops ran without the compiler diagnostics (`checks.diag_tail`); unrelated CRLF-broken specs were blamed on the task (pre-flight baseline and task-scoped test runs); the model silenced the type checker with `// @ts-nocheck` (suppression guard); two business rules of T02 had no test (rule-coverage check in Stage 2). Compare future runs with `python modules/metrics.py`.
 
 ## Limitações conhecidas e backlog
 

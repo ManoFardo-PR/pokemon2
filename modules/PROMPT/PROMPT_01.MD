@@ -9,10 +9,12 @@ FILES TO READ FIRST (from the task, may be empty): {{READ_FILES}}
 {{FEEDBACK}}
 RULES:
 1. The full specification of the subtask is at the end of this prompt (SPECIFICATION section). Do NOT look for a specification file on disk.
-2. You MAY read files in the workspace (read-only tools) to learn what already exists: modules produced by earlier tasks, project layout, conventions. Start with FILES TO READ FIRST when given. Do not write or edit anything.
+2. {{WORKSPACE_RULE}}
 3. Decide where every file goes based on what you read in the project and on the specification. Use paths relative to the repository root. Do not invent a layout that contradicts the existing project.
 4. If the specification provides interfaces or test scenarios, copy them exactly; do not reinterpret them. Do not add requirements that are not in the specification. If something is ambiguous, choose the simplest interpretation and record it in section 5.
 5. Section 6 must contain the exact signatures (and short relevant excerpts) of every existing function, class or module that this task will call, extend or must stay compatible with. Later stages depend on this section instead of reading files.
+6. WRITE FENCE: section 2 may only list paths under: {{ALLOWED_PATHS}}. Never under: {{FORBIDDEN_PATHS}}. If the task needs a change outside the fence (root configuration, CI, lockfiles), describe it in section 5 as a manual step for the maintainer; never put it in section 2.
+7. Every business rule id of the specification (BR-..., RN-...) must appear verbatim in section 3 and be covered by at least one line of section 4 that names it. The test writer must cite these ids in test names; the orchestrator checks that.
 
 OUTPUT FORMAT (mandatory: exactly these six sections, in this order, with these exact headings):
 
@@ -41,6 +43,10 @@ Example:
 ### 6. Existing Code This Task Depends On
 [for each existing file the implementation relies on: path, exact signatures, and short excerpts needed to use it correctly; write "None" if the task depends on nothing]
 
+================================================================================
+WORKSPACE FILES (injected by the orchestrator; "(none)" when nothing was injected):
+================================================================================
+{{WORKSPACE_FILES}}
 ================================================================================
 SPECIFICATION (source of truth for this subtask):
 ================================================================================

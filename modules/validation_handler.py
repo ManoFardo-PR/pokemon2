@@ -1,6 +1,8 @@
+import os
 import subprocess
-import sys
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
+
+from checks import diag_tail, scoped_command
 
 
 def run_terminal_command(
@@ -57,42 +59,70 @@ def run_terminal_command(
         }
 
 
+def quiet_env() -> Dict[str, str]:
+    """
+    Environment for validation commands: no colour codes. `CI` is deliberately NOT set:
+    on 2026-09-29 `CI=true` made typescript-eslint's project service reject the fixture
+    written by scripts/lint-config.spec.ts, turning a green tree red.
+    """
+    env = os.environ.copy()
+    env.update({"NO_COLOR": "1", "FORCE_COLOR": "0"})
+    return env
+
+
 class ValidationHandler:
     def __init__(
         self,
         test_cmd: str = "python -m unittest discover",
         typecheck_cmd: str = "python -m compileall -q .",
         cwd: Optional[str] = None,
+        check_cmd: Optional[str] = None,
+        test_timeout: int = 600,
+        typecheck_timeout: int = 300,
     ):
         self.test_cmd = test_cmd
         self.typecheck_cmd = typecheck_cmd
+        self.check_cmd = check_cmd or None
         self.cwd = cwd
+        self.test_timeout = int(test_timeout)
+        self.typecheck_timeout = int(typecheck_timeout)
 
-    def run_tests(self) -> Dict[str, Any]:
-        """Executa a suíte de testes do projeto local."""
-        return run_terminal_command(self.test_cmd, timeout=180, cwd=self.cwd)
+    def run_tests(self, paths: Optional[Sequence[str]] = None) -> Dict[str, Any]:
+        """Runs the test suite; with `paths`, only those test files (appended to the command)."""
+        cmd = scoped_command(self.test_cmd, paths)
+        res = run_terminal_command(cmd, timeout=self.test_timeout, cwd=self.cwd, env=quiet_env())
+        res["command"] = cmd
+        return res
 
     def check_compilation(self) -> Dict[str, Any]:
-        """Valida compilação/tipagem do código (para Python: compileall)."""
-        return run_terminal_command(self.typecheck_cmd, timeout=120, cwd=self.cwd)
+        """Valida compilação/tipagem do código."""
+        res = run_terminal_command(self.typecheck_cmd, timeout=self.typecheck_timeout, cwd=self.cwd, env=quiet_env())
+        res["command"] = self.typecheck_cmd
+        return res
+
+    def run_check(self) -> Dict[str, Any]:
+        """The project's full gate (`check_command`), when configured."""
+        if not self.check_cmd:
+            return {"stdout": "", "stderr": "", "exit_code": 0, "success": True, "skipped": True, "command": ""}
+        res = run_terminal_command(self.check_cmd, timeout=self.test_timeout * 2, cwd=self.cwd, env=quiet_env())
+        res["command"] = self.check_cmd
+        return res
 
     def analyze_errors(
         self,
         test_result: Optional[Dict[str, Any]],
         compilation_result: Optional[Dict[str, Any]] = None,
     ) -> str:
-        """Consolida os logs de erro em Markdown para retroalimentar a IA."""
+        """Consolida os logs de erro em Markdown para retroalimentar a IA (diagnostics first, no ANSI)."""
         error_report = []
 
         if compilation_result and not compilation_result["success"]:
-            comp_err = compilation_result["stderr"] or compilation_result["stdout"]
             error_report.append("### ERROS DE COMPILAÇÃO / CHECAGEM DE TIPOS")
-            error_report.append(f"```text\n{comp_err[-1500:]}\n```")
+            error_report.append("```text\n" + diag_tail(compilation_result["stdout"], compilation_result["stderr"], 1500) + "\n```")
 
         if test_result and not test_result["success"]:
-            test_err = test_result["stderr"] or test_result["stdout"]
             error_report.append("### ERROS DE EXECUÇÃO DE TESTE")
-            error_report.append(f"```text\n{test_err[-2500:]}\n```")
+            error_report.append("```text\n" + diag_tail(test_result["stdout"], test_result["stderr"], 2500) + "\n```")
 
         if not error_report:
             return "Nenhum erro detectado no ambiente local."

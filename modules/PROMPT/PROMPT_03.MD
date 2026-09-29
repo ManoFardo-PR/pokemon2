@@ -26,6 +26,7 @@ RULES:
 5. You have no write tools. Return the files in the format below; the orchestrator writes them to disk.
 6. Return only what you create or change. Never return a file that is unchanged.
 7. If a FEEDBACK section is present above, fix exactly the problems it lists and return the complete corrected output (all files you create or change), not just the delta.
+8. Never suppress the type checker or the linter: no `@ts-nocheck`, `@ts-ignore`, `@ts-expect-error`, `eslint-disable` or equivalents. The orchestrator rejects any file containing them. Fix the types instead.
 
 OUTPUT FORMAT (mandatory).
 For a NEW file (Action = create) or a full rewrite (Action = rewrite):

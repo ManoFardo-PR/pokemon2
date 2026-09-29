@@ -43,6 +43,7 @@ MODULES_DIR = os.path.dirname(os.path.abspath(__file__))
 if MODULES_DIR not in sys.path:
     sys.path.insert(0, MODULES_DIR)
 
+import checks                                         # noqa: E402
 import dependency                                     # noqa: E402
 import file_ops                                       # noqa: E402
 import selector                                       # noqa: E402
@@ -97,6 +98,16 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     cfg.setdefault("audit_mode", "llm")
     cfg.setdefault("max_inject_chars", 40000)
     cfg.setdefault("gate_prompt_sent_chars", 12000)  # PROMPT_SENT embutido no portão
+    # Phase-1 hardening (2026-09-29): baseline, scoped tests, CLI-free planning, guards.
+    cfg.setdefault("check_command", "")            # full project gate for the pre-flight; "" = typecheck + tests
+    cfg.setdefault("preflight", True)              # baseline on the untouched tree before the first issue of a batch
+    cfg.setdefault("test_scope", True)             # stages 2 and 4 run the task's test files before the full suite
+    cfg.setdefault("test_timeout_sec", 600)
+    cfg.setdefault("stage1_mode", "direct")        # "direct": two API calls, no CLI; "cli": Continue CLI with tools
+    cfg.setdefault("stage1_max_files", 8)          # files the selection call may add to the task's read_files
+    cfg.setdefault("stage1_inject_chars", 60000)
+    cfg.setdefault("forbidden_patterns", list(checks.DEFAULT_FORBIDDEN_PATTERNS))
+    cfg.setdefault("forbidden_test_patterns", list(checks.DEFAULT_FORBIDDEN_TEST_PATTERNS))
     cfg.setdefault("max_diff_chars", 8000)
     cfg.setdefault("poll_interval_sec", 10)
     cfg.setdefault("cli_timeout_sec", 300)   # inatividade: conta da última atividade da CLI
@@ -111,6 +122,8 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     cfg["live_log"] = os.path.abspath(os.path.join(MODULES_DIR, cfg["live_log"]))
     if cfg["audit_mode"] not in ("llm", "local"):
         raise ValueError("audit_mode deve ser 'llm' ou 'local'")
+    if cfg["stage1_mode"] not in ("direct", "cli"):
+        raise ValueError("stage1_mode must be 'direct' or 'cli'")
     return cfg
 
 
@@ -151,11 +164,14 @@ class Orchestrator:
             test_cmd=cfg["test_command"],
             typecheck_cmd=cfg["typecheck_command"],
             cwd=self.repo_root,
+            check_cmd=cfg["check_command"] or None,
+            test_timeout=int(cfg["test_timeout_sec"]),
         )
         # estado por task
         self.llm_calls = 0
         self.events: List[str] = []
         self.files_touched: List[str] = []
+        self._bodies: Dict[int, str] = {}  # issue number -> body with continuation comments merged
 
     # ------------------------------------------------------------------
     # Templates e artefatos
@@ -371,6 +387,15 @@ class Orchestrator:
                     self.rep.event("FILE_SKIP", self.current_task, path, meta={"kind": "PATCH", "reason": "no-op"})
                     continue
 
+            # Guard: the model may not silence the type checker, the linter or the test runner
+            # (T01 shipped five spec files with `// @ts-nocheck` to get "Compile OK").
+            patterns = list(self.cfg["forbidden_patterns"]) + (list(self.cfg["forbidden_test_patterns"]) if want_test else [])
+            hits = checks.forbidden_hits(new_content, patterns)
+            if hits:
+                reject(path, "forbidden content (suppressing the type checker, linter or test runner is not allowed): "
+                       + "; ".join(hits))
+                continue
+
             if not self.engine.ask_or_auto("CREATE_FILE" if current is None else "EDIT_FILE", f"Gravar {path}"):
                 raise StageError(f"Gravação de {path} recusada pelo usuário.")
             file_ops.write_text(abs_path, new_content)
@@ -391,12 +416,7 @@ class Orchestrator:
         """Trecho útil de um comando que falhou: prioriza as linhas de diagnóstico
         (error TS..., FAIL, AssertionError) sobre o epílogo do pnpm, que era a
         única coisa que sobrava com um simples tail e deixava o modelo às cegas."""
-        full = ((res.get("stdout") or "") + "\n" + (res.get("stderr") or "")).strip()
-        diags = [l for l in full.splitlines()
-                 if re.search(r"error TS\d+|\berror\b|\bFAIL\b|AssertionError", l)
-                 and "ELIFECYCLE" not in l and "ERR_PNPM" not in l]
-        picked = "\n".join(diags)[:limit]
-        return picked if picked.strip() else full[-limit:]
+        return checks.diag_tail(res.get("stdout") or "", res.get("stderr") or "", limit)
 
     @staticmethod
     def _apply_report(res: Dict[str, Any]) -> str:
@@ -411,17 +431,24 @@ class Orchestrator:
             lines.append("Problems:\n- " + "\n- ".join(res["problems"]))
         return "\n".join(lines) or "Nothing returned."
 
-    def _local_report(self) -> Dict[str, Any]:
+    def _local_report(self, scope_paths: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Compile, then the task's own test files (fast, attributable), then the full suite."""
         comp = self.validator.check_compilation()
-        tests = self.validator.run_tests()
+        scoped = self.validator.run_tests(scope_paths) if (scope_paths and self.cfg["test_scope"]) else None
+        if scoped is not None and not scoped["success"]:
+            tests, scope_note = scoped, f"task tests only, {len(scope_paths or [])} file(s); full suite not run"
+        else:
+            tests = self.validator.run_tests()
+            scope_note = ("task tests OK; " if scoped is not None else "") + "full suite"
         ok = comp["success"] and tests["success"]
-        tail = (tests["stderr"] or tests["stdout"])[-3000:]
+        tail = (checks.diag_tail(tests["stdout"], tests["stderr"], 3000) if not tests["success"]
+                else checks.strip_ansi(tests["stdout"] or tests["stderr"])[-1500:])
         text = (
             f"Compile: {'OK' if comp['success'] else 'FAILED'} (exit {comp['exit_code']})\n"
-            f"Tests: {'OK' if tests['success'] else 'FAILED'} (exit {tests['exit_code']})\n\n"
+            f"Tests ({scope_note}): {'OK' if tests['success'] else 'FAILED'} (exit {tests['exit_code']})\n\n"
             "```text\n" + tail + "\n```"
         )
-        self.rep.event("LOCAL_VALIDATION", self.current_task, "compile + tests", tail,
+        self.rep.event("LOCAL_VALIDATION", self.current_task, f"compile + tests ({scope_note})", tail,
                        {"compile": comp["exit_code"], "tests": tests["exit_code"], "ok": ok})
         return {"ok": ok, "text": text, "compilation": comp, "tests": tests}
 
@@ -456,9 +483,9 @@ class Orchestrator:
         """
         max_rework = int(self.cfg["verify_max_rounds"])
         use_gate = stage_no in [int(s) for s in self.cfg["verify_stages"]]
-        # Só o Estágio 1 lê o workspace (princípio do pipeline); os demais
-        # recebem tudo injetado e rodam sem ferramentas (uma requisição só).
-        single_shot = stage_no != 1
+        # Só o Estágio 1 em modo "cli" lê o workspace com ferramentas; em modo "direct"
+        # os arquivos vêm injetados e todas as fases rodam com uma requisição só.
+        single_shot = stage_no != 1 or self.cfg["stage1_mode"] == "direct"
         prompt = self._fill(base_prompt, FEEDBACK=base_feedback)
         prev_hash, output, checks = None, "", {"ok": False, "report": "", "feedback": ""}
 
@@ -497,29 +524,84 @@ class Orchestrator:
     # ------------------------------------------------------------------
     # Estágio 1: plano
     # ------------------------------------------------------------------
+    def _issue_body(self, issue: Dict[str, Any]) -> str:
+        """Issue body with the seeder's continuation comments merged back (cached per issue)."""
+        number = issue["number"]
+        if number not in self._bodies:
+            list_body = issue.get("body") or ""
+            body = self.gh.get_issue_full_body(number) or list_body
+            if len(body) > len(list_body):
+                self._event(f"Stage 1: merged {len(body) - len(list_body)} chars from continuation comments into the specification")
+            self._bodies[number] = body
+        return self._bodies[number]
+
+    def _stage1_workspace_files(self, task_id: str, spec: str, read_files: List[str]) -> str:
+        """
+        CLI-free Stage 1, first half: one direct call (PROMPT_01A.MD) picks the existing
+        files the planner needs from the tracked-file listing; the orchestrator injects
+        their content, bounded by stage1_inject_chars. Reads may go anywhere outside
+        forbidden_paths; writes stay fenced by allowed_paths as before.
+        """
+        n = int(self.cfg["stage1_max_files"])
+        prompt = self._fill(
+            self._tpl("PROMPT_01A.MD"), TASK_ID=task_id, MAX_FILES=str(n),
+            READ_FILES=", ".join(read_files) if read_files else "(none)",
+            TREE=checks.repo_tree(self.repo_root, self.cfg["allowed_paths"]), SPEC=spec,
+        )
+        raw = self._ask_cli(prompt, "stage1_files", task_id, single_shot=True)
+        wanted = [p for p in checks.parse_file_list(raw, limit=n) if p not in read_files]
+
+        def readable(rel: str) -> Optional[str]:
+            try:
+                abs_path = file_ops.safe_path(rel, self.repo_root, [], self.cfg["forbidden_paths"])
+            except ValueError:
+                return None
+            return abs_path if os.path.isfile(abs_path) else None
+
+        candidates, skipped = [], []
+        for rel in list(read_files) + wanted:
+            (candidates if readable(rel) else skipped).append(rel)
+        block, included, omitted = checks.inject_files(
+            candidates, lambda rel: file_ops.read_text(readable(rel) or ""), file_ops.fence_for,
+            int(self.cfg["stage1_inject_chars"]))
+        notes = [f"{s} (outside the repository fence or not a file)" for s in skipped] + omitted
+        self._event(f"Stage 1: injected {len(included)} workspace file(s), {len(block)} chars"
+                    + (f"; skipped: {'; '.join(notes)}" if notes else ""))
+        return block
+
     def stage1_plan(self, issue: Dict[str, Any], task_id: str) -> str:
         cached = self._load_artifact(task_id, "stage1_plan.md")
         if cached:
             self._event("Estágio 1: plano já existe em logs/; reutilizando")
             return cached
 
-        print(f"\n📄 [{STAGE_NAME[1]}] PROMPT_01.MD")
+        print(f"\n📄 [{STAGE_NAME[1]}] PROMPT_01.MD ({self.cfg['stage1_mode']} mode)")
         self.gh.set_stage(issue["number"], STAGE_LABEL[1])
-        # The seeder may have moved trailing sections into continuation comments
-        # (GitHub body limit); merge them back so the planner sees the whole spec.
-        list_body = issue.get("body") or ""
-        body = self.gh.get_issue_full_body(issue["number"]) or list_body
-        if len(body) > len(list_body):
-            self._event(f"Stage 1: merged {len(body) - len(list_body)} chars from continuation comments into the specification")
+        body = self._issue_body(issue)
         target_files = self._issue_section_paths(body, "Arquivos Alvo", "Target Files")
         read_files = self._issue_section_paths(body, "Arquivos para ler", "Files to read")
         spec = f"# {issue['title']}\n\n{body}"
+        allowed = ", ".join(self.cfg["allowed_paths"]) or "(the whole repository)"
+        forbidden = ", ".join(self.cfg["forbidden_paths"]) or "(none)"
+        if self.cfg["stage1_mode"] == "direct":
+            workspace_rule = ("You have NO tools and cannot read the workspace. The orchestrator injected below the "
+                              "existing files it selected for you (WORKSPACE FILES). Plan only from them and from the "
+                              "specification; if a file you would need is missing, say so in section 5 and take the "
+                              "simplest safe assumption.")
+            workspace_files = self._stage1_workspace_files(task_id, spec, read_files)
+        else:
+            workspace_rule = ("You MAY read files in the workspace (read-only tools) to learn what already exists: "
+                              "modules produced by earlier tasks, project layout, conventions. Start with FILES TO READ "
+                              "FIRST when given. Do not write or edit anything.")
+            workspace_files = "(not injected in cli mode: read the workspace with your tools)"
         base_prompt = self._fill(
             self._tpl("PROMPT_01.MD"),
             TASK_ID=task_id, PROJECT_NAME=self.cfg["project_name"],
             TEST_COMMAND=self.cfg["test_command"], TYPECHECK_COMMAND=self.cfg["typecheck_command"],
             PROJECT_CONVENTIONS=self.cfg["project_conventions"] or "(none)",
-            READ_FILES=", ".join(read_files) if read_files else "(none specified; explore as needed)",
+            READ_FILES=", ".join(read_files) if read_files else "(none specified)",
+            WORKSPACE_RULE=workspace_rule, WORKSPACE_FILES=workspace_files,
+            ALLOWED_PATHS=allowed, FORBIDDEN_PATHS=forbidden,
             SPEC=spec,
         )
 
@@ -584,6 +666,8 @@ class Orchestrator:
             return cached
 
         print(f"\n🔴 [{STAGE_NAME[2]}] PROMPT_02.MD")
+        test_rel = [pf["path"] for pf in plan_files if pf["role"] == "test"]
+        rule_ids = checks.rule_ids_from_issue(self._issue_body(issue))
         test_paths = [self._safe(pf["path"]) for pf in plan_files if pf["role"] == "test"]
         snap = file_ops.snapshot(test_paths)
         base_prompt = self._fill(
@@ -605,12 +689,32 @@ class Orchestrator:
                 err = self._diag_tail(comp)
                 return {"ok": False, "report": report + f"\nCompile FAILED:\n{err}",
                         "feedback": f"- the test files do not compile:\n```text\n{err}\n```"}
-            red = self.validator.run_tests()
-            tail = (red["stderr"] or red["stdout"])[-1500:]
+            red = self.validator.run_tests(test_rel if self.cfg["test_scope"] else None)
+            tail = checks.diag_tail(red["stdout"], red["stderr"], 1500)
             if red["success"]:
                 return {"ok": False, "report": report + "\nTests PASSED before implementation (must fail in RED).",
                         "feedback": "- the tests pass before any production code exists; RED tests must fail (they must exercise the code described in section 3 of the plan)"}
-            return {"ok": True, "report": report + f"\nCompile OK. RED run failed as expected (exit {red['exit_code']}):\n```text\n{tail}\n```", "feedback": ""}
+            # Honest RED: the failure must come from the task's own test files, not from elsewhere.
+            failed = checks.failed_test_files((red["stdout"] or "") + "\n" + (red["stderr"] or ""), test_rel)
+            if failed is not None and not failed:
+                return {"ok": False,
+                        "report": report + f"\nRED run failed, but none of the task's test files is reported as failing:\n```text\n{tail}\n```",
+                        "feedback": "- the test run failed for a reason outside the task's test files (wrong paths, a syntax "
+                                    "error elsewhere, or the runner did not pick the files up); the task's own tests must be "
+                                    "the ones failing: " + ", ".join(test_rel)}
+            # Every business rule id of the issue must be cited in the test files.
+            texts = [file_ops.read_text(self._safe(p)) or "" for p in test_rel]
+            covered, missing = checks.rule_coverage(rule_ids, texts)
+            if missing:
+                return {"ok": False,
+                        "report": report + f"\nRule coverage: {len(covered)}/{len(rule_ids)}; missing: {', '.join(missing)}",
+                        "feedback": "- every business rule id must appear verbatim in a test name or a comment of the task's "
+                                    "test files; missing: " + ", ".join(missing)}
+            coverage = f"Rule coverage: {len(covered)}/{len(rule_ids)}." if rule_ids else "Rule coverage: no rule ids in the issue."
+            failing = ", ".join(failed) if failed else "(runner does not print file names)"
+            return {"ok": True,
+                    "report": report + f"\nCompile OK. RED run failed as expected (exit {red['exit_code']}); failing files: {failing}. {coverage}\n```text\n{tail}\n```",
+                    "feedback": ""}
 
         output, checks, converged = self._run_stage(2, issue["number"], task_id, base_prompt, "", check2)
         if not checks["ok"]:
@@ -649,6 +753,12 @@ class Orchestrator:
         )
         max_retries = int(self.cfg["max_retries"])
         outer_feedback = ""
+        test_rel = [pf["path"] for pf in plan_files if pf["role"] == "test"]
+        rule_ids = checks.rule_ids_from_issue(self._issue_body(issue))
+        covered, missing = checks.rule_coverage(rule_ids, [file_ops.read_text(self._safe(p)) or "" for p in test_rel])
+        rule_coverage = ((f"{len(covered)}/{len(rule_ids)} rule ids found in the test files"
+                          + (f"; MISSING: {', '.join(missing)}" if missing else ""))
+                         if rule_ids else "(the issue declares no rule ids)")
 
         def check3(output: str) -> Dict[str, Any]:
             file_ops.restore(snap)
@@ -677,7 +787,7 @@ class Orchestrator:
                 self.gh.add_comment(number, "⚠️ Gate LLM da fase 3 não convergiu; seguindo porque compilação e formato passaram.")
 
             print("🔍 [Estágio 4 - Validação local] testes")
-            local = self._local_report()
+            local = self._local_report(test_rel)
             self._save_artifact(task_id, f"stage4_local_try{attempt}.md", local["text"])
             if not local["ok"]:
                 errors = self.validator.analyze_errors(local["tests"], local["compilation"])
@@ -696,6 +806,7 @@ class Orchestrator:
             audit_prompt = self._fill(
                 self._tpl("PROMPT_04.MD"), TASK_ID=task_id, PLAN_OUTPUT=plan, TASK_DIFF=self._task_diff(),
                 FILES_WRITTEN="\n".join(f"- {w}" for w in self.files_touched) or "(none)", LOCAL_REPORT=local["text"],
+                RULE_COVERAGE=rule_coverage,
             )
             audit = self._ask_cli(audit_prompt, f"stage4_audit_try{attempt}", task_id, single_shot=True)
             verdict = self.cli.extract_verdict(audit, kind="audit")
@@ -818,9 +929,41 @@ class Orchestrator:
         q = self.gh.get_open_issues(self.cfg["trigger_label"], self.cfg["failed_label"])
         return dependency.resolve(q, self._index(), self.cfg["failed_label"])
 
+    def _preflight(self) -> bool:
+        """
+        Baseline on the untouched tree, once per batch: the project's own gate must be
+        green before any issue is touched, so a later failure is attributable to the task
+        (on 2026-09-28 CRLF-broken specs outside the task cost six GREEN rounds).
+        """
+        if not self.cfg["preflight"]:
+            return True
+        steps = ([("check", self.validator.run_check)] if self.cfg["check_command"]
+                 else [("typecheck", self.validator.check_compilation), ("tests", self.validator.run_tests)])
+        print("\n🧪 [PRE-FLIGHT] baseline on the untouched tree: " + ", ".join(n for n, _ in steps))
+        for name, fn in steps:
+            res = fn()
+            tail = checks.diag_tail(res["stdout"], res["stderr"], 3000)
+            self.rep.event("PREFLIGHT", "-", f"{name}: {'OK' if res['success'] else 'FAILED'} (exit {res['exit_code']})",
+                           "" if res["success"] else tail)
+            if res["success"]:
+                continue
+            crlf = checks.crlf_offenders(self.repo_root)
+            hint = (f"\n   {len(crlf)} tracked file(s) are CRLF in the working copy but pinned to LF by .gitattributes "
+                    f"(e.g. {crlf[0]}). On a clean tree run: git rm --cached -r -q . && git reset --hard") if crlf else ""
+            print(f"⛔ pre-flight '{name}' failed on the untouched tree; no issue was touched.{hint}\n{tail}")
+            return False
+        print(" ✅ baseline green")
+        return True
+
     def run_batch(self, issues: List[Dict[str, Any]]) -> Dict[str, Any]:
         started = time.time()
         done, failed, skipped, calls = [], [], [], 0
+        if not self._preflight():
+            skipped = [f"#{i['number']} (pre-flight failed: the baseline is red)" for i in issues]
+            summary = {"done": done, "failed": failed, "skipped": skipped, "llm_calls": 0,
+                       "elapsed": int(time.time() - started)}
+            print(f"\n📊 Batelada não iniciada: {len(skipped)} pulada(s) pelo pre-flight.")
+            return summary
         for issue in issues:
             ok_dep, reason = dependency.ready_now(issue, self._index(), self.cfg["failed_label"])
             if not ok_dep:
@@ -859,6 +1002,8 @@ class Orchestrator:
             ok_dep, reason = dependency.ready_now(issues[0], self._index(), self.cfg["failed_label"])
             if not ok_dep:
                 print(f"⚠️ Issue #{issue_number} está bloqueada ({reason}); executando mesmo assim por pedido explícito.")
+            if not self._preflight():
+                return
             self.process_issue(issues[0])
             return
 

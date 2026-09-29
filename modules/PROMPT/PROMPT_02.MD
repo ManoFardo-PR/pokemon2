@@ -20,6 +20,8 @@ RULES:
 5. If the task has no testable logic (for example, it only creates a package), write at least one test that checks the module can be imported.
 6. You have no write tools. Return the files in the format below; the orchestrator writes them to disk.
 7. Return only what you create or change. Never return a file that is unchanged.
+8. Never suppress the type checker, the linter or the test runner: no `@ts-nocheck`, `@ts-ignore`, `@ts-expect-error`, `eslint-disable`, `.skip(`, `.only(` or equivalents. The orchestrator rejects any file containing them. Make the tests compile by importing the real modules the plan names.
+9. Every business rule id of the plan (BR-..., RN-...) must appear verbatim in at least one `describe` or `it` name, or in a comment next to the test that covers it. The orchestrator rejects the output when a rule id is missing from the test files.
 
 OUTPUT FORMAT (mandatory).
 For a NEW file (Action = create) or a full rewrite (Action = rewrite):

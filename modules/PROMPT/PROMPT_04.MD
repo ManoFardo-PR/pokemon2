@@ -17,6 +17,10 @@ LOCAL VALIDATION RESULT (compile and tests):
 ================================================================================
 {{LOCAL_REPORT}}
 ================================================================================
+BUSINESS-RULE COVERAGE (computed by the orchestrator: rule ids of the task found in the test files):
+================================================================================
+{{RULE_COVERAGE}}
+================================================================================
 
 INSTRUCTIONS:
 1. You MAY read the files listed above in the workspace to check their real content. Do not write anything.
