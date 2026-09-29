@@ -374,6 +374,26 @@ function resolveFixturesDir(): string {
   return path.resolve(process.cwd(), "fixtures");
 }
 
+/**
+ * The fixtures directory also holds raw upstream documents kept as test material:
+ * pokemon-tcg-data samples and the TCGdex card documents of S02.T03. Those are not
+ * envelope fixtures, so `readFixture` cannot validate them and `loadFixture` cannot
+ * load them — the envelope marker, not the file name, decides what is listed.
+ */
+function isFixtureEnvelope(filePath: string): boolean {
+  try {
+    const doc: unknown = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    return (
+      typeof doc === "object" &&
+      doc !== null &&
+      !Array.isArray(doc) &&
+      typeof (doc as { fixture?: unknown }).fixture === "string"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function listFixtures(): string[] {
   const dir = resolveFixturesDir();
   if (!fs.existsSync(dir)) {
@@ -382,6 +402,7 @@ export function listFixtures(): string[] {
   const files = fs.readdirSync(dir);
   return files
     .filter((f) => f.endsWith(".json") && !f.endsWith("-sample.json"))
+    .filter((f) => isFixtureEnvelope(path.join(dir, f)))
     .map((f) => f.slice(0, -5));
 }
 

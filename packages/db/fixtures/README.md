@@ -13,6 +13,17 @@ This directory contains static, realistic test fixtures used across `@pokesearch
   5. Special Energy (`Double Turbo Energy`)
 - `decks-basic.json`: 2 tournament decks with resolved cards and one deliberately unresolved card line to test resolution fallback logic.
 
+## Raw Source Documents
+
+These are upstream documents kept verbatim, not fixture envelopes: they carry no `fixture` / `version` / `rows` keys, `listFixtures()` does not list them and `loadFixture()` cannot load them. They exist so parsers can be tested against the exact shape the sources deliver.
+
+- `cards-ptcg-sample.json`: a pokemon-tcg-data card array, as served by the upstream repository.
+- `tcgdex-card-both-prices.json` (`sv1-001`): a TCGdex card document with both the TCGplayer (USD) and Cardmarket (EUR) price blocks — S02.T03 / S02.T07.
+- `tcgdex-card-cardmarket-only.json` (`sv1-002`): the same shape with `pricing.cardmarket` only, the common case for cards TCGplayer does not list.
+- `tcgdex-card-no-prices.json` (`sv1-003`): no `pricing` key at all, so a price snapshot must skip the card rather than write zeros.
+
+None of the three carries `_fetched_at`: that stamp is added by `fetch-tcgdex.ts` on the way into the cache (BR-S02.T03-02), never by the source.
+
 ## Security & Data Integrity Checklist (BR-S01.T03-06)
 
 All fixtures must strictly satisfy the following rules:
