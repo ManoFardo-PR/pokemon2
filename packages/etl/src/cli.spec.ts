@@ -121,8 +121,12 @@ describe("CLI entry point (etl)", () => {
     migrate(db);
     db.close();
 
-    // Default step stubs throw NotImplementedError
-    const result = await runCli(["full"]);
+    // fetch-ptcg is the first step: point it at a closed local port with no retry
+    // backoff so it fails fast and offline (a real step error, not a stub).
+    const result = await runCli(["full"], {
+      PTCG_RAW_BASE: "http://127.0.0.1:9",
+      PTCG_BACKOFF_MS: "0,0,0",
+    });
     expect(result.code).toBe(1);
 
     const dbCheck = openDatabase(dbPath);

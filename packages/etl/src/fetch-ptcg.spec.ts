@@ -25,9 +25,16 @@ describe("fetch-ptcg (RED phase test suite)", () => {
     etag?: string;
     body: string;
     headers?: Record<string, string>;
+    /** Status per request on this path (the last one repeats); overrides `status`. */
+    sequence?: number[];
+    /** Send the headers and half of the body, then drop the connection (BR-S02.T02-06). */
+    abortBody?: boolean;
   }
   let routes: Map<string, MockRoute>;
   let requestLog: Array<{ path: string; headers: http.IncomingHttpHeaders }>;
+  let hitCounts: Map<string, number>;
+  /** No waiting between retries in tests; production defaults to 1 s, 2 s, 4 s. */
+  const ZERO_BACKOFF: readonly number[] = [0, 0, 0];
 
   beforeEach(async () => {
     tempCacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "etl-ptcg-test-"));
@@ -35,6 +42,7 @@ describe("fetch-ptcg (RED phase test suite)", () => {
 
     routes = new Map();
     requestLog = [];
+    hitCounts = new Map();
 
     server = http.createServer((req, res) => {
       const parsedUrl = new URL(req.url ?? "/", `http://localhost`);
@@ -48,8 +56,21 @@ describe("fetch-ptcg (RED phase test suite)", () => {
         return;
       }
 
+      const hit = hitCounts.get(reqPath) ?? 0;
+      hitCounts.set(reqPath, hit + 1);
+      const status = route.sequence
+        ? (route.sequence[Math.min(hit, route.sequence.length - 1)] ?? route.status)
+        : route.status;
+
+      if (route.abortBody) {
+        res.writeHead(status, { "content-type": "application/json" });
+        res.write(route.body.slice(0, Math.floor(route.body.length / 2)));
+        res.destroy();
+        return;
+      }
+
       const clientEtag = req.headers["if-none-match"];
-      if (clientEtag && route.etag && clientEtag === route.etag) {
+      if (status === 200 && clientEtag && route.etag && clientEtag === route.etag) {
         res.writeHead(304, { etag: route.etag });
         res.end();
         return;
@@ -63,7 +84,7 @@ describe("fetch-ptcg (RED phase test suite)", () => {
         headers["etag"] = route.etag;
       }
 
-      res.writeHead(route.status, headers);
+      res.writeHead(status, headers);
       res.end(route.body);
     });
 
@@ -288,10 +309,78 @@ describe("fetch-ptcg (RED phase test suite)", () => {
         body: "Server Error",
       });
 
-      await expect(fetchAll({ baseUrl: serverUrl, force: true })).rejects.toThrow();
+      await expect(
+        fetchAll({ baseUrl: serverUrl, force: true, backoffMs: ZERO_BACKOFF })
+      ).rejects.toThrow();
 
       const finalEtags = fs.readFileSync(ptcg.etagsFile(), "utf8");
       expect(finalEtags).toBe(initialEtags);
+    });
+  });
+
+  describe("Retry policy (BR-S02.T02-07)", () => {
+    it("503 then 200 succeeds with two requests", async () => {
+      setupStandardRoutes();
+      routes.set("/cards/en/sv1.json", {
+        status: 200,
+        sequence: [503, 200],
+        etag: '"etag-cards-sv1-1"',
+        body: JSON.stringify(sampleCardsSv1),
+      });
+
+      const result = await fetchAll({ baseUrl: serverUrl, backoffMs: ZERO_BACKOFF });
+
+      expect(requestLog.filter((r) => r.path === "/cards/en/sv1.json")).toHaveLength(2);
+      expect(result.changedSetIds).toContain("sv1");
+      expect(JSON.parse(fs.readFileSync(ptcg.cardsFile("sv1"), "utf8"))).toEqual(sampleCardsSv1);
+    });
+
+    it("gives up after three retries on a persistent 5xx", async () => {
+      setupStandardRoutes();
+      routes.set("/sets/en.json", { status: 503, body: "Service Unavailable" });
+
+      await expect(fetchAll({ baseUrl: serverUrl, backoffMs: ZERO_BACKOFF })).rejects.toThrow(
+        /HTTP 503/
+      );
+      expect(requestLog.filter((r) => r.path === "/sets/en.json")).toHaveLength(4);
+    });
+
+    it("403 fails without retry", async () => {
+      setupStandardRoutes();
+      routes.set("/sets/en.json", { status: 403, body: "Forbidden" });
+
+      await expect(fetchAll({ baseUrl: serverUrl, backoffMs: ZERO_BACKOFF })).rejects.toThrow(
+        /HTTP 403/
+      );
+      expect(requestLog.filter((r) => r.path === "/sets/en.json")).toHaveLength(1);
+      expect(fs.existsSync(ptcg.setsFile())).toBe(false);
+    });
+  });
+
+  describe("Atomic writes (BR-S02.T02-06)", () => {
+    it("aborted body leaves the previous file intact", async () => {
+      setupStandardRoutes();
+      await fetchAll({ baseUrl: serverUrl, backoffMs: ZERO_BACKOFF });
+      const sv1Path = ptcg.cardsFile("sv1");
+      const etagsBefore = fs.readFileSync(ptcg.etagsFile(), "utf8");
+
+      const replacement: PtcgCard[] = [{ id: "sv1-99", name: "Never written", number: "99" }];
+      routes.set("/cards/en/sv1.json", {
+        status: 200,
+        etag: '"etag-cards-sv1-2"',
+        body: JSON.stringify(replacement),
+        abortBody: true,
+      });
+      requestLog = [];
+
+      await expect(fetchAll({ baseUrl: serverUrl, backoffMs: ZERO_BACKOFF })).rejects.toThrow();
+
+      // 1 attempt + 3 retries, all dropped mid-body
+      expect(requestLog.filter((r) => r.path === "/cards/en/sv1.json")).toHaveLength(4);
+      expect(JSON.parse(fs.readFileSync(sv1Path, "utf8"))).toEqual(sampleCardsSv1);
+      expect(fs.readFileSync(ptcg.etagsFile(), "utf8")).toBe(etagsBefore);
+      const leftovers = fs.readdirSync(path.dirname(sv1Path)).filter((f) => f.includes(".tmp"));
+      expect(leftovers).toEqual([]);
     });
   });
 
