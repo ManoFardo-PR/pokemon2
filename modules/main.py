@@ -43,7 +43,7 @@ MODULES_DIR = os.path.dirname(os.path.abspath(__file__))
 if MODULES_DIR not in sys.path:
     sys.path.insert(0, MODULES_DIR)
 
-import checks                                         # noqa: E402
+import checks as chk                                  # noqa: E402  (alias: stages have a local named `checks`)
 import dependency                                     # noqa: E402
 import file_ops                                       # noqa: E402
 import selector                                       # noqa: E402
@@ -106,8 +106,8 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     cfg.setdefault("stage1_mode", "direct")        # "direct": two API calls, no CLI; "cli": Continue CLI with tools
     cfg.setdefault("stage1_max_files", 8)          # files the selection call may add to the task's read_files
     cfg.setdefault("stage1_inject_chars", 60000)
-    cfg.setdefault("forbidden_patterns", list(checks.DEFAULT_FORBIDDEN_PATTERNS))
-    cfg.setdefault("forbidden_test_patterns", list(checks.DEFAULT_FORBIDDEN_TEST_PATTERNS))
+    cfg.setdefault("forbidden_patterns", list(chk.DEFAULT_FORBIDDEN_PATTERNS))
+    cfg.setdefault("forbidden_test_patterns", list(chk.DEFAULT_FORBIDDEN_TEST_PATTERNS))
     cfg.setdefault("max_diff_chars", 8000)
     cfg.setdefault("poll_interval_sec", 10)
     cfg.setdefault("cli_timeout_sec", 300)   # inatividade: conta da última atividade da CLI
@@ -390,7 +390,7 @@ class Orchestrator:
             # Guard: the model may not silence the type checker, the linter or the test runner
             # (T01 shipped five spec files with `// @ts-nocheck` to get "Compile OK").
             patterns = list(self.cfg["forbidden_patterns"]) + (list(self.cfg["forbidden_test_patterns"]) if want_test else [])
-            hits = checks.forbidden_hits(new_content, patterns)
+            hits = chk.forbidden_hits(new_content, patterns)
             if hits:
                 reject(path, "forbidden content (suppressing the type checker, linter or test runner is not allowed): "
                        + "; ".join(hits))
@@ -416,7 +416,7 @@ class Orchestrator:
         """Trecho útil de um comando que falhou: prioriza as linhas de diagnóstico
         (error TS..., FAIL, AssertionError) sobre o epílogo do pnpm, que era a
         única coisa que sobrava com um simples tail e deixava o modelo às cegas."""
-        return checks.diag_tail(res.get("stdout") or "", res.get("stderr") or "", limit)
+        return chk.diag_tail(res.get("stdout") or "", res.get("stderr") or "", limit)
 
     @staticmethod
     def _apply_report(res: Dict[str, Any]) -> str:
@@ -441,8 +441,8 @@ class Orchestrator:
             tests = self.validator.run_tests()
             scope_note = ("task tests OK; " if scoped is not None else "") + "full suite"
         ok = comp["success"] and tests["success"]
-        tail = (checks.diag_tail(tests["stdout"], tests["stderr"], 3000) if not tests["success"]
-                else checks.strip_ansi(tests["stdout"] or tests["stderr"])[-1500:])
+        tail = (chk.diag_tail(tests["stdout"], tests["stderr"], 3000) if not tests["success"]
+                else chk.strip_ansi(tests["stdout"] or tests["stderr"])[-1500:])
         text = (
             f"Compile: {'OK' if comp['success'] else 'FAILED'} (exit {comp['exit_code']})\n"
             f"Tests ({scope_note}): {'OK' if tests['success'] else 'FAILED'} (exit {tests['exit_code']})\n\n"
@@ -546,10 +546,10 @@ class Orchestrator:
         prompt = self._fill(
             self._tpl("PROMPT_01A.MD"), TASK_ID=task_id, MAX_FILES=str(n),
             READ_FILES=", ".join(read_files) if read_files else "(none)",
-            TREE=checks.repo_tree(self.repo_root, self.cfg["allowed_paths"]), SPEC=spec,
+            TREE=chk.repo_tree(self.repo_root, self.cfg["allowed_paths"]), SPEC=spec,
         )
         raw = self._ask_cli(prompt, "stage1_files", task_id, single_shot=True)
-        wanted = [p for p in checks.parse_file_list(raw, limit=n) if p not in read_files]
+        wanted = [p for p in chk.parse_file_list(raw, limit=n) if p not in read_files]
 
         def readable(rel: str) -> Optional[str]:
             try:
@@ -561,7 +561,7 @@ class Orchestrator:
         candidates, skipped = [], []
         for rel in list(read_files) + wanted:
             (candidates if readable(rel) else skipped).append(rel)
-        block, included, omitted = checks.inject_files(
+        block, included, omitted = chk.inject_files(
             candidates, lambda rel: file_ops.read_text(readable(rel) or ""), file_ops.fence_for,
             int(self.cfg["stage1_inject_chars"]))
         notes = [f"{s} (outside the repository fence or not a file)" for s in skipped] + omitted
@@ -667,7 +667,7 @@ class Orchestrator:
 
         print(f"\n🔴 [{STAGE_NAME[2]}] PROMPT_02.MD")
         test_rel = [pf["path"] for pf in plan_files if pf["role"] == "test"]
-        rule_ids = checks.rule_ids_from_issue(self._issue_body(issue))
+        rule_ids = chk.rule_ids_from_issue(self._issue_body(issue))
         test_paths = [self._safe(pf["path"]) for pf in plan_files if pf["role"] == "test"]
         snap = file_ops.snapshot(test_paths)
         base_prompt = self._fill(
@@ -690,12 +690,12 @@ class Orchestrator:
                 return {"ok": False, "report": report + f"\nCompile FAILED:\n{err}",
                         "feedback": f"- the test files do not compile:\n```text\n{err}\n```"}
             red = self.validator.run_tests(test_rel if self.cfg["test_scope"] else None)
-            tail = checks.diag_tail(red["stdout"], red["stderr"], 1500)
+            tail = chk.diag_tail(red["stdout"], red["stderr"], 1500)
             if red["success"]:
                 return {"ok": False, "report": report + "\nTests PASSED before implementation (must fail in RED).",
                         "feedback": "- the tests pass before any production code exists; RED tests must fail (they must exercise the code described in section 3 of the plan)"}
             # Honest RED: the failure must come from the task's own test files, not from elsewhere.
-            failed = checks.failed_test_files((red["stdout"] or "") + "\n" + (red["stderr"] or ""), test_rel)
+            failed = chk.failed_test_files((red["stdout"] or "") + "\n" + (red["stderr"] or ""), test_rel)
             if failed is not None and not failed:
                 return {"ok": False,
                         "report": report + f"\nRED run failed, but none of the task's test files is reported as failing:\n```text\n{tail}\n```",
@@ -704,7 +704,7 @@ class Orchestrator:
                                     "the ones failing: " + ", ".join(test_rel)}
             # Every business rule id of the issue must be cited in the test files.
             texts = [file_ops.read_text(self._safe(p)) or "" for p in test_rel]
-            covered, missing = checks.rule_coverage(rule_ids, texts)
+            covered, missing = chk.rule_coverage(rule_ids, texts)
             if missing:
                 return {"ok": False,
                         "report": report + f"\nRule coverage: {len(covered)}/{len(rule_ids)}; missing: {', '.join(missing)}",
@@ -754,8 +754,8 @@ class Orchestrator:
         max_retries = int(self.cfg["max_retries"])
         outer_feedback = ""
         test_rel = [pf["path"] for pf in plan_files if pf["role"] == "test"]
-        rule_ids = checks.rule_ids_from_issue(self._issue_body(issue))
-        covered, missing = checks.rule_coverage(rule_ids, [file_ops.read_text(self._safe(p)) or "" for p in test_rel])
+        rule_ids = chk.rule_ids_from_issue(self._issue_body(issue))
+        covered, missing = chk.rule_coverage(rule_ids, [file_ops.read_text(self._safe(p)) or "" for p in test_rel])
         rule_coverage = ((f"{len(covered)}/{len(rule_ids)} rule ids found in the test files"
                           + (f"; MISSING: {', '.join(missing)}" if missing else ""))
                          if rule_ids else "(the issue declares no rule ids)")
@@ -942,12 +942,12 @@ class Orchestrator:
         print("\n🧪 [PRE-FLIGHT] baseline on the untouched tree: " + ", ".join(n for n, _ in steps))
         for name, fn in steps:
             res = fn()
-            tail = checks.diag_tail(res["stdout"], res["stderr"], 3000)
+            tail = chk.diag_tail(res["stdout"], res["stderr"], 3000)
             self.rep.event("PREFLIGHT", "-", f"{name}: {'OK' if res['success'] else 'FAILED'} (exit {res['exit_code']})",
                            "" if res["success"] else tail)
             if res["success"]:
                 continue
-            crlf = checks.crlf_offenders(self.repo_root)
+            crlf = chk.crlf_offenders(self.repo_root)
             hint = (f"\n   {len(crlf)} tracked file(s) are CRLF in the working copy but pinned to LF by .gitattributes "
                     f"(e.g. {crlf[0]}). On a clean tree run: git rm --cached -r -q . && git reset --hard") if crlf else ""
             print(f"⛔ pre-flight '{name}' failed on the untouched tree; no issue was touched.{hint}\n{tail}")

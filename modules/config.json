@@ -25,7 +25,7 @@
   "test_timeout_sec": 600,
   "stage1_mode": "direct",
   "stage1_max_files": 8,
-  "stage1_inject_chars": 60000,
+  "stage1_inject_chars": 90000,
   "trigger_label": "tdd-queue",
   "failed_label": "tdd-failed",
   "max_retries": 3,

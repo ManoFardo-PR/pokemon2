@@ -223,6 +223,103 @@ class MetricsParsing(unittest.TestCase):
         self.assertIn("S02T01", metrics.render(rows))
 
 
+class StageFlowOffline(unittest.TestCase):
+    """
+    Stages 2 and 3 end to end with the LLM, GitHub and the validators stubbed, in a
+    temporary repository. This is the test that would have caught the UnboundLocalError
+    of 2026-09-29 (`checks` module shadowed by the stage's local variable).
+    """
+    PLAN = "\n".join([
+        "### 1. Objective and Context", "demo",
+        "### 2. Target Files",
+        "| Path | Role | Action | Purpose |", "|---|---|---|---|",
+        "| packages/demo/src/thing.ts | src | create | impl |",
+        "| packages/demo/src/thing.spec.ts | test | create | tests |",
+        "### 3. Technical Requirements and Contracts", "BR-X-01, BR-X-02",
+        "### 4. Test Scenarios (RED phase)", "- a",
+        "### 5. Architecture and Coding Constraints", "none",
+        "### 6. Existing Code This Task Depends On", "None", "",
+    ])
+    BODY = "## ⚙️ Regras de Negócio\n| ID | Regra de Negócio |\n|---|---|\n| BR-X-01 | a |\n| BR-X-02 | b |\n"
+    FENCE = "`" * 3
+
+    def setUp(self):
+        from main import Orchestrator  # noqa: E402  (import here: main resolves npx at construction only)
+        self.tmp = tempfile.mkdtemp(prefix="orch-flow-")
+        os.makedirs(os.path.join(self.tmp, "repo", "packages", "demo", "src"))
+        yaml = os.path.join(self.tmp, "config.yaml")
+        open(yaml, "w", encoding="utf-8").write("models: []\n")
+        cfg_path = os.path.join(self.tmp, "config.json")
+        json.dump({
+            "continue_cli_path": "npx @continuedev/cli", "continue_config": yaml,
+            "repo_root": os.path.join(self.tmp, "repo"), "allowed_paths": ["packages"],
+            "test_command": "pnpm test", "typecheck_command": "pnpm typecheck", "trigger_label": "tdd-queue",
+            "verify_stages": [], "verify_max_rounds": 0, "audit_mode": "local", "preflight": False,
+            "live_log": os.path.join(self.tmp, "live.log"),
+        }, open(cfg_path, "w", encoding="utf-8"))
+        self.orch = Orchestrator(load_config(cfg_path))
+        self.orch.logs_dir = os.path.join(self.tmp, "logs")
+        self.state = {"phase": "red", "runs": [], "asked": []}
+        gh_calls = []
+        self.orch.gh = mock.Mock(**{
+            "set_stage.return_value": True, "add_comment.side_effect": lambda n, b: gh_calls.append(b) or True,
+            "get_issue_labels.return_value": [], "get_issue_full_body.return_value": self.BODY,
+        })
+        self.gh_calls = gh_calls
+        self.orch.validator.check_compilation = lambda: {"success": True, "exit_code": 0, "stdout": "", "stderr": "", "command": ""}
+
+        def run_tests(paths=None):
+            self.state["runs"].append(paths)
+            if self.state["phase"] == "red":
+                return {"success": False, "exit_code": 1, "stdout": " FAIL  packages/demo/src/thing.spec.ts > x\nError: Failed to load ./thing.js",
+                        "stderr": "", "command": ""}
+            return {"success": True, "exit_code": 0, "stdout": " ✓ thing.spec.ts (2 tests)", "stderr": "", "command": ""}
+        self.orch.validator.run_tests = run_tests
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def stub_llm(self, test_body: str):
+        def ask(prompt, tag, task_id, single_shot=False):
+            self.state["asked"].append(tag)
+            if tag.startswith("stage2"):
+                return f"### FILE: packages/demo/src/thing.spec.ts\n{self.FENCE}ts\n{test_body}\n{self.FENCE}\n"
+            return f"### FILE: packages/demo/src/thing.ts\n{self.FENCE}ts\nexport const thing = 1;\n{self.FENCE}\n"
+        self.orch._ask_cli = ask
+
+    def test_red_then_green_local_audit(self):
+        self.stub_llm("import { thing } from './thing.js';\nit('thing is 1 (BR-X-01, BR-X-02)', () => { expect(thing).toBe(1); });")
+        issue = {"number": 99, "title": "[ZZFLOW] demo", "body": ""}
+        tests_md = self.orch.stage2_red(issue, "ZZFLOW", self.PLAN)
+        self.assertIn("### FILE: packages/demo/src/thing.spec.ts", tests_md)
+        self.assertTrue(os.path.exists(os.path.join(self.tmp, "repo", "packages", "demo", "src", "thing.spec.ts")))
+        self.assertEqual(self.state["runs"], [["packages/demo/src/thing.spec.ts"]])  # scoped RED run
+        red_report = next(b for b in self.gh_calls if "[Estágio 2" in b)
+        self.assertIn("Rule coverage: 2/2", red_report)
+
+        self.state["phase"] = "green"
+        result = self.orch.stage3_green_and_audit(issue, "ZZFLOW", self.PLAN, tests_md)
+        self.assertTrue(result["success"])
+        self.assertEqual(result["attempts"], 1)
+        self.assertIn("packages/demo/src/thing.ts", self.orch.files_touched)
+        # Stage 4: scoped run first, then the full suite
+        self.assertEqual(self.state["runs"][1:], [["packages/demo/src/thing.spec.ts"], None])
+        self.assertEqual(self.state["asked"], ["stage2_r1", "stage3_r1"])
+
+    def test_red_rejects_missing_rule_ids(self):
+        from main import StageError
+        self.stub_llm("import { thing } from './thing.js';\nit('only BR-X-01', () => { expect(thing).toBe(1); });")
+        with self.assertRaisesRegex(StageError, "missing: BR-X-02"):
+            self.orch.stage2_red({"number": 99, "title": "[ZZFLOW] demo", "body": ""}, "ZZFLOW", self.PLAN)
+
+    def test_red_rejects_suppressed_test_file(self):
+        from main import StageError
+        self.stub_llm("// @ts-nocheck\nit('x (BR-X-01, BR-X-02)', () => {});")
+        with self.assertRaisesRegex(StageError, "forbidden content"):
+            self.orch.stage2_red({"number": 99, "title": "[ZZFLOW] demo", "body": ""}, "ZZFLOW", self.PLAN)
+
+
 class ConfigDefaults(unittest.TestCase):
     def test_phase1_defaults_and_validation(self):
         base = {"continue_cli_path": "npx @continuedev/cli", "test_command": "pnpm test",
