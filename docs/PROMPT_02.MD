@@ -12,7 +12,7 @@ PASTE THE MASTER OUTPUT FROM PROMPT 1 (PLANNER) BELOW THIS LINE:
 CONSTRAINTS & RULES:
 1. Do NOT write or modify any production implementation code in this turn.
 2. Create or update ONLY the test files required for this subtask using `createNewFile` or `editFile`.
-3. Ensure the test suite strictly covers all assertions, boundary checks, and schema parity tests described in Section 4 of the injected context above.
+3. Ensure the test suite strictly covers all assertions, boundary checks, business rules and schema parity tests described in Section 4 of the injected context above.
 4. The tests must be fully syntactically valid and executable via the workspace test runner (e.g., `pnpm test`), but they should FAIL gracefully because the production logic is not yet implemented.
 5. Keep imports clean, use explicit `.ts` extensions where required by Node 24 runtime rules, and mock external dependencies cleanly.
 

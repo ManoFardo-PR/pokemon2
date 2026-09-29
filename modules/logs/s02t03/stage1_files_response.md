@@ -1,0 +1,9 @@
+[
+  "packages/etl/package.json",
+  "packages/etl/src/paths.ts",
+  "packages/etl/src/fetch-ptcg.ts",
+  "packages/etl/src/fetch-ptcg.spec.ts",
+  "packages/etl/src/run-log.ts",
+  "packages/etl/src/cli.ts",
+  "packages/etl/src/orchestrator.ts"
+]

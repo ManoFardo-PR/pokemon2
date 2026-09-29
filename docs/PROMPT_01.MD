@@ -25,7 +25,7 @@ Act as a Senior Developer executing subtask {{TASK_ID}}. Below is the complete, 
 [Inject exact parameters, types, interfaces, environment variables, boundary guards, and validation rules]
 
 ### 4. TDD Test Scenarios (RED Phase)
-[Inject complete list of required test assertions, edge cases, and schema parity checks]
+[Inject complete list of required test assertions, edge cases, business rules and schema parity checks]
 
 ### 5. Architectural & Coding Constraints
 [Inject conventions, error handling rules, compiler flags, and workspace standards]
