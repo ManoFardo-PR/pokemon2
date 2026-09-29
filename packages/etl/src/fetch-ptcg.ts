@@ -6,6 +6,12 @@ const logger = createEtlLogger();
 
 export const PTCG_RAW_BASE = "https://raw.githubusercontent.com/PokemonTCG/pokemon-tcg-data/master";
 
+/** Backoff before retry n (BR-S02.T02-07): 1 s, 2 s, 4 s. Tests inject `[0, 0, 0]`. */
+export const DEFAULT_BACKOFF_MS: readonly number[] = [1000, 2000, 4000];
+
+/** Statuses retried, besides transport errors. Every other non-2xx except 404 fails at once. */
+const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([500, 502, 503, 504]);
+
 export interface PtcgSet {
   id: string;
   name: string;
@@ -60,6 +66,8 @@ export interface FetchAllOptions {
   force?: boolean | undefined;
   onlySets?: string[] | undefined;
   signal?: AbortSignal | undefined;
+  /** Retry backoff per attempt in ms; defaults to DEFAULT_BACKOFF_MS. */
+  backoffMs?: readonly number[] | undefined;
 }
 
 export interface FetchAllResult {
@@ -127,79 +135,74 @@ interface HttpFetchResult {
   body?: string | undefined;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * GET with the retry policy of BR-S02.T02-07: transport errors and 5xx are retried
+ * up to `retries` times with `backoffMs` between attempts; 304 and 404 are returned
+ * to the caller; every other non-2xx (403, 401, 429, ...) fails immediately.
+ * The body is read inside the retry scope, so a connection dropped mid-body is a
+ * transport error and nothing reaches the cache (BR-S02.T02-06).
+ */
 async function fetchWithRetry(
   url: string,
   options: {
     etag?: string | undefined;
     signal?: AbortSignal | undefined;
     retries?: number | undefined;
+    backoffMs?: readonly number[] | undefined;
   }
 ): Promise<HttpFetchResult> {
   const maxRetries = options.retries ?? 3;
-  const backoffs = [100, 200, 400];
+  const backoffs = options.backoffMs ?? DEFAULT_BACKOFF_MS;
+  const headers: Record<string, string> = {
+    "user-agent": "pokesearch2-etl/0.1 (+local)",
+    accept: "application/json",
+  };
+  if (options.etag !== undefined) {
+    headers["if-none-match"] = options.etag;
+  }
+  const fetchInit: RequestInit = { method: "GET", headers };
+  if (options.signal !== undefined) {
+    fetchInit.signal = options.signal;
+  }
 
-  let attempt = 0;
-  while (true) {
-    attempt++;
-    const headers: Record<string, string> = {
-      "user-agent": "pokesearch2-etl/0.1 (+local)",
-      accept: "application/json",
-    };
-    if (options.etag !== undefined) {
-      headers["if-none-match"] = options.etag;
-    }
-
+  for (let attempt = 1; ; attempt++) {
+    const delay = backoffs[attempt - 1] ?? backoffs[backoffs.length - 1] ?? 0;
+    let res: Response;
+    let body: string | undefined;
     try {
-      const fetchInit: RequestInit = {
-        method: "GET",
-        headers,
-      };
-      if (options.signal !== undefined) {
-        fetchInit.signal = options.signal;
+      res = await fetch(url, fetchInit);
+      if (res.status !== 304 && res.status !== 404) {
+        body = await res.text();
       }
-      const res = await fetch(url, fetchInit);
-
-      if (res.status === 304) {
-        return {
-          status: 304,
-          etag: res.headers.get("etag") ?? options.etag ?? undefined,
-        };
-      }
-
-      if (res.status === 404) {
-        return {
-          status: 404,
-        };
-      }
-
-      const retryableStatus = [429, 500, 502, 503, 504].includes(res.status);
-      if (retryableStatus && attempt <= maxRetries) {
-        const delay = backoffs[attempt - 1] ?? 400;
-        await new Promise((r) => setTimeout(r, delay));
-        continue;
-      }
-
-      if (!res.ok) {
-        const errorText = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status} from ${url}: ${errorText}`);
-      }
-
-      const body = await res.text();
-      const responseEtag = res.headers.get("etag") ?? undefined;
-
-      return {
-        status: 200,
-        etag: responseEtag,
-        body,
-      };
     } catch (err: unknown) {
-      if (attempt <= maxRetries) {
-        const delay = backoffs[attempt - 1] ?? 400;
-        await new Promise((r) => setTimeout(r, delay));
-        continue;
+      if (options.signal?.aborted || attempt > maxRetries) {
+        throw err;
       }
-      throw err;
+      await sleep(delay);
+      continue;
     }
+
+    if (res.status === 304) {
+      return { status: 304, etag: res.headers.get("etag") ?? options.etag ?? undefined };
+    }
+    if (res.status === 404) {
+      return { status: 404 };
+    }
+    if (RETRYABLE_STATUSES.has(res.status)) {
+      if (attempt > maxRetries) {
+        throw new Error(`HTTP ${res.status} from ${url} after ${attempt} attempts: ${body ?? ""}`);
+      }
+      await sleep(delay);
+      continue;
+    }
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} from ${url}: ${body ?? ""}`);
+    }
+    return { status: 200, etag: res.headers.get("etag") ?? undefined, body: body ?? "" };
   }
 }
 
@@ -208,6 +211,7 @@ export async function fetchSets(opts?: {
   force?: boolean | undefined;
   signal?: AbortSignal | undefined;
   inMemoryEtags?: Record<string, string> | undefined;
+  backoffMs?: readonly number[] | undefined;
 }): Promise<{
   sets: PtcgSet[];
   changed: boolean;
@@ -226,6 +230,7 @@ export async function fetchSets(opts?: {
   const res = await fetchWithRetry(url, {
     etag: storedEtag,
     signal: opts?.signal,
+    backoffMs: opts?.backoffMs,
   });
 
   if (res.status === 404) {
@@ -290,6 +295,7 @@ export async function fetchSetCards(
     force?: boolean | undefined;
     signal?: AbortSignal | undefined;
     inMemoryEtags?: Record<string, string> | undefined;
+    backoffMs?: readonly number[] | undefined;
   }
 ): Promise<{
   cards: PtcgCard[];
@@ -310,6 +316,7 @@ export async function fetchSetCards(
   const res = await fetchWithRetry(url, {
     etag: storedEtag,
     signal: opts?.signal,
+    backoffMs: opts?.backoffMs,
   });
 
   if (res.status === 404) {
@@ -391,6 +398,7 @@ export async function fetchAll(opts?: FetchAllOptions): Promise<FetchAllResult> 
     force: opts?.force,
     signal: opts?.signal,
     inMemoryEtags,
+    backoffMs: opts?.backoffMs,
   });
 
   requests++;
@@ -418,6 +426,7 @@ export async function fetchAll(opts?: FetchAllOptions): Promise<FetchAllResult> 
         force: opts?.force,
         signal: opts?.signal,
         inMemoryEtags,
+        backoffMs: opts?.backoffMs,
       });
 
       requests++;

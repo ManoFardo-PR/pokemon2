@@ -81,6 +81,38 @@ interface GlobalOptions {
   cache?: string | undefined;
 }
 
+/** `--sets a, b,,c` -> ["a", "b", "c"]; undefined when nothing is left. */
+function parseSetIds(raw: string | undefined): string[] | undefined {
+  if (!raw) {
+    return undefined;
+  }
+  const ids = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  return ids.length > 0 ? ids : undefined;
+}
+
+/** Developer/test hooks for the pokemon-tcg-data fetcher (see packages/etl/README.md). */
+function ptcgHooksFromEnv(): Pick<LoadOptions, "ptcgBaseUrl" | "backoffMs"> {
+  const hooks: Pick<LoadOptions, "ptcgBaseUrl" | "backoffMs"> = {};
+  const baseUrl = process.env.PTCG_RAW_BASE;
+  if (baseUrl) {
+    hooks.ptcgBaseUrl = baseUrl;
+  }
+  const backoff = process.env.PTCG_BACKOFF_MS;
+  if (backoff) {
+    const values = backoff
+      .split(",")
+      .map((s) => Number(s.trim()))
+      .filter((n) => Number.isFinite(n) && n >= 0);
+    if (values.length > 0) {
+      hooks.backoffMs = values;
+    }
+  }
+  return hooks;
+}
+
 interface StatusOptions {
   kind?: string | undefined;
   json?: boolean | undefined;
@@ -168,11 +200,12 @@ program
       logger.info({ kind: "full" }, "Starting full ETL run");
 
       const loadOpts: LoadOptions = {
-        sets: options.sets ? options.sets.split(",") : undefined,
+        sets: parseSetIds(options.sets),
         force: options.force,
         skipTcgdex: options.skipTcgdex,
         concurrency: options.concurrency,
         verbose: options.verbose,
+        ...ptcgHooksFromEnv(),
       };
 
       await withRun(db, "full", async (run) => {
@@ -205,6 +238,7 @@ program
       const loadOpts: LoadOptions = {
         skipTcgdex: options.skipTcgdex,
         verbose: options.verbose,
+        ...ptcgHooksFromEnv(),
       };
 
       await withRun(db, "delta", async (run) => {
