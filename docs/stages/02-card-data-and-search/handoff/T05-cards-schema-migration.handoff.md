@@ -5,12 +5,12 @@
 | TASK_ID | S02.T05 |
 | SPEC | docs/stages/02-card-data-and-search/T05-cards-schema-migration.md |
 | HANDOFF | docs/stages/02-card-data-and-search/handoff/T05-cards-schema-migration.handoff.md |
-| LAST_PHASE | P2-RED |
-| LAST_STATUS | DONE |
-| NEXT | P3-GREEN |
+| LAST_PHASE | P3-GREEN |
+| LAST_STATUS | PASSED |
+| NEXT | P4A-VERIFY |
 | BASE_COMMIT | 5859e54d7c0d2c531b0cc2b1c219a48f1a555c49 |
-| RED_COMMIT | none yet |
-| GREEN_COMMIT | none yet |
+| RED_COMMIT | 72c1ebd41d5bdaf095ea19c35d545ebdf36008d2 |
+| GREEN_COMMIT | 62702c071ee270b4f3a4f2b11f2b3ea32f8ac27a |
 | UPDATED | 2026-09-30 |
 
 ## §1 PLAN
@@ -962,3 +962,194 @@ Static checks run from the Cowork shell (Node 22, the repo's own pure-JS `typesc
 - `node node_modules/typescript/bin/tsc -p packages/db/tsconfig.json --noEmit` → exit 0, no output
 - `node node_modules/typescript/bin/tsc -p scripts/tsconfig.json --noEmit` → exit 0, no output
 - `node node_modules/eslint/bin/eslint.js packages/db/src/schema.ts packages/db/src/schema.spec.ts packages/db/src/schema-drift.spec.ts packages/db/src/migrate.spec.ts scripts/sql-lint.spec.ts` → exit 0, no output
+
+## §3 GREEN
+
+Run by P3-GREEN on 2026-09-30, in Claude Code. No `## §3 GREEN` existed before this one, so this is run 1.
+
+### §3.1 Baseline
+
+STEP 1 ran `pnpm test` and `pnpm typecheck` on the working tree before any production file was written.
+
+| Check | Expected (§2.4 / §2.5) | Actual | Verdict |
+|---|---|---|---|
+| Failing tests | 28 | 28 | match |
+| Passing tests | every other test in the workspace | 448 passed, 39 test files (4 failed files) | match |
+| Failing test names | the 28 of §2.4 | the same 28, name for name | match |
+| Failure reasons | §2.5 | see below | match |
+| `pnpm typecheck` | clean | exit 0, no diagnostics | match (case d clear) |
+
+Failure reasons, checked one by one against §2.5:
+
+- the 21 `schema.spec.ts` tests: all failed with `DbError: no such table: sets`, raised by the shared
+  `beforeEach` at `src/schema.spec.ts:213` (`insert("sets", …)`) — the declared `MISSING_ARTIFACT` reason.
+- `schema-drift.spec.ts` (3): `TABLES.sets is missing`, `TABLES.cards_latest_price is missing`,
+  `TABLES.cards is missing` — the declared assertion mismatches.
+- `migrate.spec.ts > 0002 applies on a fresh temp DB …`: `expected 1 to be 2` — as declared.
+- `migrate.spec.ts > 0002_cards.sql creates no row and runs inside a transaction`: `ENOENT … 0002_cards.sql` — as declared.
+- `migrate.spec.ts > executing the 0002 SQL a second time …`: `expected 1 to be 2` — as declared.
+- `scripts/sql-lint.spec.ts` (1): `ENOENT … 0002_cards.sql` — as declared.
+
+No test outside §2.4 failed (case a clear), no test in §2.4 passed (case b clear), and every reason matched
+its declaration (case c clear). **Baseline clean.**
+
+NOTE (P3): the RED commit was not made by this phase. The §2.1 files, the handoff, the spec and the stage
+README were already committed as `72c1ebd feat: add fixture for Gardevoir ex card and implement schema drift
+tests`, authored `2026-09-30 11:35:44 -0300` — while this phase's baseline `pnpm test` was still running
+(it started 11:35:34). The working tree was clean at that point, so the baseline evidence above is the
+evidence for exactly the content of `72c1ebd`. RED_COMMIT is therefore set to `72c1ebd`, not to a commit this
+phase created; the deviation is recorded in §3.5 (D-1).
+
+`72c1ebd` swept in one file that must not be tracked: `apps/api/src/__lint-fixture__.ts`, which
+`scripts/lint-config.spec.ts` creates and deletes at runtime (BR-S01.T02-03) and which happened to be on disk
+during that commit. This phase removed it in its own commit before implementing:
+`f8a03e6 chore: untrack the transient eslint fixture swept into 72c1ebd`.
+
+- RED_COMMIT: `72c1ebd41d5bdaf095ea19c35d545ebdf36008d2`
+- Pre-implementation hygiene commit: `f8a03e6`
+
+### §3.2 Files changed
+
+`git diff --stat 72c1ebd`, VERBATIM (run with the new files staged, so untracked files appear):
+
+```
+ apps/api/src/__lint-fixture__.ts      |   2 -
+ packages/db/migrations/0002_cards.md  | 176 ++++++++++++++++++++++++++++++++
+ packages/db/migrations/0002_cards.sql | 187 ++++++++++++++++++++++++++++++++++
+ packages/db/package.json              |   1 +
+ packages/db/src/schema.ts             | 156 ++++++++++++++++++++++++++++
+ 5 files changed, 520 insertions(+), 2 deletions(-)
+```
+
+Against the §1.8 target list: both CREATE targets written; both MODIFY targets touched; no test file, fixture,
+test helper or test config created, edited, renamed or deleted; nothing in DO NOT TOUCH changed. The
+`apps/api/src/__lint-fixture__.ts` deletion is the `f8a03e6` hygiene commit described in §3.1, not a
+production change of this subtask.
+
+### §3.3 BR → implementation table
+
+| BR ID | Test(s) from §2.2 | Implementing code | Status |
+|---|---|---|---|
+| RN-01 | `schema.spec.ts` › RN-01 › raw_ptcg_json is NOT NULL; › raw_tcgdex_json is nullable … | `0002_cards.sql:cards` — `raw_ptcg_json TEXT NOT NULL`, `raw_tcgdex_json TEXT` (nullable); every other card column is a derivation, listed in `0002_cards.md` §3 | IMPLEMENTED |
+| RN-01 (loader round-trip) | — | — | DEFERRED → S02.T06 (§1.11a) |
+| BR-S02.T05-01 | `schema.spec.ts` › BR-01 › deleting a card removes its five child row sets | `0002_cards.sql` — `REFERENCES cards(id) ON DELETE CASCADE` on `attacks.card_id`, `abilities.card_id`, `weaknesses.card_id`, `resistances.card_id`, `price_history.card_id` and `cards_market_usd.card_id` | IMPLEMENTED |
+| BR-S02.T05-02 | `schema.spec.ts` › BR-02 › inserting a card with an unknown set_id …; › deleting a set that still has cards is refused | `0002_cards.sql:cards` — `set_id TEXT NOT NULL REFERENCES sets(id)` with no `ON DELETE`, so the delete is restricted | IMPLEMENTED |
+| BR-S02.T05-03 | `schema.spec.ts` › BR-03 › duplicate (card_id, idx) is rejected | `0002_cards.sql` — `CREATE UNIQUE INDEX attacks_card_idx_uq ON attacks (card_id, idx)` and `abilities_card_idx_uq ON abilities (card_id, idx)` | IMPLEMENTED |
+| BR-S02.T05-04 | `schema.spec.ts` › BR-04 › duplicate (card_id, type) is rejected | `0002_cards.sql` — `PRIMARY KEY (card_id, type)` on `weaknesses` and on `resistances` | IMPLEMENTED |
+| BR-S02.T05-05 | `schema.spec.ts` › BR-05 › second insert of the same key updates …; › price_history rejects an unknown source and a malformed snapshot_date | `0002_cards.sql:price_history` — `PRIMARY KEY (card_id, snapshot_date, source, variant)`, `CHECK (source IN ('tcgplayer', 'cardmarket'))`, `CHECK (length(snapshot_date) = 10)` | IMPLEMENTED |
+| BR-S02.T05-06 | `schema.spec.ts` › BR-06 › cards_market_usd rejects a second row …; › … is a table, not a view, and apps/api never writes it; › a card with no prices stays visible through a LEFT JOIN … | `0002_cards.sql:cards_market_usd` — `CREATE TABLE` (not a view) with `card_id TEXT PRIMARY KEY REFERENCES cards(id) ON DELETE CASCADE`, plus `cards_market_usd_price_idx`; the rationale and the ETL-only ownership are in `0002_cards.md` §1 D1 | IMPLEMENTED |
+| BR-S02.T05-07 | `schema.spec.ts` › BR-07 › cards_fts accepts an insert and a MATCH; › cards_fts columns follow the bm25 column-order contract; `scripts/sql-lint.spec.ts` › BR-07 | `0002_cards.sql` — the `-- @postgres:` note followed by `-- @sqlite-only` / `CREATE VIRTUAL TABLE cards_fts USING fts5(…, tokenize = 'unicode61 remove_diacritics 2')` / `-- @end`; the weight table is in `0002_cards.md` §4 | IMPLEMENTED |
+| BR-S02.T05-08 | `migrate.spec.ts` › 0002 applies on a fresh temp DB …; › creates no row and runs inside a transaction; › executing the 0002 SQL a second time … | `0002_cards.sql` as a whole — no `INSERT` statement, no `-- @no-transaction` marker on line 1 (so `migrate()` wraps it in one transaction), no `IF NOT EXISTS` anywhere | IMPLEMENTED |
+| BR-S02.T05-09 | `schema.spec.ts` › BR-09 › every *_norm column definition … carries a BR-S02.T05-09 comment | `0002_cards.sql` — the six `name_norm` / `text_norm` definitions on `sets`, `cards`, `attacks`, `abilities`, each commented `norm(<col>), written only by the loader; BR-S02.T05-09`; the `norm()` contract is quoted in `0002_cards.md` §2 | IMPLEMENTED (schema half) |
+| BR-S02.T05-09 (`norm()` equality) | — | — | DEFERRED → S02.T06 (§1.11a) |
+| BR-S02.T05-10 | `schema-drift.spec.ts` › BR-10 › 0002 tables match their TypeScript row types; › the cards_latest_price view …; › fails when a column is added … | `packages/db/src/schema.ts:TABLES` — 9 new descriptors (`sets`, `cards`, `attacks`, `abilities`, `weaknesses`, `resistances`, `price_history`, `cards_latest_price`, `cards_market_usd`), generated from `PRAGMA table_info` of the migrated database; the row types they pair with (`SetRow` … `CardsMarketUsdRow`, `PriceSource`, `DamageMod`) were written as contracts in P2 and left unchanged | IMPLEMENTED |
+
+Every ID of the §1.2 master list (RN-01, BR-S02.T05-01 … -10, 11 IDs) appears above. No BR of §2.2 is without
+implementing code, and no non-DEFERRED BR of §1.2 is without a test.
+
+### §3.4 TCRs
+
+None. No test file, fixture, test helper, snapshot or test configuration was created, edited, renamed or
+deleted by this phase, and no test needed one: every one of the 28 passed against the DDL as specified in §1.3.
+
+### §3.5 Deviations and decisions
+
+- **D-1 — the RED commit was made outside this phase.** STEP 1 prescribes that P3 commits the §2.1 files as
+  `test(S02.T05): RED — <n> failing tests` and sets RED_COMMIT to that hash. Those files were already
+  committed as `72c1ebd`, with a different message, while this phase's baseline run was in flight (§3.1).
+  RED_COMMIT is set to `72c1ebd` rather than rewriting someone else's commit; the baseline evidence in §3.1
+  corresponds exactly to its content, so the chain of evidence holds. Flagged for P4A/P4.
+- **D-2 — one extra commit before implementation.** `f8a03e6` removes `apps/api/src/__lint-fixture__.ts`,
+  a runtime artifact of `scripts/lint-config.spec.ts` that `72c1ebd` tracked by accident. It is not a §1.8
+  target; it was committed on its own so the GREEN diff stays production-only. It is not a test-file change:
+  the file is generated by a test, never read as one, and `lint-config.spec.ts` recreates it on every run
+  (all 4 of its tests pass in §3.6).
+- **§1.13 Q4 resolved as proposed — 21 named indexes, not 18.** The §1.3 DDL names 21 (`sets` 3, `cards` 8,
+  `attacks` 3, `abilities` 2, `weaknesses` 1, `resistances` 1, `price_history` 2, `cards_market_usd` 1); 18 is
+  the count up to `resistances`. All 21 are created; the spec's "all 18 named indexes" wording is corrected in
+  `0002_cards.md` §5 rather than in the spec body, which this phase may not rewrite.
+- **§1.13 Q5 resolved as proposed.** `packages/db/package.json` gains `"./schema": "./src/schema.ts"`, so the
+  subpath the spec and D-009 name (`@pokesearch/db/schema`) resolves. One line; no import was rewritten to use
+  it, since the existing files import `./schema.js` relatively.
+- **§1.13 Q7 resolved as proposed.** The §1.3 DDL comments only `sets.name_norm`. The other five `*_norm`
+  definitions received the same `BR-S02.T05-09` comment, which is what §2.2 BR-09 asserts (6 lines).
+- **§1.13 Q6 left untouched, as proposed.** `sqliteDialect.numericOrder` still returns only
+  `CAST(<col> AS INTEGER)` without the secondary `<col>`, and `sqliteDialect.rank()` still builds `bm25(<weights>)`
+  without the table argument that `bm25(cards_fts, …)` requires. No migration uses either, so neither is in
+  scope here. Both stay flagged for their first consumers: S02.T09 and S02.T08.
+- **`TABLES` descriptors were generated, not hand-typed.** Each of the 9 entries was emitted from
+  `PRAGMA table_info` of a database with 0001 and 0002 applied, then committed as source. This is what
+  BR-S02.T05-10 compares against at run time, so generating it removes transcription error as a failure mode
+  while leaving the descriptors hand-maintained from here on (D-009 keeps them hand-written).
+- **The view's descriptor uses PRAGMA's own values.** §2.6 decision 8 proposed
+  `notnull: false, pk: false, dflt_value: null` for `cards_latest_price`. Measured, `PRAGMA
+  table_info(cards_latest_price)` reports exactly that for all 14 columns, so the descriptor is PRAGMA-faithful
+  and the proposal and the measurement agree.
+- **`cards_market_usd` carries `snapshot_date`.** Present in the §1.3 DDL and kept: the legacy object was a
+  view over `cards_latest_price` and could not report how stale a price was. Recorded in `0002_cards.md` §1 D1.
+- **Nothing was implemented that the spec does not ask for.** No row is inserted, no index beyond the 21, no
+  trigger, no `PRAGMA`, and `cards_fts` is left empty (populating it is S02.T08).
+
+### §3.6 Final command output
+
+`pnpm test` — exit 0:
+
+```
+ Test Files  39 passed (39)
+      Tests  476 passed (476)
+   Duration  30.24s (transform 9.11s, setup 10.96s, collect 23.22s, tests 87.72s, environment 11.72s, prepare 10.78s)
+```
+
+No failures. All 28 tests of §2.4 pass, and the 448 tests that passed at baseline still pass
+(448 + 28 = 476).
+
+`pnpm typecheck` — exit 0:
+
+```
+$ pnpm -r run typecheck && tsc -p scripts/tsconfig.json
+Scope: 6 of 7 workspace projects
+$ tsc --noEmit
+$ tsc --noEmit
+$ tsc --noEmit
+$ tsc --noEmit
+$ tsc --noEmit
+$ tsc --noEmit
+```
+
+`pnpm lint` — exit 0:
+
+```
+$ pnpm -r run lint && eslint scripts
+Scope: 6 of 7 workspace projects
+$ eslint .
+$ eslint .
+$ eslint .
+$ eslint .
+$ eslint .
+$ eslint .
+```
+
+`node scripts/sql-lint.mjs` — exit 0, no output (BR-S02.T05-07 on the real file; the negative half, exit 1 with
+`outside -- @sqlite-only block` once the tag is stripped, is asserted by `scripts/sql-lint.spec.ts`).
+
+Step-8 measurement, taken on an empty database with 0001 then 0002 applied and recorded in `0002_cards.md` §5:
+20 480 bytes after 0001, 200 704 bytes after 0002; 16 tables (including the 5 FTS5 shadow tables), 1 view,
+29 indexes — 21 named on the 0002 tables, 2 named on the 0001 tables, 6 implicit `sqlite_autoindex_*`.
+
+### §3.7 Loop
+
+One round. Nothing failed.
+
+| Round | Ran | Result | Fix applied |
+|---|---|---|---|
+| 1 | `pnpm test`, `pnpm typecheck`, `pnpm lint`, `node scripts/sql-lint.mjs` | 476/476 passed; typecheck, lint and sql-lint all exit 0 | none needed |
+
+The implementation was written once, in the order of §1.5 steps 1–4 and 7–8: the DDL down to `resistances`,
+then `price_history` / `cards_latest_price` / `cards_market_usd`, then the tagged `cards_fts` block, then the
+`TABLES` entries generated from the applied schema, then the companion note with the measurement. Steps 5 and 6
+were P2's (the specs and the fixture) and were not touched.
+
+### §3.8 Status
+
+**PASSED.** §3.6 shows `pnpm test` 476/476 with exit 0, `pnpm typecheck` exit 0, `pnpm lint` exit 0, and
+`node scripts/sql-lint.mjs` exit 0. No TCR is open and no new deferral was created.
