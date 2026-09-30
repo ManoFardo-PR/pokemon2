@@ -12,6 +12,7 @@ This directory contains static, realistic test fixtures used across `@pokesearch
   4. Trainer Supporter (`Professor's Research`)
   5. Special Energy (`Double Turbo Energy`)
 - `decks-basic.json`: 2 tournament decks with resolved cards and one deliberately unresolved card line to test resolution fallback logic.
+- `cards-schema-0002.json`: 1 set and 1 printing (`sv1-86` Gardevoir ex, taken verbatim from `cards-ptcg-sample.json`) in the exact column shape of migration `0002_cards.sql`, with its attack, ability, weakness and resistance; no TCGdex counterpart, so every `tcgdex_*` column is NULL. Used by the S02.T05 typed round-trip test. `cards-basic.json` still uses the pre-0002 shape (migration owned by S02.T06).
 
 ## Raw Source Documents
 

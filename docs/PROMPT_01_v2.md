@@ -108,6 +108,8 @@ Header table:
 
 §1.14 Manifest — every file read: path | why | VERBATIM or REFERENCE.
 
+§1.15 User answers and amendments — appended when the user answers §1.13 questions. For every answer that adds or changes a target file, redo STEP 2 items 9 and 12 for that file before recording it: its companion docs (READMEs, indexes or notes that list files of that kind — e.g. a fixtures README), existing tests that read its folder, and the §1.8 list. Record each new target and each predicted breakage here; an answer is not applied until this check is written down.
+
 ================================================================================
 STEP 3b — MARK THE STATUS
 ================================================================================

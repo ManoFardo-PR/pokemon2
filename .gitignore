@@ -14,3 +14,5 @@ engine/target/
 
 .venv/
 __pycache__/
+# Transient file created and deleted by scripts/lint-config.spec.ts while it runs; never track it.
+apps/api/src/__lint-fixture__.ts

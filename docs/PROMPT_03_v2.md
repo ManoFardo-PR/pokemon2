@@ -17,6 +17,24 @@ STEP 0 — VALIDATE THE CHAIN
 4. Read the whole HANDOFF file, then every file in §1.8, §2.1 and the §1.14 REFERENCE files you need.
 
 ================================================================================
+STEP 0b — PRE-FLIGHT COMMIT (before anything runs)
+================================================================================
+The Cowork phases (P1, P2, P4) cannot commit; their output waits in the working tree for you. Run `git status --porcelain` and classify every changed or untracked path:
+  1. RED set of this task — the §2.1 files, the HANDOFF, the spec, the stage README. Leave them; they go into the RED commit in STEP 1.
+  2. Other pipeline output — any other `docs/**` file, other tasks' handoffs and logs, `docs/PROMPT*_v2.md`, `docs/PROMPTS_v2_README.md`, and files named in an earlier handoff's "Post-audit fixes" table. Commit them now, on their own: `chore(pipeline): commit pending pipeline output before {{TASK_ID}} P3`.
+  3. Line-ending-only changes (`git diff --ignore-cr-at-eol --quiet -- <path>` succeeds). Do not commit; report the count.
+  4. Anything else. Do not commit, do not touch; list it in §3.1. If any of them is a §1.8 target, STOP and report.
+The tree must hold only groups 1, 3 and 4 before the baseline run. The user must not commit while this phase runs.
+
+================================================================================
+CONTEXT BUDGET
+================================================================================
+- Do not open the spec file: the HANDOFF quotes every section you need VERBATIM. Skip §1.0 and §1.14 of the HANDOFF.
+- Read each file once. Re-read only the region you are about to edit.
+- Full-workspace runs (baseline and final) use a quiet reporter: `pnpm exec vitest run --reporter=dot`. Loop rounds run only the affected files: `pnpm exec vitest run <files>`.
+- Paste into the HANDOFF only the summary lines and the full text of failures, never passing-test listings.
+
+================================================================================
 STEP 1 — CONFIRM THE RED BASELINE (before any implementation)
 ================================================================================
 Run the full workspace suite and typecheck (commands from §1.10, normally `pnpm test` and `pnpm typecheck`). Compare the result with §2.4 and §2.5.

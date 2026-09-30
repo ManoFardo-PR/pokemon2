@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S02 — Card data and search |
-| Status | IN_PROGRESS |
+| Status | DONE |
 | Order in stage | 5 / 14 |
 | Depends on | [S01.T04](../01-foundation/T04-database-migration-framework.md) |
 | Unblocks | [S02.T06](T06-load-cards.md), [S02.T08](T08-full-text-search.md), [S02.T09](T09-search-query-model-and-sql.md), [S03.T01](../03-tournament-meta-and-deck-builder/T01-tournaments-schema-migration.md), [S05.T01](../05-card-rules-base/T01-rules-schema-migration.md) |
 | Parallel with | [S02.T01](T01-etl-cli-and-raw-cache.md) |
 | Gate | no |
-| Owner / Updated | P4A-VERIFY / 2026-09-30 |
+| Owner / Updated | P4-AUDIT / 2026-09-30 |
 
 ## Inputs (required)
 - `module` migration runner and conventions (`-- @sqlite-only` blocks) — from [S01.T04](../01-foundation/T04-database-migration-framework.md)
@@ -312,7 +312,7 @@ CREATE VIRTUAL TABLE cards_fts USING fts5(
 - [ ] `schema-drift.spec.ts > 0002 tables match their TypeScript row types` passes, and fails when a column is added to the SQL without the type (BR-S02.T05-10).
 - [ ] A fixture card inserted through `@pokesearch/db/schema` reads back with identical values for every column, including `subtypes_json` and `raw_ptcg_json`.
 - [ ] `pnpm check` fails when the `-- @sqlite-only` tag around `cards_fts` is removed, and passes with it (BR-S02.T05-07).
-- [ ] `SELECT name FROM sqlite_master WHERE type='index' AND tbl_name IN (…)` lists all 18 named indexes; every index in the Outputs list is present.
+- [ ] `SELECT name FROM sqlite_master WHERE type='index' AND tbl_name IN (…)` lists all 21 named indexes; every index in the Outputs list is present.
 
 ## Risks and open questions
 

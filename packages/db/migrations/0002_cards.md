@@ -44,7 +44,7 @@ Here: `attacks_card_idx_uq` and `abilities_card_idx_uq` are `UNIQUE (card_id, id
 `weaknesses` / `resistances` declare `PRIMARY KEY (card_id, type)` (BR-S02.T05-04) — a card has at most one
 weakness and one resistance per energy type.
 
-`attacks.id` / `abilities.id` are `INTEGER PRIMARY KEY` without `AUTOINCREMENT` (legacy had it on `attacks`):
+`attacks.id` / `abilities.id` are `INTEGER PRIMARY KEY` without `AUTOINCREMENT` (legacy had it on both):
 the loader deletes and re-inserts children per card, so the surrogate ids are reused and are not stable
 references. Nothing may store an `attacks.id`; [S05.T02](../../../docs/stages/05-card-rules-base/T02-effect-texts-and-card-parts.md)
 keys card parts by `(card_id, kind, idx)` for exactly this reason.
@@ -129,7 +129,7 @@ can never be rebuilt from the derived columns.
 
 `bm25()` takes one weight per column **in declaration order**, so reordering the columns silently reweights
 every search — no error, just worse results. `schema.spec.ts > cards_fts columns follow the bm25 column-order
-contract` pins the order, and the FTS module asserts it at startup.
+contract` pins the order, and the FTS module of [S02.T08](../../../docs/stages/02-card-data-and-search/T08-full-text-search.md) is specified to assert it at startup.
 
 The tokenizer is `unicode61 remove_diacritics 2`, so a query for `pokemon` matches a stored `Pokémon`.
 

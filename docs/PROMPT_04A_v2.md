@@ -16,6 +16,11 @@ STEP 0 — VALIDATE THE CHAIN
 3. Read §1.8, §1.10, §2.4 and the latest §3. Do not read the implementation to form opinions about it.
 
 ================================================================================
+STEP 0b — PRE-FLIGHT COMMIT
+================================================================================
+Run `git status --porcelain`. Commit pending pipeline output (any `docs/**` file, handoffs, logs, prompt files, files named in a handoff's "Post-audit fixes" table) on its own as `chore(pipeline): commit pending pipeline output before {{TASK_ID}} P4A`. Ignore line-ending-only changes. Anything else: do not touch, list it in §4A.1. The user must not commit while this phase runs.
+
+================================================================================
 STEP 1 — COLLECT EVIDENCE
 ================================================================================
 Run each command below and keep its raw output.
@@ -28,7 +33,7 @@ Repository state:
 - `git diff --name-only <RED_COMMIT>..HEAD`
 
 Checks (full workspace):
-- `pnpm check` (typecheck, lint, sql-lint, notice-lint, schema:check, test — per `package.json`)
+- `pnpm check` (typecheck, lint, sql-lint, notice-lint, schema:check, test — per `package.json`). Keep only its summary lines and any failure in full.
 - `pnpm build`
 - `node scripts/docs-lint.mjs --strict`
 - `pnpm vitest run <every test file in §2.1> --reporter=verbose` — so each test name from §2.4 appears in the output with its result.
@@ -51,8 +56,8 @@ STEP 3 — APPEND §4A VERIFY TO THE HANDOFF FILE
 ================================================================================
 Append `## §4A VERIFY` (or `— run N`) with:
 §4A.1 Repository state — the git command outputs VERBATIM. Flag any uncommitted change.
-§4A.2 Check results — for each command: exit code, summary lines VERBATIM, and every failure in full VERBATIM. Passing-test listings may be kept to the verbose output of the §2.1 files.
-§4A.3 Expected tests — every test in §2.4 with its result from the verbose run: PASS / FAIL / NOT FOUND.
+§4A.2 Check results — for each command: exit code, summary lines VERBATIM, and every failure in full VERBATIM. No passing-test listings except §4A.3.
+§4A.3 Expected tests — every test in §2.4 with its result from the verbose run: PASS / FAIL / NOT FOUND, one line each (do not paste the raw verbose output).
 §4A.4 Fixes applied — each with its commit hash, or "none".
 §4A.5 Verdict — CLEAN only if every command exited 0, every §2.4 test is PASS, and `git status` is clean; otherwise NOT CLEAN with the list of reasons. State facts only; no assessment of code quality or rule coverage.
 

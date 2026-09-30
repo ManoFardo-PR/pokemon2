@@ -82,6 +82,8 @@ After changing statuses, run `node scripts/docs-lint.mjs --strict` (the status c
 5. **Evidence over claims.** Statuses come from command output pasted verbatim, never from a phase's own assertion.
 6. **Line endings.** The repo pins `*.md`, `*.ts`, `*.json`, `*.sql` etc. to LF (`.gitattributes`). Write LF.
 7. **Git from Cowork (P1, P2, P4) is read-only**, and index-touching reads use a temp index copy (`cp .git/index /tmp/gidx && GIT_INDEX_FILE=/tmp/gidx git …`). A plain `git status` from the Cowork side leaves a `.git/index.lock` it cannot remove. Only Claude Code (P3, P4A) and the user commit.
+8. **Commits.** Only Claude Code commits. P3 and P4A start with a pre-flight commit of pending pipeline output (what P1, P2 and P4 left in the tree) and end with their own commit. The user does not commit while a phase runs.
+9. **Context budget.** P3 and P4A never open the spec (the handoff quotes it), use quiet test reporters, and paste only summaries and failures into the handoff.
 
 ## Loop-backs
 

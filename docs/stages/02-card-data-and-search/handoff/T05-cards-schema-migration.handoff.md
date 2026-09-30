@@ -5,9 +5,9 @@
 | TASK_ID | S02.T05 |
 | SPEC | docs/stages/02-card-data-and-search/T05-cards-schema-migration.md |
 | HANDOFF | docs/stages/02-card-data-and-search/handoff/T05-cards-schema-migration.handoff.md |
-| LAST_PHASE | P4A-VERIFY |
-| LAST_STATUS | CLEAN |
-| NEXT | P4-AUDIT |
+| LAST_PHASE | P4-AUDIT |
+| LAST_STATUS | APPROVED WITH DEFERRALS |
+| NEXT | none |
 | BASE_COMMIT | 5859e54d7c0d2c531b0cc2b1c219a48f1a555c49 |
 | RED_COMMIT | 72c1ebd41d5bdaf095ea19c35d545ebdf36008d2 |
 | GREEN_COMMIT | f083c985fbfa3a386b203a382225539cb6e71e89 |
@@ -1374,3 +1374,113 @@ none.
 - `pnpm vitest run` over the four §2.1 files exit 0.
 - All 28 tests of §2.4 PASS.
 - `git status --porcelain` empty; no uncommitted change.
+
+## §4 AUDIT
+
+Auditor: P4-AUDIT (Cowork), 2026-09-30. HEAD at audit: `ea6a6f8` (`docs(S02.T05): verification evidence`). The only commit after §4A.1's HEAD is P4A's own, touching the handoff and the spec's `Owner / Updated` cell, which is allowed. No test suite was run by this phase; §4A is the execution evidence. Independent checks below were run from the Cowork shell with read-only git (temp index) and `node:sqlite` (SQLite 3.51.3).
+
+### §4.1 Checks A–G
+
+**A. Test integrity — PASS.**
+`git diff --name-status 72c1ebd..HEAD` lists no test file, fixture, test helper or test config:
+
+```
+D	apps/api/src/__lint-fixture__.ts
+A	docs/stages/02-card-data-and-search/T05-cards-schema-migration.log.md
+M	docs/stages/02-card-data-and-search/T05-cards-schema-migration.md
+M	docs/stages/02-card-data-and-search/handoff/T05-cards-schema-migration.handoff.md
+A	packages/db/migrations/0002_cards.md
+A	packages/db/migrations/0002_cards.sql
+M	packages/db/package.json
+M	packages/db/src/schema.ts
+```
+
+`git diff --stat 72c1ebd..HEAD -- '*.spec.ts' '*.spec.mjs' '*.test.*' '**/fixtures/**' '**/__fixtures__/**' '**/testing/**' 'vitest.config.ts' '**/vitest.config.ts'` → empty. No TCR was raised (§3.4).
+
+**B. Scope — PASS, with one explained extra.**
+Every path above is in §1.8 CREATE/MODIFY, or is the log, the handoff or the spec status cell — except `apps/api/src/__lint-fixture__.ts` (deleted). That file is a runtime artifact of `scripts/lint-config.spec.ts` that the out-of-phase RED commit tracked by accident; its removal in `f8a03e6` restores the tree, it is not implementation. Nothing in §1.8 DO NOT TOUCH changed.
+
+**C. Business rules — see §4.2.** All 11 IDs MET, two with justified deferred halves.
+
+`0002_cards.sql` against the spec's DDL (§1.3), `diff` of the fenced block vs the file: the only differences are (a) the five `BR-S02.T05-09` column comments required by §2.6 decision 6 plus a reworded sixth, (b) one space of alignment on two `attacks` index lines, (c) a two-line comment on the bm25 column-order contract above `cards_fts` that deliberately avoids the word `bm25` (sql-lint flags it even in comments). No DDL statement differs. File is UTF-8 with LF endings.
+
+**D. Edge cases and acceptance — PASS.**
+Every §1.6 edge case maps to a test in §2.3 except "FTS5 unavailable" (environmental, accepted in §1.6). Every §1.7 RUNNABLE NOW check maps to a §2.4 test, and §4A.3 reports all 28 as PASS. Acceptance #9 (`pnpm check` with and without the tag) is covered by `scripts/sql-lint.spec.ts` and by `pnpm check` exit 0 in §4A.2.
+
+Independent confirmation (Cowork shell, `node:sqlite`, 0001 + 0002 applied to an empty file):
+
+```
+objects [{"type":"index","c":29},{"type":"table","c":16},{"type":"view","c":1}]
+named idx on 0002 21
+no raw_ptcg -> 1299 NOT NULL constraint failed: cards.raw_ptcg_json
+unknown set -> 787 FOREIGN KEY constraint failed
+delete set w/ cards -> 787 FOREIGN KEY constraint failed
+after cascade { m: 0, w: 0 }
+size bytes 200704
+```
+
+These match `0002_cards.md` §5 (16 tables, 1 view, 29 indexes, 21 named, 200 704 bytes).
+
+**E. Evidence consistency — PASS.**
+§3.6 and the log report 476 tests / 39 files, exit 0 for test, typecheck, lint, sql-lint; §4A.2 reports the same from a fresh session (`pnpm check` 476/476, `pnpm build` 0, docs-lint `--strict` 0); §4A.3 lists all 28 §2.4 tests as PASS, 0 NOT FOUND. The log's Status (`IN_PROGRESS — P3-GREEN PASSED; DONE is P4-AUDIT's to set`) matches the evidence and the pipeline rule.
+
+**F. Deferrals — JUSTIFIED.**
+Both OUT deferrals (RN-01 loader round-trip; BR-S02.T05-09 `norm()` equality) and the §1.15 Q1 debt (`cards-basic.json` to the 0002 shape) name S02.T06, whose status is `TODO` and which has no `.log.md`. Each needs the loader and its `norm()`, which do not exist. All three are in the log's Deferrals table, which S02.T06's P1 reads (S02.T06 depends on S02.T05).
+The two dialect findings (`numericOrder`, `rank()`) are not deferrals of this subtask's work; they are recorded in the log for S02.T08 and S02.T09, both of which depend on S02.T05, so their P1 reads them.
+
+**G. Conventions — PASS.**
+`schema.ts` descriptors are plain literals, no casts or non-null assertions; `package.json` gains only the `./schema` export (§1.13 Q5). The `_uq` suffix on two unique indexes departs from `MIGRATIONS.md`'s `<table>_<cols>_idx`, but the names are the spec's (§1.3), so this is not a P3 deviation.
+
+### §4.2 BR verdict table
+
+| BR ID | Test (§2.2) | Implementation (§3.3 / log) | Verdict | Evidence |
+|---|---|---|---|---|
+| RN-01 | raw_ptcg_json is NOT NULL; raw_tcgdex_json is nullable … | `cards.raw_ptcg_json TEXT NOT NULL`, `raw_tcgdex_json TEXT` | MET (schema half) + DEFERRED-JUSTIFIED (loader round-trip → S02.T06) | errcode 1299 reproduced independently |
+| BR-S02.T05-01 | deleting a card removes its five child row sets | `ON DELETE CASCADE` on 6 child FKs | MET | cascade reproduced independently |
+| BR-S02.T05-02 | unknown set_id …; deleting a set that still has cards … | `cards.set_id REFERENCES sets(id)` | MET | errcode 787 reproduced |
+| BR-S02.T05-03 | duplicate (card_id, idx) is rejected | `attacks_card_idx_uq`, `abilities_card_idx_uq` | MET | index list |
+| BR-S02.T05-04 | duplicate (card_id, type) is rejected | `PRIMARY KEY (card_id, type)` ×2 | MET | DDL |
+| BR-S02.T05-05 | second insert …; unknown source / malformed date | 4-col PK + 2 CHECKs | MET | DDL |
+| BR-S02.T05-06 | rejects a second row; is a table and apps/api never writes it; LEFT JOIN | `CREATE TABLE cards_market_usd` | MET | `sqlite_master` type `table` |
+| BR-S02.T05-07 | FTS insert + MATCH; column order; sql-lint with/without tag | tagged `cards_fts` block | MET | §4A.2 `pnpm check` 0 |
+| BR-S02.T05-08 | 0002 applies …; no row / transaction; applied twice | file content | MET | §4A.3 |
+| BR-S02.T05-09 | every *_norm column … carries a BR-S02.T05-09 comment | 6 commented definitions | MET (comment half) + DEFERRED-JUSTIFIED (`norm()` equality → S02.T06) | DDL diff |
+| BR-S02.T05-10 | 3 drift tests | 9 `TABLES` descriptors | MET | §4A.3 |
+
+### §4.3 Findings
+
+| # | Severity | Finding | Evidence | Fix owner |
+|---|---|---|---|---|
+| F1 | MINOR (process) | The RED commit was not made by the pipeline. `72c1ebd` (11:35:44, user identity, generated-style message) was committed while P3's baseline run was in flight. It mixes the RED tests with unrelated work (v2 prompts, status backfill, `.gitattributes`, `build` script) and tracked a transient test artifact. The chain survived only because P3 detected it, recorded it honestly and cleaned up in `f8a03e6`. | `git log`, §3.5 D-1 | User: no commits while a phase runs. Optional: add `apps/api/src/__lint-fixture__.ts` to `.gitignore`. |
+| F2 | MINOR | `packages/db/fixtures/README.md` "Delivered Fixtures" does not list `cards-schema-0002.json`. Nobody was told to: P1 added the fixture to the targets after the user's Q1 answer without re-checking its companion docs. | README vs `packages/db/fixtures/` | P1 (prompt rule). One-line docs fix, any time. |
+| F3 | MINOR | The spec still says "all 18 named indexes"; the DDL it specifies names 21 (confirmed independently). `0002_cards.md` §5 records the correction; the spec body was left for this audit. | spec Acceptance list; §4.1 D | User: correct the number in the spec (docs edit, no code impact). |
+| F4 | MINOR | `0002_cards.md` has two inaccuracies: §1 D2 says legacy had `AUTOINCREMENT` "on `attacks`" — it is on both `attacks` and `abilities` (`pokemon/src/pokesearch/db/schema.sql:62`, `:77`); §4 says "the FTS module asserts it at startup", describing S02.T08 behavior that does not exist yet as if it did. | legacy schema; S02.T08 status `TODO` | Docs fix; any later touch of the note. |
+| F5 | MINOR (improvement, not a defect here) | `node:sqlite` exposes the extended result code (`1299`, `787` above), but `DbError` keeps only the primary code (`client.ts:169-170`), so the tests had to identify constraints by message text (§2.6 decision 1). Keeping `extendedCode` on `DbError` would let tests assert `SQLITE_CONSTRAINT_NOTNULL` exactly as the spec words it. | independent run; `client.ts` | S01.T02 owner, whenever the client is next touched. |
+
+No BLOCKER or MAJOR finding.
+
+### §4.4 Verdict
+
+**APPROVED WITH DEFERRALS.**
+
+### §4.5 Status set
+
+`DONE` in the spec header and the stage README row; `P4-AUDIT / 2026-09-30` in `Owner / Updated`. Per the pipeline rule, the remaining work passes to its blocking task. S02.T06 inherits, from this subtask's `.log.md` Deferrals table:
+- the RN-01 loader round-trip;
+- the BR-S02.T05-09 `norm()` equality test;
+- migrating `cards-basic.json` (and the hand-written schema in `fixtures.spec.ts`) to the 0002 shape.
+
+The log lists all three. S02.T08 and S02.T09 receive the dialect findings through the same log.
+
+### §4.6 Post-audit fixes (user-approved, 2026-09-30)
+
+| Finding | Fix | File |
+|---|---|---|
+| F1 | ignore the transient lint fixture | `.gitignore` (+ `apps/api/src/__lint-fixture__.ts`) |
+| F2 | list `cards-schema-0002.json` under Delivered Fixtures | `packages/db/fixtures/README.md` |
+| F3 | "all 18 named indexes" → "all 21 named indexes" | spec, Acceptance list |
+| F4 | legacy `AUTOINCREMENT` "on both"; the startup assertion is attributed to S02.T08 as specified, not as existing | `packages/db/migrations/0002_cards.md` |
+| F5 | not fixed here — belongs to the `client.ts` owner (S01.T02); recorded | — |
+
+Docs-only; no test or production code changed. Uncommitted at the end of P4 — the next Claude Code phase's pre-flight commits them.
+
