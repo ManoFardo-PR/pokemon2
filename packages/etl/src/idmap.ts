@@ -135,10 +135,12 @@ export function setIdCandidates(
   const smMatch = raw.match(/^sm(\d+)$/);
   if (smMatch?.[1]) {
     const numStr = smMatch[1];
+    const numVal = Number.parseInt(numStr, 10);
     if (
+      numStr.length >= 2 &&
       numStr.endsWith("5") &&
-      numStr !== "5" &&
-      numStr !== "15"
+      numVal !== 5 &&
+      numVal !== 15
     ) {
       const leading = numStr.slice(0, -1);
       candidates.push(`sm${leading}.5`);
@@ -176,13 +178,11 @@ export function setIdCandidates(
     candidates.push(raw);
   }
 
-  // Block 11: Fallbacks — only when no earlier block produced a candidate.
-  if (candidates.length === 0) {
-    candidates.push(raw);
-    if (raw.includes("pt5")) {
-      candidates.push(raw.replace(/pt5/g, ".5"));
-    }
-  }
+  // Block 11: Fallback — the id itself, then the id with `pt5` -> `.5`.
+  // Appended unconditionally: every block appends and the dedupe pass below
+  // lets the earliest candidate win, so this is a tail, not an alternative.
+  candidates.push(raw);
+  candidates.push(raw.replace(/pt5/g, ".5"));
 
   // Deduplication preserving order (BR-S02.T04-01)
   const seen = new Set<string>();
@@ -244,8 +244,21 @@ export function matchCards(
   const takenTcgdexIds = new Set<string>();
   const remainingCanonical: CanonicalCard[] = [];
 
-  // Step 1: Overrides
+  // Upstream can repeat a card id inside one set file. The first occurrence
+  // wins and the duplicate is flagged rather than silently overwriting it.
+  const seenCanonicalIds = new Set<string>();
+  const canonical: CanonicalCard[] = [];
   for (const card of ptcg) {
+    if (seenCanonicalIds.has(card.id)) {
+      ambiguous.push(card.id);
+      continue;
+    }
+    seenCanonicalIds.add(card.id);
+    canonical.push(card);
+  }
+
+  // Step 1: Overrides
+  for (const card of canonical) {
     const ov = cardOverride(card.id, overrides);
     if (ov !== undefined) {
       matches.set(card.id, ov);
@@ -310,9 +323,11 @@ export function matchCards(
   // Only fires when normalized name is unique on BOTH sides (BR-S02.T04-06)
   const unclaimedBriefs = brief.filter((b) => !takenTcgdexIds.has(b.id));
 
-  // Count names on canonical side across ALL canonical cards in the set (ptcg)
+  // Counted over the cards still pending after number matching (the legacy
+  // `pending` scope), not over the whole set: a name already claimed by number
+  // must not block its remaining printing from matching.
   const ptcgNameCounts = new Map<string, number>();
-  for (const c of ptcg) {
+  for (const c of postNumberCanonical) {
     const norm = c.name.trim().toLowerCase();
     ptcgNameCounts.set(norm, (ptcgNameCounts.get(norm) ?? 0) + 1);
   }

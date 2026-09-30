@@ -41,15 +41,19 @@ describe("S02.T04 — ID Mapping (RED phase)", () => {
       it("generates candidates for standard and .5 sets", () => {
         expect(setIdCandidates("sv1")).toEqual(["sv01", "sv1"]);
         expect(setIdCandidates("sv10")).toEqual(["sv10"]);
-        expect(setIdCandidates("sv3pt5")).toEqual(["sv03.5", "sv3.5"]);
-        expect(setIdCandidates("sv8pt5")).toEqual(["sv08.5", "sv8.5"]);
+        expect(setIdCandidates("sv3pt5").slice(0, 2)).toEqual(["sv03.5", "sv3.5"]);
+        expect(setIdCandidates("sv8pt5").slice(0, 2)).toEqual(["sv08.5", "sv8.5"]);
+      });
+
+      it("keeps the raw id as the fallback tail", () => {
+        expect(setIdCandidates("sv3pt5")).toEqual(["sv03.5", "sv3.5", "sv3pt5"]);
       });
     });
 
     describe("Block 2: Mega Evolution (me) era", () => {
       it("generates candidates for me sets", () => {
         expect(setIdCandidates("me1")).toEqual(["me01", "me1"]);
-        expect(setIdCandidates("me2pt5")).toEqual(["me02.5", "me2.5"]);
+        expect(setIdCandidates("me2pt5").slice(0, 2)).toEqual(["me02.5", "me2.5"]);
       });
     });
 
@@ -57,15 +61,24 @@ describe("S02.T04 — ID Mapping (RED phase)", () => {
       it("generates candidates for swsh standard and half sets", () => {
         expect(setIdCandidates("swsh45")).toEqual(["swsh4.5", "swsh45"]);
         expect(setIdCandidates("swsh35")).toEqual(["swsh3.5", "swsh35"]);
-        expect(setIdCandidates("swsh12pt5")).toEqual(["swsh12.5", "swsh12"]);
+        expect(setIdCandidates("swsh12pt5").slice(0, 2)).toEqual([
+          "swsh12.5",
+          "swsh12",
+        ]);
         expect(setIdCandidates("swsh10")).toEqual(["swsh10"]);
         expect(setIdCandidates("swsh11")).toEqual(["swsh11"]);
       });
 
       it("generates gallery candidates with base fallback", () => {
         expect(setIdCandidates("swsh9tg")).toEqual(["swsh9tg", "swsh9"]);
-        expect(setIdCandidates("swsh45sv")).toEqual(["swsh4.5sv", "swsh4.5"]);
-        expect(setIdCandidates("swsh12pt5gg")).toEqual(["swsh12.5gg", "swsh12.5"]);
+        expect(setIdCandidates("swsh45sv").slice(0, 2)).toEqual([
+          "swsh4.5sv",
+          "swsh4.5",
+        ]);
+        expect(setIdCandidates("swsh12pt5gg").slice(0, 2)).toEqual([
+          "swsh12.5gg",
+          "swsh12.5",
+        ]);
       });
     });
 
@@ -95,6 +108,12 @@ describe("S02.T04 — ID Mapping (RED phase)", () => {
         expect(setIdCandidates("sm35")).toEqual(["sm3.5", "sm35"]);
         expect(setIdCandidates("sm115")).toEqual(["sm11.5", "sm115"]);
         expect(setIdCandidates("sm5")).toEqual(["sm5"]);
+      });
+
+      it("excludes 5 and 15 numerically, so a padded id is not split", () => {
+        expect(setIdCandidates("sm05")).toEqual(["sm05"]);
+        expect(setIdCandidates("sm015")).toEqual(["sm015"]);
+        expect(setIdCandidates("sm15")).toEqual(["sm15"]);
       });
     });
 
@@ -165,6 +184,18 @@ describe("S02.T04 — ID Mapping (RED phase)", () => {
     it("unknown set resolves to null and is reported", () => {
       const known = new Set(["xy1", "xy2"]);
       expect(resolveTcgdexSet("nonexistent", known)).toBeNull();
+    });
+
+    it("an override pointing at a set TCGdex does not have resolves to null", () => {
+      const known = new Set(["sv01", "sv1"]);
+      const overrides: Overrides = {
+        sets: { sv1: "sv01_typo" },
+        cards: {},
+      };
+      // Without the override sv1 would resolve; the override replaces the whole
+      // candidate list, so the stale id is the only thing tried.
+      expect(resolveTcgdexSet("sv1", known)).toBe("sv01");
+      expect(resolveTcgdexSet("sv1", known, overrides)).toBeNull();
     });
   });
 
@@ -283,6 +314,58 @@ describe("S02.T04 — ID Mapping (RED phase)", () => {
       expect(res.matches.has("cel25c-93_A")).toBe(false);
       expect(res.unmatched).toHaveLength(2);
       expect(res.byName).toBe(0);
+    });
+
+    it("counts names over the pending cards, not the whole set (Step 4 scope)", () => {
+      // "Mew" appears twice on the canonical side, but one printing is already
+      // claimed by number, so only one is pending and the fallback must fire.
+      // Counting over the whole set would refuse this pairing.
+      const canonical: CanonicalCard[] = [
+        { id: "c-1", number: "1", name: "Mew" },
+        { id: "c-2", number: "999", name: "Mew" },
+      ];
+      const brief: BriefCard[] = [
+        { id: "b-1", localId: "1", name: "Mew" },
+        { id: "b-cc2", localId: "CC02", name: "Mew" },
+      ];
+
+      const res = matchCards(canonical, brief);
+      expect(res.matches.get("c-1")).toBe("b-1");
+      expect(res.matches.get("c-2")).toBe("b-cc2");
+      expect(res.byNumber).toBe(1);
+      expect(res.byName).toBe(1);
+      expect(res.unmatched).toHaveLength(0);
+    });
+
+    it("a canonical id repeated in the source keeps the first and flags it", () => {
+      const canonical: CanonicalCard[] = [
+        { id: "dup", number: "1", name: "First" },
+        { id: "dup", number: "2", name: "Second" },
+      ];
+      const brief: BriefCard[] = [
+        { id: "b-1", localId: "1", name: "First" },
+        { id: "b-2", localId: "2", name: "Second" },
+      ];
+
+      const res = matchCards(canonical, brief);
+      expect(res.matches.get("dup")).toBe("b-1");
+      expect(res.matches.size).toBe(1);
+      expect(res.byNumber).toBe(1);
+      expect(res.ambiguous).toEqual(["dup"]);
+    });
+
+    it("an empty brief leaves every canonical card unmatched", () => {
+      const canonical: CanonicalCard[] = [
+        { id: "c-1", number: "1", name: "A" },
+        { id: "c-2", number: "2", name: "B" },
+      ];
+
+      const res = matchCards(canonical, []);
+      expect(res.matches.size).toBe(0);
+      expect(res.unmatched).toHaveLength(2);
+      expect(res.byNumber).toBe(0);
+      expect(res.byName).toBe(0);
+      expect(res.byOverride).toBe(0);
     });
 
     it("name fallback matches when name is unique on both sides (Step 4)", () => {
