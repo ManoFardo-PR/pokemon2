@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S02 — Card data and search |
-| Status | TODO |
+| Status | DONE |
 | Order in stage | 1 / 14 |
 | Depends on | [S01.T01](../01-foundation/T01-monorepo-skeleton.md), [S01.T04](../01-foundation/T04-database-migration-framework.md) |
 | Unblocks | [S02.T02](T02-fetch-pokemon-tcg-data.md), [S02.T03](T03-fetch-tcgdex.md), [S03.T02](../03-tournament-meta-and-deck-builder/T02-limitless-api-client.md), [S03.T03](../03-tournament-meta-and-deck-builder/T03-limitless-web-scraper.md), [S08.T02](../08-operations-and-extensions/T02-etl-monitoring-and-alerts.md) |
 | Parallel with | [S02.T05](T05-cards-schema-migration.md) |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `env` `RAW_CACHE_DIR`, `DATABASE_PATH` — from [S01.T01](../01-foundation/T01-monorepo-skeleton.md)

@@ -9,7 +9,7 @@
 | Unblocks | [S01.T02](T02-sqlite-database-client.md), [S01.T05](T05-shared-contracts-package.md), [S01.T06](T06-rust-toolchain-gate.md), [S01.T08](T08-web-skeleton.md), [S01.T09](T09-licensing-and-notice.md), [S01.T10](T10-quality-gates-and-docs-lint.md), [S02.T01](../02-card-data-and-search/T01-etl-cli-and-raw-cache.md) |
 | Parallel with | — |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `decision` D-001..D-007 — technology and layout decisions (Rust engine and its gate, SQLite file outside OneDrive, ETL rewritten in TypeScript, rules as data, repo in OneDrive with heavy artifacts outside, English repo / pt-BR UI, single local user) — from `project/02-decision-log.md`

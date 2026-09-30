@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S02 — Card data and search |
-| Status | TODO |
+| Status | DONE |
 | Order in stage | 4 / 14 |
 | Depends on | [S02.T02](T02-fetch-pokemon-tcg-data.md), [S02.T03](T03-fetch-tcgdex.md) |
 | Unblocks | [S02.T06](T06-load-cards.md) |
 | Parallel with | — |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `file` canonical sets/cards JSON — from [S02.T02](T02-fetch-pokemon-tcg-data.md)

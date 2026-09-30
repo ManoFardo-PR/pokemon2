@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | TODO |
+| Status | DONE |
 | Order in stage | 10 / 10 |
 | Depends on | [S01.T01](T01-monorepo-skeleton.md), [S01.T05](T05-shared-contracts-package.md) |
 | Unblocks | — |
 | Parallel with | [S01.T03](T03-test-database-and-fixtures.md) |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `file` root scripts and workspace — from [S01.T01](T01-monorepo-skeleton.md)

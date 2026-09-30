@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | COMPLETED |
+| Status | DONE |
 | Order in stage | 5 / 10 |
 | Depends on | [S01.T01](T01-monorepo-skeleton.md) |
 | Unblocks | [S01.T07](T07-api-skeleton-and-health.md), [S01.T10](T10-quality-gates-and-docs-lint.md), [S02.T09](../02-card-data-and-search/T09-search-query-model-and-sql.md), [S02.T10](../02-card-data-and-search/T10-natural-language-parser.md), [S03.T09](../03-tournament-meta-and-deck-builder/T09-decklist-parser-and-exporter.md), [S04.T02](../04-game-engine-core/T02-card-definition-model.md), [S04.T12](../04-game-engine-core/T12-cli-job-protocol.md), [S04.T13](../04-game-engine-core/T13-scenario-format-and-runner.md), [S05.T03](../05-card-rules-base/T03-effect-ir-vocabulary.md) |
 | Parallel with | [S01.T02](T02-sqlite-database-client.md), [S01.T06](T06-rust-toolchain-gate.md), [S01.T09](T09-licensing-and-notice.md) |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `file` workspace layout and `module` `packages/shared/src/env.ts` — from [S01.T01](T01-monorepo-skeleton.md)

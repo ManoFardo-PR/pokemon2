@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | COMPLETED |
+| Status | DONE |
 | Order in stage | 9 / 10 |
 | Depends on | [S01.T01](T01-monorepo-skeleton.md) |
 | Unblocks | — |
 | Parallel with | [S01.T02](T02-sqlite-database-client.md), [S01.T05](T05-shared-contracts-package.md), [S01.T06](T06-rust-toolchain-gate.md) |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `file` repository root — from [S01.T01](T01-monorepo-skeleton.md)

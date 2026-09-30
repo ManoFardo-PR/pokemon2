@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S02 — Card data and search |
-| Status | TODO |
+| Status | DONE |
 | Order in stage | 3 / 14 |
 | Depends on | [S02.T01](T01-etl-cli-and-raw-cache.md) |
 | Unblocks | [S02.T04](T04-set-and-card-id-mapping.md), [S02.T07](T07-prices-snapshot.md) |
 | Parallel with | [S02.T02](T02-fetch-pokemon-tcg-data.md) |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `module` CLI + cache layout + run log — from [S02.T01](T01-etl-cli-and-raw-cache.md)

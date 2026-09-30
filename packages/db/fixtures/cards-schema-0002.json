@@ -1,0 +1,189 @@
+{
+  "fixture": "cards-schema-0002",
+  "version": 1,
+  "description": "S02.T05 — one set and one printing (sv1-86 Gardevoir ex, taken verbatim from cards-ptcg-sample.json) in the exact column shape of migration 0002_cards.sql; the card has no TCGdex counterpart, so every tcgdex_* column is NULL",
+  "source": {
+    "ptcg": {
+      "sets": [
+        {
+          "id": "sv1",
+          "name": "Scarlet & Violet",
+          "series": "Scarlet & Violet",
+          "printedTotal": 198,
+          "total": 258,
+          "releaseDate": "2023/03/31"
+        }
+      ],
+      "cards": [
+        {
+          "id": "sv1-86",
+          "name": "Gardevoir ex",
+          "supertype": "Pokémon",
+          "subtypes": [
+            "Stage 2",
+            "ex"
+          ],
+          "hp": "310",
+          "types": [
+            "Psychic"
+          ],
+          "evolvesFrom": "Kirlia",
+          "abilities": [
+            {
+              "name": "Psychic Embrace",
+              "text": "As often as you like during your turn, you may attach a Basic Psychic Energy card from your discard pile to 1 of your Psychic Pokémon. If you attached Energy to a Pokémon in this way, put 2 damage counters on that Pokémon. You can't use this Ability on a Pokémon that would be Knocked Out.",
+              "type": "Ability"
+            }
+          ],
+          "attacks": [
+            {
+              "name": "Miracle Force",
+              "cost": [
+                "Psychic",
+                "Psychic",
+                "Colorless"
+              ],
+              "convertedEnergyCost": 3,
+              "damage": "190",
+              "text": "This Pokémon recovers from all Special Conditions."
+            }
+          ],
+          "weaknesses": [
+            {
+              "type": "Darkness",
+              "value": "×2"
+            }
+          ],
+          "resistances": [
+            {
+              "type": "Fighting",
+              "value": "-30"
+            }
+          ],
+          "retreatCost": [
+            "Colorless",
+            "Colorless"
+          ],
+          "convertedRetreatCost": 2,
+          "number": "86",
+          "artist": "PLANETA Yamashita",
+          "rarity": "Double Rare",
+          "legalities": {
+            "unlimited": "Legal",
+            "standard": "Legal",
+            "expanded": "Legal"
+          },
+          "regulationMark": "G",
+          "images": {
+            "small": "https://images.pokemontcg.io/sv1/86.png",
+            "large": "https://images.pokemontcg.io/sv1/86_hires.png"
+          }
+        }
+      ]
+    }
+  },
+  "rows": {
+    "sets": [
+      {
+        "id": "sv1",
+        "tcgdex_id": null,
+        "name": "Scarlet & Violet",
+        "name_norm": "scarlet & violet",
+        "series": "Scarlet & Violet",
+        "printed_total": 198,
+        "total": 258,
+        "release_date": "2023-03-31",
+        "ptcgo_code": null,
+        "legal_unlimited": null,
+        "legal_standard": null,
+        "legal_expanded": null,
+        "symbol_url": null,
+        "logo_url": null,
+        "updated_at": "2026-09-30T00:00:00Z"
+      }
+    ],
+    "cards": [
+      {
+        "id": "sv1-86",
+        "set_id": "sv1",
+        "tcgdex_id": null,
+        "number": "86",
+        "local_id": null,
+        "name": "Gardevoir ex",
+        "name_norm": "gardevoir ex",
+        "supertype": "Pokémon",
+        "subtypes_json": "[\"Stage 2\", \"ex\"]",
+        "hp": 310,
+        "types_json": "[\"Psychic\"]",
+        "evolves_from": "Kirlia",
+        "evolves_to_json": null,
+        "stage": null,
+        "rules_json": null,
+        "flavor_text": null,
+        "regulation_mark": "G",
+        "rarity": "Double Rare",
+        "artist": "PLANETA Yamashita",
+        "national_dex_json": null,
+        "retreat_cost": 2,
+        "retreat_json": "[\"Colorless\", \"Colorless\"]",
+        "legal_unlimited": "Legal",
+        "legal_standard": "Legal",
+        "legal_expanded": "Legal",
+        "tcgdex_legal_standard": null,
+        "tcgdex_legal_expanded": null,
+        "variants_json": null,
+        "img_small": "https://images.pokemontcg.io/sv1/86.png",
+        "img_large": "https://images.pokemontcg.io/sv1/86_hires.png",
+        "img_webp_high": null,
+        "img_webp_low": null,
+        "raw_ptcg_json": "{\"id\":\"sv1-86\",\"name\":\"Gardevoir ex\",\"supertype\":\"Pokémon\",\"subtypes\":[\"Stage 2\",\"ex\"],\"hp\":\"310\",\"types\":[\"Psychic\"],\"evolvesFrom\":\"Kirlia\",\"abilities\":[{\"name\":\"Psychic Embrace\",\"text\":\"As often as you like during your turn, you may attach a Basic Psychic Energy card from your discard pile to 1 of your Psychic Pokémon. If you attached Energy to a Pokémon in this way, put 2 damage counters on that Pokémon. You can't use this Ability on a Pokémon that would be Knocked Out.\",\"type\":\"Ability\"}],\"attacks\":[{\"name\":\"Miracle Force\",\"cost\":[\"Psychic\",\"Psychic\",\"Colorless\"],\"convertedEnergyCost\":3,\"damage\":\"190\",\"text\":\"This Pokémon recovers from all Special Conditions.\"}],\"weaknesses\":[{\"type\":\"Darkness\",\"value\":\"×2\"}],\"resistances\":[{\"type\":\"Fighting\",\"value\":\"-30\"}],\"retreatCost\":[\"Colorless\",\"Colorless\"],\"convertedRetreatCost\":2,\"number\":\"86\",\"artist\":\"PLANETA Yamashita\",\"rarity\":\"Double Rare\",\"legalities\":{\"unlimited\":\"Legal\",\"standard\":\"Legal\",\"expanded\":\"Legal\"},\"regulationMark\":\"G\",\"images\":{\"small\":\"https://images.pokemontcg.io/sv1/86.png\",\"large\":\"https://images.pokemontcg.io/sv1/86_hires.png\"}}",
+        "raw_tcgdex_json": null,
+        "release_date": "2023-03-31",
+        "tcgdex_updated": null,
+        "updated_at": "2026-09-30T00:00:00Z"
+      }
+    ],
+    "attacks": [
+      {
+        "id": 1,
+        "card_id": "sv1-86",
+        "idx": 0,
+        "name": "Miracle Force",
+        "name_norm": "miracle force",
+        "cost_json": "[\"Psychic\", \"Psychic\", \"Colorless\"]",
+        "converted_cost": 3,
+        "damage_text": "190",
+        "damage_num": 190,
+        "damage_mod": null,
+        "text": "This Pokémon recovers from all Special Conditions.",
+        "text_norm": "this pokemon recovers from all special conditions."
+      }
+    ],
+    "abilities": [
+      {
+        "id": 1,
+        "card_id": "sv1-86",
+        "idx": 0,
+        "name": "Psychic Embrace",
+        "name_norm": "psychic embrace",
+        "type": "Ability",
+        "text": "As often as you like during your turn, you may attach a Basic Psychic Energy card from your discard pile to 1 of your Psychic Pokémon. If you attached Energy to a Pokémon in this way, put 2 damage counters on that Pokémon. You can't use this Ability on a Pokémon that would be Knocked Out.",
+        "text_norm": "as often as you like during your turn, you may attach a basic psychic energy card from your discard pile to 1 of your psychic pokemon. if you attached energy to a pokemon in this way, put 2 damage counters on that pokemon. you can't use this ability on a pokemon that would be knocked out."
+      }
+    ],
+    "weaknesses": [
+      {
+        "card_id": "sv1-86",
+        "type": "Darkness",
+        "value": "×2"
+      }
+    ],
+    "resistances": [
+      {
+        "card_id": "sv1-86",
+        "type": "Fighting",
+        "value": "-30"
+      }
+    ]
+  }
+}

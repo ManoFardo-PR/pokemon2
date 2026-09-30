@@ -19,11 +19,11 @@ Rebuild the card database from the public sources with a new TypeScript ETL (pok
 ## Subtasks (execution order)
 | # | ID | Title | Depends on | Gate | Status |
 |---|---|---|---|---|---|
-| 1 | [S02.T01](T01-etl-cli-and-raw-cache.md) | ETL CLI, raw cache layout and run log | [S01.T01](../01-foundation/T01-monorepo-skeleton.md), [S01.T04](../01-foundation/T04-database-migration-framework.md) | no | TODO |
-| 2 | [S02.T02](T02-fetch-pokemon-tcg-data.md) | Fetch pokemon-tcg-data (canonical card JSON) | [S02.T01](T01-etl-cli-and-raw-cache.md) | no | TODO |
-| 3 | [S02.T03](T03-fetch-tcgdex.md) | Fetch TCGdex (prices, legality, variants, images) | [S02.T01](T01-etl-cli-and-raw-cache.md) | no | TODO |
-| 4 | [S02.T04](T04-set-and-card-id-mapping.md) | Set and card id mapping between sources | [S02.T02](T02-fetch-pokemon-tcg-data.md), [S02.T03](T03-fetch-tcgdex.md) | no | TODO |
-| 5 | [S02.T05](T05-cards-schema-migration.md) | Cards schema migration | [S01.T04](../01-foundation/T04-database-migration-framework.md) | no | TODO |
+| 1 | [S02.T01](T01-etl-cli-and-raw-cache.md) | ETL CLI, raw cache layout and run log | [S01.T01](../01-foundation/T01-monorepo-skeleton.md), [S01.T04](../01-foundation/T04-database-migration-framework.md) | no | DONE |
+| 2 | [S02.T02](T02-fetch-pokemon-tcg-data.md) | Fetch pokemon-tcg-data (canonical card JSON) | [S02.T01](T01-etl-cli-and-raw-cache.md) | no | DONE |
+| 3 | [S02.T03](T03-fetch-tcgdex.md) | Fetch TCGdex (prices, legality, variants, images) | [S02.T01](T01-etl-cli-and-raw-cache.md) | no | DONE |
+| 4 | [S02.T04](T04-set-and-card-id-mapping.md) | Set and card id mapping between sources | [S02.T02](T02-fetch-pokemon-tcg-data.md), [S02.T03](T03-fetch-tcgdex.md) | no | DONE |
+| 5 | [S02.T05](T05-cards-schema-migration.md) | Cards schema migration | [S01.T04](../01-foundation/T04-database-migration-framework.md) | no | IN_PROGRESS |
 | 6 | [S02.T06](T06-load-cards.md) | Load cards into the database | [S02.T04](T04-set-and-card-id-mapping.md), [S02.T05](T05-cards-schema-migration.md) | no | TODO |
 | 7 | [S02.T07](T07-prices-snapshot.md) | Price snapshots | [S02.T03](T03-fetch-tcgdex.md), [S02.T06](T06-load-cards.md) | no | TODO |
 | 8 | [S02.T08](T08-full-text-search.md) | Full-text search index and query builder | [S02.T05](T05-cards-schema-migration.md), [S02.T06](T06-load-cards.md) | no | TODO |

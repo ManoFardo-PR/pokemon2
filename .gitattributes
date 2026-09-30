@@ -8,3 +8,6 @@
 *.json text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+# migrate.ts stores sha256 of the raw migration file; CRLF and LF checkouts would record
+# different checksums for the same migration (MigrationChecksumError). Pin to LF.
+*.sql text eol=lf

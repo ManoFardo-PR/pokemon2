@@ -19,16 +19,16 @@ Stand up an empty but fully wired workspace: pnpm monorepo, local SQLite databas
 ## Subtasks (execution order)
 | # | ID | Title | Depends on | Gate | Status |
 |---|---|---|---|---|---|
-| 1 | [S01.T01](T01-monorepo-skeleton.md) | Monorepo skeleton and environment layout | — | no | TODO |
-| 2 | [S01.T02](T02-sqlite-database-client.md) | SQLite database client and portability rules | [S01.T01](T01-monorepo-skeleton.md) | no | TODO |
-| 3 | [S01.T03](T03-test-database-and-fixtures.md) | Test database helper and fixtures | [S01.T02](T02-sqlite-database-client.md) | no | TODO |
-| 4 | [S01.T04](T04-database-migration-framework.md) | Database migration framework | [S01.T02](T02-sqlite-database-client.md), [S01.T03](T03-test-database-and-fixtures.md) | no | TODO |
-| 5 | [S01.T05](T05-shared-contracts-package.md) | Shared contracts package | [S01.T01](T01-monorepo-skeleton.md) | no | TODO |
+| 1 | [S01.T01](T01-monorepo-skeleton.md) | Monorepo skeleton and environment layout | — | no | DONE |
+| 2 | [S01.T02](T02-sqlite-database-client.md) | SQLite database client and portability rules | [S01.T01](T01-monorepo-skeleton.md) | no | DONE |
+| 3 | [S01.T03](T03-test-database-and-fixtures.md) | Test database helper and fixtures | [S01.T02](T02-sqlite-database-client.md) | no | DONE |
+| 4 | [S01.T04](T04-database-migration-framework.md) | Database migration framework | [S01.T02](T02-sqlite-database-client.md), [S01.T03](T03-test-database-and-fixtures.md) | no | DONE |
+| 5 | [S01.T05](T05-shared-contracts-package.md) | Shared contracts package | [S01.T01](T01-monorepo-skeleton.md) | no | DONE |
 | 6 | [S01.T06](T06-rust-toolchain-gate.md) | Rust toolchain gate | [S01.T01](T01-monorepo-skeleton.md) | yes | TODO |
-| 7 | [S01.T07](T07-api-skeleton-and-health.md) | API skeleton and health endpoint | [S01.T04](T04-database-migration-framework.md), [S01.T05](T05-shared-contracts-package.md) | no | TODO |
-| 8 | [S01.T08](T08-web-skeleton.md) | Web application skeleton | [S01.T01](T01-monorepo-skeleton.md), [S01.T07](T07-api-skeleton-and-health.md) | no | TODO |
-| 9 | [S01.T09](T09-licensing-and-notice.md) | Licensing and NOTICE | [S01.T01](T01-monorepo-skeleton.md) | no | TODO |
-| 10 | [S01.T10](T10-quality-gates-and-docs-lint.md) | Quality gates and docs lint | [S01.T01](T01-monorepo-skeleton.md), [S01.T05](T05-shared-contracts-package.md) | no | TODO |
+| 7 | [S01.T07](T07-api-skeleton-and-health.md) | API skeleton and health endpoint | [S01.T04](T04-database-migration-framework.md), [S01.T05](T05-shared-contracts-package.md) | no | DONE |
+| 8 | [S01.T08](T08-web-skeleton.md) | Web application skeleton | [S01.T01](T01-monorepo-skeleton.md), [S01.T07](T07-api-skeleton-and-health.md) | no | DONE |
+| 9 | [S01.T09](T09-licensing-and-notice.md) | Licensing and NOTICE | [S01.T01](T01-monorepo-skeleton.md) | no | DONE |
+| 10 | [S01.T10](T10-quality-gates-and-docs-lint.md) | Quality gates and docs lint | [S01.T01](T01-monorepo-skeleton.md), [S01.T05](T05-shared-contracts-package.md) | no | DONE |
 
 Order follows the ID sequence; a subtask starts only when every "Depends on" item is DONE (see [Conventions](../../project/08-conventions.md)). Subtasks with the same topological level and no mutual dependency may run in parallel (listed in each file's "Parallel with").
 

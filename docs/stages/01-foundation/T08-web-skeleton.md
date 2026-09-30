@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | COMPLETED |
+| Status | DONE |
 | Order in stage | 8 / 10 |
 | Depends on | [S01.T01](T01-monorepo-skeleton.md), [S01.T07](T07-api-skeleton-and-health.md) |
 | Unblocks | [S02.T12](../02-card-data-and-search/T12-web-search-page.md), [S02.T13](../02-card-data-and-search/T13-web-card-detail-page.md), [S02.T14](../02-card-data-and-search/T14-web-sets-page.md), [S03.T08](../03-tournament-meta-and-deck-builder/T08-web-meta-pages.md), [S05.T13](../05-card-rules-base/T13-rules-editor-ui.md), [S05.T14](../05-card-rules-base/T14-coverage-page-and-authoring-queue.md), [S08.T03](../08-operations-and-extensions/T03-hosted-postgres-migration-path.md) |
 | Parallel with | — |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `env` `WEB_PORT`, `API_PORT` — from [S01.T01](T01-monorepo-skeleton.md)

@@ -12,6 +12,7 @@
     "typecheck": "pnpm -r run typecheck && tsc -p scripts/tsconfig.json",
     "lint": "pnpm -r run lint && eslint scripts",
     "test": "vitest run",
+    "build": "pnpm -r --if-present run build",
     "schema:build": "pnpm --filter @pokesearch/shared schema:build",
     "schema:check": "pnpm --filter @pokesearch/shared schema:check",
     "db:backup": "node --no-warnings=ExperimentalWarning scripts/db-backup.mjs",

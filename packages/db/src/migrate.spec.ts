@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync, existsSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { openDatabase, type Db } from "./client.js";
@@ -391,5 +391,64 @@ describe("Database Migration Runner (packages/db/src/migrate.ts)", () => {
       );
       expect(etlRuns?.name).toBe("etl_runs");
     });
+  });
+});
+
+// S02.T05 / BR-S02.T05-08 — the real 0002_cards.sql through the runner.
+describe("S02.T05 — 0002_cards.sql through the migration runner", () => {
+  const NEW_TABLES = [
+    "sets",
+    "cards",
+    "attacks",
+    "abilities",
+    "weaknesses",
+    "resistances",
+    "price_history",
+    "cards_market_usd",
+    "cards_fts",
+  ] as const;
+  let tempDir: string;
+  let db: Db;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "pokesearch-0002-migrate-"));
+    db = openDatabase(join(tempDir, "migrate-0002.db"));
+  });
+
+  afterEach(() => {
+    try {
+      db.close();
+    } catch {
+      // ignore
+    }
+    if (existsSync(tempDir)) {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("0002 applies on a fresh temp DB, version 2, zero rows, PRAGMA foreign_key_check clean", () => {
+    migrate(db, { dir: defaultMigrationsDir() });
+    expect(currentSchemaVersion(db)).toBe(2);
+    expect(db.get<{ name: string }>("SELECT name FROM schema_migrations WHERE version = 2;")?.name).toBe("cards");
+    for (const table of NEW_TABLES) {
+      expect(db.get<{ c: number }>(`SELECT count(*) AS c FROM ${table};`)?.c, table).toBe(0);
+    }
+    expect(db.all("PRAGMA foreign_key_check;")).toEqual([]);
+  });
+
+  it("0002_cards.sql creates no row and runs inside a transaction", () => {
+    const sql = readFileSync(join(defaultMigrationsDir(), "0002_cards.sql"), "utf8");
+    expect(sql.startsWith("-- @no-transaction")).toBe(false);
+    const code = sql.replace(/--[^\n]*/g, "");
+    expect(code).not.toMatch(/\bINSERT\b/i);
+  });
+
+  it("executing the 0002 SQL a second time fails and leaves the schema at version 2", () => {
+    migrate(db, { dir: defaultMigrationsDir() });
+    expect(currentSchemaVersion(db)).toBe(2);
+    const sql = readFileSync(join(defaultMigrationsDir(), "0002_cards.sql"), "utf8");
+    expect(() => db.transaction((tx) => tx.exec(sql))).toThrow(/already exists/);
+    expect(currentSchemaVersion(db)).toBe(2);
+    expect(db.get<{ c: number }>("SELECT count(*) AS c FROM schema_migrations WHERE version = 2;")?.c).toBe(1);
   });
 });

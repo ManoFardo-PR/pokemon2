@@ -3,13 +3,13 @@
 | Field | Value |
 |---|---|
 | Stage | S01 — Foundation |
-| Status | COMPLETED |
+| Status | DONE |
 | Order in stage | 3 / 10 |
 | Depends on | [S01.T02](T02-sqlite-database-client.md) |
 | Unblocks | [S01.T04](T04-database-migration-framework.md) |
 | Parallel with | [S01.T10](T10-quality-gates-and-docs-lint.md) |
 | Gate | no |
-| Owner / Updated | — / — |
+| Owner / Updated | v1 pipeline, not audited / 2026-09-30 |
 
 ## Inputs (required)
 - `module` `@pokesearch/db/client` — from [S01.T02](T02-sqlite-database-client.md)
