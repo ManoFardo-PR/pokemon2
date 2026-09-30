@@ -9,7 +9,7 @@
 | Handoff | [T05-cards-schema-migration.handoff.md](handoff/T05-cards-schema-migration.handoff.md) |
 | Base commit | `5859e54` |
 | RED commit | `72c1ebd` (see Deviations) |
-| GREEN commit | `62702c0` |
+| GREEN commit | `f083c98` |
 
 ## Test status
 
