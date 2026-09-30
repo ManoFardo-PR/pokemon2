@@ -9,7 +9,7 @@
 | Unblocks | [S02.T06](T06-load-cards.md), [S02.T08](T08-full-text-search.md), [S02.T09](T09-search-query-model-and-sql.md), [S03.T01](../03-tournament-meta-and-deck-builder/T01-tournaments-schema-migration.md), [S05.T01](../05-card-rules-base/T01-rules-schema-migration.md) |
 | Parallel with | [S02.T01](T01-etl-cli-and-raw-cache.md) |
 | Gate | no |
-| Owner / Updated | P3-GREEN / 2026-09-30 |
+| Owner / Updated | P4A-VERIFY / 2026-09-30 |
 
 ## Inputs (required)
 - `module` migration runner and conventions (`-- @sqlite-only` blocks) — from [S01.T04](../01-foundation/T04-database-migration-framework.md)

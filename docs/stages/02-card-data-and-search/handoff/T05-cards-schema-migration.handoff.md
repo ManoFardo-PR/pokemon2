@@ -5,9 +5,9 @@
 | TASK_ID | S02.T05 |
 | SPEC | docs/stages/02-card-data-and-search/T05-cards-schema-migration.md |
 | HANDOFF | docs/stages/02-card-data-and-search/handoff/T05-cards-schema-migration.handoff.md |
-| LAST_PHASE | P3-GREEN |
-| LAST_STATUS | PASSED |
-| NEXT | P4A-VERIFY |
+| LAST_PHASE | P4A-VERIFY |
+| LAST_STATUS | CLEAN |
+| NEXT | P4-AUDIT |
 | BASE_COMMIT | 5859e54d7c0d2c531b0cc2b1c219a48f1a555c49 |
 | RED_COMMIT | 72c1ebd41d5bdaf095ea19c35d545ebdf36008d2 |
 | GREEN_COMMIT | f083c985fbfa3a386b203a382225539cb6e71e89 |
@@ -1153,3 +1153,224 @@ were P2's (the specs and the fixture) and were not touched.
 
 **PASSED.** §3.6 shows `pnpm test` 476/476 with exit 0, `pnpm typecheck` exit 0, `pnpm lint` exit 0, and
 `node scripts/sql-lint.mjs` exit 0. No TCR is open and no new deferral was created.
+
+## §4A VERIFY
+
+Collected in a fresh session. Evidence only; no judgement of the implementation.
+
+### §4A.1 Repository state
+
+`git rev-parse HEAD` — exit 0
+
+```
+f8388e7f3b7270b8b17f1911c14e5c0b91954f30
+```
+
+`git status --porcelain` — exit 0
+
+```
+```
+
+Empty output. **No uncommitted change.**
+
+`git log --oneline 72c1ebd41d5bdaf095ea19c35d545ebdf36008d2~1..HEAD` — exit 0
+
+```
+f8388e7 docs(S02.T05): record GREEN_COMMIT in the handoff and the log
+f083c98 feat(S02.T05): GREEN — cards schema migration 0002 with FTS5 and row types
+f8a03e6 chore: untrack the transient eslint fixture swept into 72c1ebd
+72c1ebd feat: add fixture for Gardevoir ex card and implement schema drift tests
+```
+
+`git diff --stat 72c1ebd41d5bdaf095ea19c35d545ebdf36008d2..HEAD` — exit 0
+
+```
+ apps/api/src/__lint-fixture__.ts                   |   2 -
+ .../T05-cards-schema-migration.log.md              | 103 +++++++++++
+ .../T05-cards-schema-migration.md                  |   2 +-
+ .../handoff/T05-cards-schema-migration.handoff.md  | 201 ++++++++++++++++++++-
+ packages/db/migrations/0002_cards.md               | 176 ++++++++++++++++++
+ packages/db/migrations/0002_cards.sql              | 187 +++++++++++++++++++
+ packages/db/package.json                           |   1 +
+ packages/db/src/schema.ts                          | 156 ++++++++++++++++
+ 8 files changed, 820 insertions(+), 8 deletions(-)
+```
+
+`git diff --name-only 72c1ebd41d5bdaf095ea19c35d545ebdf36008d2..HEAD` — exit 0
+
+```
+apps/api/src/__lint-fixture__.ts
+docs/stages/02-card-data-and-search/T05-cards-schema-migration.log.md
+docs/stages/02-card-data-and-search/T05-cards-schema-migration.md
+docs/stages/02-card-data-and-search/handoff/T05-cards-schema-migration.handoff.md
+packages/db/migrations/0002_cards.md
+packages/db/migrations/0002_cards.sql
+packages/db/package.json
+packages/db/src/schema.ts
+```
+
+### §4A.2 Check results
+
+#### `pnpm check` — exit 0
+
+Sub-commands executed, in order, as echoed by pnpm:
+
+```
+$ pnpm typecheck && pnpm lint && node scripts/sql-lint.mjs && node scripts/notice-lint.mjs && pnpm schema:check && pnpm test
+$ pnpm -r run typecheck && tsc -p scripts/tsconfig.json
+$ pnpm -r run lint && eslint scripts
+$ pnpm --filter @pokesearch/shared schema:check
+$ vitest run
+```
+
+- `pnpm typecheck` — six `tsc --noEmit` runs plus `tsc -p scripts/tsconfig.json`; no diagnostic emitted.
+- `pnpm lint` — six `eslint .` runs plus `eslint scripts`; no diagnostic emitted.
+- `node scripts/sql-lint.mjs` — no output.
+- `node scripts/notice-lint.mjs` — no output.
+- `pnpm schema:check` — VERBATIM:
+
+```
+All schemas are up-to-date and deterministic.
+```
+
+- `pnpm test` — VERBATIM summary:
+
+```
+ Test Files  39 passed (39)
+      Tests  476 passed (476)
+   Start at  12:11:11
+   Duration  20.82s (transform 6.69s, setup 7.37s, collect 14.81s, tests 66.00s, environment 10.80s, prepare 10.25s)
+```
+
+No failure in any sub-command.
+
+The esbuild warning `Unrecognized target environment "es2024" [tsconfig.json]` is emitted repeatedly by the
+vite/esbuild transform during `vitest run`. It is a warning, not an error, and does not affect the exit code.
+
+#### `pnpm build` — exit 0
+
+VERBATIM:
+
+```
+$ pnpm -r --if-present run build
+Scope: 6 of 7 workspace projects
+$ vite build
+vite v5.4.21 building for production...
+transforming...
+✓ 192 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.41 kB │ gzip:   0.29 kB
+dist/assets/index-KNoAnyLu.css    2.07 kB │ gzip:   0.82 kB
+dist/assets/index-CKelI_1k.js   401.08 kB │ gzip: 122.52 kB
+✓ built in 1.34s
+```
+
+No failure.
+
+#### `node scripts/docs-lint.mjs --strict` — exit 0
+
+No output on stdout or stderr. No failure.
+
+#### `pnpm vitest run packages/db/src/schema.spec.ts packages/db/src/schema-drift.spec.ts packages/db/src/migrate.spec.ts scripts/sql-lint.spec.ts --reporter=verbose` — exit 0
+
+The four test files of §2.1. VERBATIM summary:
+
+```
+ Test Files  4 passed (4)
+      Tests  60 passed (60)
+   Start at  12:11:55
+   Duration  1.54s (transform 1.33s, setup 2.20s, collect 370ms, tests 897ms, environment 1ms, prepare 602ms)
+```
+
+Verbose listing of the S02.T05 tests, VERBATIM (ANSI colour codes stripped, reordered by file for readability —
+vitest interleaves the projects):
+
+```
+ ✓  @pokesearch/db  src/schema-drift.spec.ts > BR-S02.T05-10: 0002 row types vs the migrated database > 0002 tables match their TypeScript row types 24ms
+ ✓  @pokesearch/db  src/schema-drift.spec.ts > BR-S02.T05-10: 0002 row types vs the migrated database > the cards_latest_price view exposes exactly the CardsLatestPriceRow columns 16ms
+ ✓  @pokesearch/db  src/schema-drift.spec.ts > BR-S02.T05-10: 0002 row types vs the migrated database > fails when a column is added to the SQL without the type 15ms
+ ✓  scripts  scripts/sql-lint.spec.ts > BR-S02.T05-07: sql-lint guards the -- @sqlite-only block of 0002_cards.sql > `pnpm check` fails when the `-- @sqlite-only` tag around `cards_fts` is removed, and passes with it 143ms
+ ✓  @pokesearch/db  src/migrate.spec.ts > S02.T05 — 0002_cards.sql through the migration runner > 0002 applies on a fresh temp DB, version 2, zero rows, PRAGMA foreign_key_check clean 11ms
+ ✓  @pokesearch/db  src/migrate.spec.ts > S02.T05 — 0002_cards.sql through the migration runner > 0002_cards.sql creates no row and runs inside a transaction 5ms
+ ✓  @pokesearch/db  src/migrate.spec.ts > S02.T05 — 0002_cards.sql through the migration runner > executing the 0002 SQL a second time fails and leaves the schema at version 2 11ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > RN-01: both raw documents are preserved > raw_ptcg_json is NOT NULL 13ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > RN-01: both raw documents are preserved > raw_tcgdex_json is nullable: a card with no TCGdex counterpart is accepted 11ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-01: children cascade with their card > deleting a card removes its five child row sets 14ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-02: a card cannot exist without its set > inserting a card with an unknown set_id raises SQLITE_CONSTRAINT_FOREIGNKEY 14ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-02: a card cannot exist without its set > deleting a set that still has cards is refused 12ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-03: one attack / ability per index > duplicate (card_id, idx) is rejected 13ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-04: one weakness / resistance per energy type > duplicate (card_id, type) is rejected 12ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-05: one price observation per key > second insert of the same key updates, count stays 1 11ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-05: one price observation per key > price_history rejects an unknown source and a malformed snapshot_date 12ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-06: cards_market_usd is a maintained table with one row per card > cards_market_usd rejects a second row for the same card 12ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-06: cards_market_usd is a maintained table with one row per card > cards_market_usd is a table, not a view, and apps/api never writes it 14ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-06: cards_market_usd is a maintained table with one row per card > a card with no prices stays visible through a LEFT JOIN with a NULL market_usd 11ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-07: the FTS5 index and its bm25 column-order contract > cards_fts accepts an insert and a MATCH 11ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-07: the FTS5 index and its bm25 column-order contract > cards_fts columns follow the bm25 column-order contract 10ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > BR-S02.T05-09: normalized columns document the norm() contract > every *_norm column definition in 0002_cards.sql carries a BR-S02.T05-09 comment 11ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > Acceptance: named indexes > lists every named index of the 0002 tables 11ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > Edge cases > a card numbered TG01 is stored verbatim 12ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > Edge cases > damage_mod accepts '×' and rejects 'x' and '*' 13ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > Edge cases > an attack with non-numeric damage keeps the text and NULL number and modifier 12ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > Edge cases > tcgdex_legal_* accept 0, 1 and NULL, and reject '' and 2 17ms
+ ✓  @pokesearch/db  src/schema.spec.ts > S02.T05 — 0002_cards schema (packages/db/migrations/0002_cards.sql) > Acceptance: typed fixture round-trip > a fixture card inserted through @pokesearch/db/schema reads back with identical values for every column 18ms
+```
+
+The remaining 32 of the 60 tests are the pre-existing S01.T04 tests in `schema.spec.ts` and `migrate.spec.ts`;
+all passed.
+
+No failure in any command. Nothing to record under "every failure in full".
+
+### §4A.3 Expected tests
+
+All 28 tests of §2.4, matched in full against the verbose run above. The describe paths are abbreviated with `…`
+in this table for width; each was compared against the complete §2.4 text before being recorded.
+
+| # | Test | Result |
+|---|---|---|
+| 1 | `schema.spec.ts > S02.T05 … > RN-01 … > raw_ptcg_json is NOT NULL` | PASS |
+| 2 | `schema.spec.ts > S02.T05 … > RN-01 … > raw_tcgdex_json is nullable: a card with no TCGdex counterpart is accepted` | PASS |
+| 3 | `schema.spec.ts > S02.T05 … > BR-S02.T05-01 … > deleting a card removes its five child row sets` | PASS |
+| 4 | `schema.spec.ts > S02.T05 … > BR-S02.T05-02 … > inserting a card with an unknown set_id raises SQLITE_CONSTRAINT_FOREIGNKEY` | PASS |
+| 5 | `schema.spec.ts > S02.T05 … > BR-S02.T05-02 … > deleting a set that still has cards is refused` | PASS |
+| 6 | `schema.spec.ts > S02.T05 … > BR-S02.T05-03 … > duplicate (card_id, idx) is rejected` | PASS |
+| 7 | `schema.spec.ts > S02.T05 … > BR-S02.T05-04 … > duplicate (card_id, type) is rejected` | PASS |
+| 8 | `schema.spec.ts > S02.T05 … > BR-S02.T05-05 … > second insert of the same key updates, count stays 1` | PASS |
+| 9 | `schema.spec.ts > S02.T05 … > BR-S02.T05-05 … > price_history rejects an unknown source and a malformed snapshot_date` | PASS |
+| 10 | `schema.spec.ts > S02.T05 … > BR-S02.T05-06 … > cards_market_usd rejects a second row for the same card` | PASS |
+| 11 | `schema.spec.ts > S02.T05 … > BR-S02.T05-06 … > cards_market_usd is a table, not a view, and apps/api never writes it` | PASS |
+| 12 | `schema.spec.ts > S02.T05 … > BR-S02.T05-06 … > a card with no prices stays visible through a LEFT JOIN with a NULL market_usd` | PASS |
+| 13 | `schema.spec.ts > S02.T05 … > BR-S02.T05-07 … > cards_fts accepts an insert and a MATCH` | PASS |
+| 14 | `schema.spec.ts > S02.T05 … > BR-S02.T05-07 … > cards_fts columns follow the bm25 column-order contract` | PASS |
+| 15 | `schema.spec.ts > S02.T05 … > BR-S02.T05-09 … > every *_norm column definition in 0002_cards.sql carries a BR-S02.T05-09 comment` | PASS |
+| 16 | `schema.spec.ts > S02.T05 … > Acceptance: named indexes > lists every named index of the 0002 tables` | PASS |
+| 17 | `schema.spec.ts > S02.T05 … > Edge cases > a card numbered TG01 is stored verbatim` | PASS |
+| 18 | `schema.spec.ts > S02.T05 … > Edge cases > damage_mod accepts '×' and rejects 'x' and '*'` | PASS |
+| 19 | `schema.spec.ts > S02.T05 … > Edge cases > an attack with non-numeric damage keeps the text and NULL number and modifier` | PASS |
+| 20 | `schema.spec.ts > S02.T05 … > Edge cases > tcgdex_legal_* accept 0, 1 and NULL, and reject '' and 2` | PASS |
+| 21 | `schema.spec.ts > S02.T05 … > Acceptance: typed fixture round-trip > a fixture card inserted through @pokesearch/db/schema reads back with identical values for every column` | PASS |
+| 22 | `schema-drift.spec.ts > BR-S02.T05-10 … > 0002 tables match their TypeScript row types` | PASS |
+| 23 | `schema-drift.spec.ts > BR-S02.T05-10 … > the cards_latest_price view exposes exactly the CardsLatestPriceRow columns` | PASS |
+| 24 | `schema-drift.spec.ts > BR-S02.T05-10 … > fails when a column is added to the SQL without the type` | PASS |
+| 25 | `migrate.spec.ts > S02.T05 … > 0002 applies on a fresh temp DB, version 2, zero rows, PRAGMA foreign_key_check clean` | PASS |
+| 26 | `migrate.spec.ts > S02.T05 … > 0002_cards.sql creates no row and runs inside a transaction` | PASS |
+| 27 | `migrate.spec.ts > S02.T05 … > executing the 0002 SQL a second time fails and leaves the schema at version 2` | PASS |
+| 28 | `scripts/sql-lint.spec.ts > BR-S02.T05-07 … > sql-lint guards the -- @sqlite-only block of 0002_cards.sql` | PASS |
+
+28 PASS, 0 FAIL, 0 NOT FOUND.
+
+### §4A.4 Fixes applied
+
+none.
+
+### §4A.5 Verdict
+
+**CLEAN.**
+
+- `pnpm check` exit 0.
+- `pnpm build` exit 0.
+- `node scripts/docs-lint.mjs --strict` exit 0.
+- `pnpm vitest run` over the four §2.1 files exit 0.
+- All 28 tests of §2.4 PASS.
+- `git status --porcelain` empty; no uncommitted change.
