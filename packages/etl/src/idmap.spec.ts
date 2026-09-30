@@ -263,7 +263,7 @@ describe("S02.T04 — ID Mapping (RED phase)", () => {
       expect(res.matches.get("c-1")).toBe("b-1");
       expect(res.matches.has("c-2")).toBe(false);
       expect(res.unmatched).toHaveLength(1);
-      expect(res.unmatched[0].id).toBe("c-2");
+      expect(res.unmatched[0]?.id).toBe("c-2");
     });
 
     it("duplicate name on the canonical side stays unmatched (BR-S02.T04-06)", () => {
